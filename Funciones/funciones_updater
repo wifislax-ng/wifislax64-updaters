@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-FUNCIONES_VERSION=20160810
+FUNCIONES_VERSION=20160912
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -24,7 +24,7 @@ CWD=$(pwd)
 export MAKEFLAGS='-j '$(grep -c ^processor /proc/cpuinfo)
 
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
-rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
+rm -rf /opt/wifislax64-updaters/*/*~ &>/dev/null
 
 # Funcion que limpia
 f_exitmode() {
@@ -57,8 +57,8 @@ f_comprobarConexion() {
 
 # Comprobacion de updates para el script
 f_comprobarUpdates() {
-   SERVIDOR_WEB="https://raw.githubusercontent.com/wifislax-ng/wifislax-updaters/master"
-   DIRECTORIO=$(find /opt/wifislax-updaters -type f -name ${PRGNAM}_updater| rev | cut -d/ -f2- | rev)
+   SERVIDOR_WEB="https://raw.githubusercontent.com/wifislax-ng/wifislax64-updaters/master"
+   DIRECTORIO=$(find /opt/wifislax64-updaters -type f -name ${PRGNAM}_updater| rev | cut -d/ -f2- | rev)
    SERVIDOR_VERSION=$(timeout -s SIGTERM 10 curl -sk $SERVIDOR_WEB/${DIRECTORIO##*/}/${PRGNAM}_updater | grep "SCRIPT_VERSION=" | head -1 |cut -d "=" -f2)
 
    echo ${CYAN}Version Script$CIERRE: $ROJO${SCRIPT_VERSION:6}$BLANCO/$AMARILLO${SCRIPT_VERSION:4:2}$BLANCO/$ROJO${SCRIPT_VERSION:0:4}$CIERRE
@@ -151,7 +151,7 @@ for D in $DEPENDENCIAS; do
 BUSCAR=`echo "$(ls /var/log/packages|rev|cut -d '-' -f4-|rev|grep -x $D)"`
 if [ -z "$BUSCAR" ]; then
 echo "${BLANCO}Dependencia ${AMARILLO}${D} ${ROJO}NO INSTALADA${BLANCO} ...resolviendo${CIERRE}."
-UPDATER=`echo "$(find /opt/wifislax-updaters/* -name ${D}_updater)"`
+UPDATER=`echo "$(find /opt/wifislax64-updaters/* -name ${D}_updater)"`
 if [ -z "$UPDATER" ]; then
 echo "${BLANCO}No hay updater para ${AMARILLO}${D}${BLANCO},no se puede continuar${CIERRE}."
 echo ""
@@ -265,7 +265,7 @@ f_tareasFinales() {
    sleep 1
    # Guardamos los modulos en carpetas por categoria
    cd ..
-   CATEGORIA=`echo "$(find /opt/wifislax-updaters/* -name ${PRGNAM}_updater| cut -d "/" -f4)"`
+   CATEGORIA=`echo "$(find /opt/wifislax64-updaters/* -name ${PRGNAM}_updater| cut -d "/" -f4)"`
    if [ ! -d $HOME/Desktop/$CATEGORIA ]; then
    mkdir -p $HOME/Desktop/$CATEGORIA
    fi
