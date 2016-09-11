@@ -1,0 +1,8 @@
+language: bash
+
+install:
+ - sudo apt-get update
+ - sudo apt-get install iputils-ping
+
+script:
+ - bash Updaters_Test

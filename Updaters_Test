@@ -1,0 +1,124 @@
+#!/bin/bash
+
+SCRIPTVERSION=1.2-mod
+
+# v1.1 Se añade mensaje si todos los upadters funcionan
+
+clear
+
+# Algunos updaters necesitan arquitectura para saber version
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+export ARCH
+
+# Colores
+CIERRE=${CIERRE:-"[0m"}
+ROJO=${ROJO:-"[1;31m"}
+VERDE=${VERDE:-"[1;32m"}
+CYAN=${CYAN:-"[1;36m"}
+AMARILLO=${AMARILLO:-"[1;33m"}
+BLANCO=${BLANCO:-"[1;37m"}
+ROSA=${ROSA:-"[1;35m"}
+
+echo "#############################"
+echo "###  $CYAN TESTER DE UPDATERS $CIERRE ###"
+echo "#############################"
+
+
+if [ ! "$(ping google.com -c1 2>/dev/null)" ]; then
+echo ""
+echo "No tengo internet ... el script se cerrara."
+echo ""
+sleep 1
+exit 1
+fi
+
+BUSQUEDA(){
+TMP=/tmp/Updaters_Test
+if [ -d $TMP ]; then
+rm -rf $TMP
+fi
+mkdir -p $TMP
+
+UPDATERS=`find . -type f -name "*_updater"`
+echo 
+echo "${BLANCO}[${VERDE}*${BLANCO}]$AMARILLO Copiando updaters a directorio temporal ..."
+cp -rf $UPDATERS $TMP &>/dev/null
+rm -rf $TMP/Driver_ATI_updater &>/dev/null
+rm -rf $TMP/linux* &>/dev/null
+rm -rf $TMP/funciones_updater &>/dev/null
+rm -rf $TMP/wifislax-updaters_updater &>/dev/null
+rm -rf $TMP/last_update &>/dev/null
+rm -rf $TMP/firefox_multi_updater &>/dev/null
+rm -rf $TMP/adobe-reader_updater &>/dev/null
+}
+
+TEMPORAL(){
+cd $TMP
+TEMPUPDATERS=`find . -type f -name "*_updater" | sort`
+echo "${BLANCO}[${VERDE}*${BLANCO}]$AMARILLO Modificando copias temporales de updaters ..."
+for tempupdater in $TEMPUPDATERS; do
+LINEA=`grep -r "f_exitmode" -n $tempupdater | tr -d [a-zA-Z#_.:/]`
+FINAL=`cat $tempupdater | wc -l`
+ELIMINAR=`expr $FINAL + 1`
+sed -i "${LINEA},${ELIMINAR}d" $tempupdater
+#echo f_variables >> $tempupdater
+echo F_variables >> $tempupdater
+echo 'if [ -z $VERSION ]; then' >> $tempupdater
+echo 'VERSION="[1;31mFallido [0m"' >> $tempupdater
+echo 'echo "$PRGNAM" >> "./FALLIDOS"' >> $tempupdater
+echo 'fi' >> $tempupdater
+echo 'echo -e "[1;37mPrograma:[1;36m${PRGNAM}'"\t"'""[1;37mVersion:[1;32m${VERSION}[0m"' >> $tempupdater
+done
+}
+
+MOSTRAR(){
+echo "${BLANCO}[${VERDE}*${BLANCO}]$AMARILLO Testeando updaters..."
+echo
+sleep 3
+for tempupdater in $TEMPUPDATERS ; do
+{ sh -c "$TMP/$tempupdater"; }
+#sh -c "$TMP/$tempupdater"
+done
+wait
+}
+
+INFORME(){
+clear
+echo 
+echo "#############################"
+echo "###  $ROJO INFORME DE ERRORES $CIERRE ###"
+echo "#############################"
+echo 
+if [ -f $TMP/FALLIDOS ]; then
+echo "${BLANCO}[${VERDE}*${BLANCO}] Los siguientes updaters fallaron"
+echo $BLANCO
+cat $TMP/FALLIDOS
+echo $CIERRE
+LIMPIAR
+exit 1
+else 
+echo "${BLANCO}[${VERDE}*${BLANCO}] ${VERDE}!!! Enhorabuena !!!"
+echo "${BLANCO}[${VERDE}*${BLANCO}] Todos los upadters funcionan."
+fi
+}
+
+LIMPIAR(){
+echo "${BLANCO}[${VERDE}*${BLANCO}] Limpiando directorio temporal ..."
+sleep 1
+rm -rf $TMP
+echo "${BLANCO}[${VERDE}*${BLANCO}] Bye Bye"
+echo $CIERRE
+}
+
+BUSQUEDA
+TEMPORAL
+MOSTRAR
+INFORME
+LIMPIAR
