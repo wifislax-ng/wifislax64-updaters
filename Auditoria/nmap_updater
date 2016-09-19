@@ -17,7 +17,7 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	WEB=https://nmap.org/dist
-	VERSION=`curl -s $WEB/|grep nmap-[0-9]|grep .tgz|tail -1|cut -d- -f3|cut -d "t" -f1|sed "s/.$//g"`
+	VERSION=`curl -s $WEB/|grep nmap-[0-9]|grep .tgz|grep -v BETA|tail -1|cut -d- -f3|cut -d "t" -f1|sed "s/.$//g"`
 	PRGNAM=nmap
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	EXTENSION=tar.bz2
