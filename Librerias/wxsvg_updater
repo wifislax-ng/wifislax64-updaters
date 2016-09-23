@@ -2,8 +2,9 @@
 
 # Script by www.seguridadwireless.net
 
+# This was required by dvdstyler and ever need the last version of library
+
 SCRIPT_VERSION=20160923
-CATEGORIA="Reproductores streaming"
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -17,40 +18,48 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=gradio
+	WEB=https://sourceforge.net/projects/wxsvg/files/wxsvg/
+	VERSION=`curl -s $WEB | grep /latest | cut -d '/' -f 8 | cut -d ":" -f 1 | cut -d '-' -f 2 | cut -d "t" -f-1`
+	PRGNAM=wxsvg
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/haecker-felix/gradio
-	VERSION=`curl -s $WEB/releases|grep .gz|grep v[0-9]|grep -v beta|head -1|cut -d / -f5|cut -d v -f2|cut -d t -f-1|sed 's/.$//g'`
-	EXTENSION=tar.gz
-	SOURCES=v${VERSION}.${EXTENSION}
-	DOWNLOAD=$WEB/archive/$SOURCES
+	EXTENSION=tar.bz2
+	SOURCES=$PRGNAM-$VERSION.$EXTENSION
+	DOWNLOAD=$WEB/$VERSION/$SOURCES
 }
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="json-glib libgee" 
+DEPENDENCIAS="wxPython ffmpeg"
 f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-echo 
+echo ""
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr ..
 
-echo 
+sh autogen.sh || true
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --with-wx-config=/usr/bin/wx-config \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --enable-static=no \
+  --enable-shared \
+  --build=$ARCH-slackware-linux
+  
+echo ""
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
-make || exit 1
+make  || exit 1
 make install DESTDIR=$PKG
-
-# Cambio en la categoria
-FICHERO=$PKG/usr/share/applications/gradio.desktop
-SECCION=`cat $FICHERO |grep Categories|cut -d '=' -f2`
-sed -i "s/$SECCION/AudioVideo/g" $FICHERO
 }
 
 ###################################
@@ -61,8 +70,6 @@ trap f_exitmode SIGHUP SIGINT
 
 #Inicializamos las variables globales
 f_variables
-#Asignamos o detectamos arquitectura
-f_arquitectura
 #Comprobamos conexion a Internet
 f_comprobarConexion
 #Inicializamos las variables del script
@@ -73,9 +80,11 @@ f_directorioTemporal
 f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
-#Comprobamos version instalada del paquete
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos version instalada del script
 f_versionInstalada
-#Compronar dependencias
+# Comprobar dependencias
 F_dependencias
 #Si no existe el fichero se descargara
 f_download
