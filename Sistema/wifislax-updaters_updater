@@ -2,7 +2,7 @@
 
 # Script for www.seguridadwireless.net by vk496
 
-SCRIPT_VERSION=20160912
+SCRIPT_VERSION=20160923
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -146,9 +146,11 @@ if [ $CREAR_MODULO = SI ]; then
    echo -ne "${CYAN} $ROJO$contador${CYAN} scripts$CIERRE"
    sleep 1
 
-   mkdir -p $PKG/usr/share/applications/wifislax/Actualizadores $PKG/opt/wifislax-updaters
+   mkdir -p $PKG/usr/share/applications/wifislax/Actualizadores $PKG/opt/{wifislax-updaters,wifislax-scripts} $PKG/usr/share/pixmaps
    cp -Ru /usr/share/applications/wifislax/Actualizadores/ $PKG/usr/share/applications/wifislax/
    cp -Ru /opt/wifislax-updaters/ $PKG/opt/
+   cp -Ru /usr/share/pixmaps/updaters.png $PKG/usr/share/pixmaps/
+   cp -Ru /opt/wifislax-scripts/base_updater $PKG/opt/wifislax-scripts/
    
 if [ -d $PKG/usr/share/applications/wifislax/Actualizadores/Funciones ]; then
    rm -rf $PKG/usr/share/applications/wifislax/Actualizadores/Funciones
