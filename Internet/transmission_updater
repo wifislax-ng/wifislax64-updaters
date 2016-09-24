@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160508
+SCRIPT_VERSION=20160924
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -18,11 +18,12 @@ f_variables(){
 F_variables() {
 	PRGNAM=transmission
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://www.transmissionbt.com/download/
-	VERSION=`curl -s $WEB|grep tar.xz|head -1|cut -d "-" -f2|cut -d "t" -f1|sed "s/.$//g"|sed "s/ //g"`
+	WEB=https://github.com/transmission/transmission-releases
+	VERSION=$(curl -s $WEB | grep tar\.xz | tail -1 | grep -Po 'href="\K.+(?=" class)' | rev | cut -d/ -f1 | rev| grep -Eo '[0-9]+(\.[0-9]+)')
+	SUFIX=$(curl -s $WEB | grep tar\.xz | tail -1 | grep -Po 'href="\K.+(?=" class)')
 	EXTENSION=tar.xz
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	DOWNLOAD=https://$PRGNAM.cachefly.net/$SOURCES
+	DOWNLOAD=$(echo "https://github.com$SUFIX" | sed 's/\/blob\//\/raw\//g')
 }
 
 #Compilando
