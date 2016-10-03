@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160331
+SCRIPT_VERSION=20161003
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -28,7 +28,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="mutagen gst-python0" 
+DEPENDENCIAS="mutagen gst0-python" 
 f_dependencias
 }
 
