@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160323
+SCRIPT_VERSION=20161028
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -29,7 +29,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="id3lib"
+DEPENDENCIAS="id3lib libmp4v2"
 f_dependencias
 }
 

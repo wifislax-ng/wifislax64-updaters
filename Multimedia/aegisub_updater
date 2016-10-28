@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20151024
+SCRIPT_VERSION=20161028
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -28,7 +28,7 @@ F_variables() {
 }
 
 F_dependencias(){
-DEPENDENCIAS="ffms2"
+DEPENDENCIAS="lua libass wxGTK3 ffms2 OpenAL portaudio"
 f_dependencias
 }
 
@@ -41,8 +41,7 @@ CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
-  --without-{portaudio,openal,oss} \
-  --disable-update-checker \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
   --build=$ARCH-slackware-linux
 
 make  || exit 1
