@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-FUNCIONES_VERSION=20161031
+FUNCIONES_VERSION=20161101
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -293,9 +293,9 @@ f_tareasFinales() {
    /etc/rc.d/rc.teamviewerd start &>/dev/null
    fi
    # Variables especiales para renombrar algunos modulos
-   FIRMSNUMBER=012-Extra
-   CHROMENUMBER=013-Extra
-   JAVANUMBER=014-Extra
+   FIRMSNUMBER=010-Extra
+   CHROMENUMBER=011-Extra
+   JAVANUMBER=012-Extra
    
    if [ $PRGNAM = jdk ]; then
    mv $HOME/Desktop/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm $HOME/Desktop/$CATEGORIA/${JAVANUMBER}_$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm
