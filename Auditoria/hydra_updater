@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160327
+SCRIPT_VERSION=20161031
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -25,8 +25,9 @@ F_variables() {
 	DOWNLOAD=http://www.thc.org/releases/$SOURCES
 }
 
+# Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="afpfs-ng"
+DEPENDENCIAS="afpfs-ng postgresql"
 f_dependencias
 }
 
@@ -174,7 +175,7 @@ f_comprobarUpdates
 f_arquitectura
 #Comprobamos version instalada del paquete
 f_versionInstalada
-#Compronar dependencias
+#Comprobar dependencias
 F_dependencias
 #Si no existe el fichero se descargara
 f_download
