@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160722
+SCRIPT_VERSION=20161031
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -29,7 +29,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="chromaprint cryptopp libechonest protobuf"
+DEPENDENCIAS="x264 twolame libmpeg2 libdvdcss lame opencore-amr amrnb amrwb libass libcdaudio celt libdc1394 libdca faac faad2 flite fluidsynth gsm libkate liblrdf libmodplug libmimic libmusicbrainz libofa libquicktime libwebp lv2 musepack-tools OpenAL opencv soundtouch swfdec xvidcore rtmpdump schroedinger TiMidity++ xvidcore chromaprint cryptopp libechonest protobuf gst-plugins-bad gst-plugins-ugly gst-libav sparsehash"
 f_dependencias
 }
 
