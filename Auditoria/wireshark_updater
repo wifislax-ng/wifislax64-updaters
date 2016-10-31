@@ -234,6 +234,8 @@ f_comprobarUpdates
 f_arquitectura
 #Comprobamos version instalada del script
 f_versionInstalada
+# Comprobar dependencias
+F_dependencias
 #Si no existe el fichero se descargara
 f_download
 #Preparamos entorno
