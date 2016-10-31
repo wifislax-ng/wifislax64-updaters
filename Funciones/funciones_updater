@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-FUNCIONES_VERSION=20161018
+FUNCIONES_VERSION=20161031
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -153,9 +153,17 @@ if [ -z "$BUSCAR" ]; then
 echo "${BLANCO}Dependencia ${AMARILLO}${D} ${ROJO}NO INSTALADA${BLANCO} ...resolviendo${CIERRE}."
 UPDATER=`echo "$(find /opt/wifislax-updaters/* -name ${D}_updater)"`
 if [ -z "$UPDATER" ]; then
-echo "${BLANCO}No hay updater para ${AMARILLO}${D}${BLANCO},no se puede continuar${CIERRE}."
+slapt-src -u &>/dev/null
+xterm -e sh -c "yes y | TAG=sw slapt-src -i ${D}"
+VERIFICAR=`echo "$(ls /var/log/packages|rev|cut -d '-' -f4-|rev|grep -x $D)"`
+if [ -z "$VERIFICAR" ]; then
+echo ""
+echo "${ROJO}No se puedo resolver la dependencia ${AMARILLO}${D}${CIERRE}."
 echo ""
 exit 1
+else
+echo "${BLANCO}Dependencia ${AMARILLO}${D} ${CYAN}RESUELTA${CIERRE}."
+fi
 else
 xterm -e sh -c "yes y | $UPDATER"
 VERIFICAR=`echo "$(ls /var/log/packages|rev|cut -d '-' -f4-|rev|grep -x $D)"`
@@ -312,10 +320,10 @@ f_tareasFinales() {
    fi
 
    # Comandos de sistema
-   /usr/bin/update-desktop-database -q /usr/share/applications &>/dev/null &
    /usr/bin/update-mime-database /usr/share/mime &>/dev/null &
    /usr/bin/gtk-update-icon-cache /usr/share/icons/hicolor &>/dev/null &
    /usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas &>/dev/null &
+   /usr/bin/update-desktop-database -q /usr/share/applications &>/dev/null &
    /usr/bin/fc-cache -f &>/dev/null &
    
    # Informe final
