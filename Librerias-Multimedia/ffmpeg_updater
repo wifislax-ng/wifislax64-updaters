@@ -27,7 +27,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="zeromq decklink-sdk libquvi libwebp libass libbluray celt libdc1394 faac libfdk-aac frei0r gsm libiec61883 libavc1394 libilbc openjpeg ladspa_sdk lame libmodplug OpenAL opencore-amr opencv opus rtmpdump schroedinger speex twolame vid.stab x264 x265 xvidcore zvbi"
+DEPENDENCIAS="zeromq decklink-sdk libquvi libwebp libass  libass libaacs libbluray celt libdc1394 faac libfdk-aac frei0r gsm libiec61883 libavc1394 libilbc ladspa_sdk lame libmodplug OpenAL opencore-amr opencv opus rtmpdump schroedinger speex twolame vid.stab x264 x265 xvidcore zvbi"
 f_dependencias
 }
 
