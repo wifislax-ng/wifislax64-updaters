@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161023
+SCRIPT_VERSION=20161101
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -28,7 +28,7 @@ F_variables() {
 }
 
 F_dependencias(){
-DEPENDENCIAS="faac faad2 lame libdca x264 xvidcore"
+DEPENDENCIAS="libffado celt aften amrnb jack-audio-connection-kit x265 faac faad2 lame libdca x264 xvidcore"
 f_dependencias
 }
 

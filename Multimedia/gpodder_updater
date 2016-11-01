@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160709
+SCRIPT_VERSION=20161101
 CATEGORIA="Reproductores streaming"
 
 ############################################################
@@ -17,13 +17,19 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
+	PRGNAM=gpodder
 	WEB=https://github.com/gpodder/gpodder
 	VERSION=`curl -s $WEB/releases|grep .tar.gz|head -1|cut -d- -f2|cut -d t -f-1|sed 's/.$//g'`
-	PRGNAM=gpodder
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	EXTENSION=tar.gz
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
 	DOWNLOAD=http://gpodder.org/src/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="mygpoclient feedparser"
+f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
@@ -56,6 +62,8 @@ f_comprobarUpdates
 f_arquitectura
 #Comprobamos version instalada del paquete
 f_versionInstalada
+# Comprobar dependencias
+F_dependencias
 #Si no existe el fichero se descargara
 f_download
 #Preparamos entorno

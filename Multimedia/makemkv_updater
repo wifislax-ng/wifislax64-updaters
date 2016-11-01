@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160410
+SCRIPT_VERSION=20161101
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -27,7 +27,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="aria2 ffmpeg" 
+DEPENDENCIAS="aria2 libxkbcommon ffmpeg" 
 f_dependencias
 }
 
@@ -90,12 +90,7 @@ find -L . \
 
 sed -i "s/^\(install:\).*/\1/" Makefile
 
-if [ "$ARCH" = "x86_64" ]; then
-ARCH=amd64
-else
-ARCH=i386
-fi
-make install ARCH=$ARCH ARCH_OK=1 DESTDIR=$PKG
+make install ARCH=amd64 ARCH_OK=1 DESTDIR=$PKG
 }
 
 ###################################

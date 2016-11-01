@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160416
+SCRIPT_VERSION=20161101
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -29,7 +29,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libshout portmidi scons protobuf portaudio" 
+DEPENDENCIAS="faad2 opencore-amr portaudio ffmpeg chromaprint libmp4v2 libshout portmidi rubberband protobuf" 
 f_dependencias
 }
 

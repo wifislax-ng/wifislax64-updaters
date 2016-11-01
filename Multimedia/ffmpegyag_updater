@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160709
+SCRIPT_VERSION=20161101
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -25,6 +25,12 @@ F_variables() {
 	EXTENSION=tar.gz
 	SOURCES=${PRGNAM}_${VERSION}_src.$EXTENSION
 	DOWNLOAD=${WEB}$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="wxPython ffmpeg"
+f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
@@ -70,6 +76,8 @@ f_comprobarUpdates
 f_arquitectura
 #Comprobamos version instalada del paquete
 f_versionInstalada
+# Comprobar dependencias
+F_dependencias
 #Si no existe el fichero se descargara
 f_download
 #Preparamos entorno
