@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160215
+SCRIPT_VERSION=20161031
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -31,7 +31,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libdiscid gst-plugins-base gst-plugins-good brasero hicolor-icon-theme iso-codes libmusicbrainz"
+DEPENDENCIAS="libdiscid brasero hicolor-icon-theme iso-codes libmusicbrainz"
 f_dependencias
 }
 

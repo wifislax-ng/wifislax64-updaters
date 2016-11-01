@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160219
+SCRIPT_VERSION=20161031
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -26,6 +26,12 @@ F_variables() {
 	EXTENSION=tar.gz
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
 	DOWNLOAD=${WEB}/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="libvorbis libmad libsamplerate liblo librubberband dssi lv2 liblilv nsm libffado celt jack-audio-connection-kit ladspa_sdk"
+f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
@@ -74,6 +80,8 @@ f_comprobarUpdates
 f_arquitectura
 #Comprobamos version instalada del paquete
 f_versionInstalada
+# Comprobar dependencias
+F_dependencias
 #Si no existe el fichero se descargara
 f_download
 #Preparamos entorno

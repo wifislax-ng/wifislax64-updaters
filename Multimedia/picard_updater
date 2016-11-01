@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160303
+SCRIPT_VERSION=20161031
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -29,7 +29,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="chromaprint mutagen"
+DEPENDENCIAS="ffmpeg chromaprint mutagen"
 f_dependencias
 }
 
