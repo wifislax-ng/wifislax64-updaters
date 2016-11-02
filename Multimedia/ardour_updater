@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161101
+SCRIPT_VERSION=20161102
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -27,7 +27,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libffado celt jack-audio-connection-kit ffmpeg aubio liblo liblrdf vamp-plugin-sdk rubberband lv2 serd sord sratom lilv"
+DEPENDENCIAS="libffado celt jack-audio-connection-kit ffmpeg aubio liblo liblrdf vamp-plugin-sdk rubberband lv2 serd sord sratom lilv gts graphviz"
 f_dependencias
 }
 
