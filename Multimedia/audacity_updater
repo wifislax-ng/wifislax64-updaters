@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161101
+SCRIPT_VERSION=20161102
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -29,7 +29,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libffado celt wxGTK3 jack-audio-connection-kit ffmpeg ladspa_sdk lame soundtouch twolame vamp-plugin-sdk lilv suil"
+DEPENDENCIAS="libiec61883 libxml++ libconfig libffado celt wxGTK3 jack-audio-connection-kit ffmpeg ladspa_sdk lame soundtouch twolame vamp-plugin-sdk serd sord lv2 sratom lilv suil"
 f_dependencias
 }
 
