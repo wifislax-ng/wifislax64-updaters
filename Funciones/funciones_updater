@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-FUNCIONES_VERSION=20161105
+FUNCIONES_VERSION=20161106
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -20,11 +20,15 @@ BUILD=${BUILD:-1}
 TAG=${TAG:-sw}
 CWD=$(pwd)
 
+# Miramos config de empaquetado
+CONFIG=/etc/wifislax-updaters/wifislax-updaters.conf
+PACKAGETYPE=$(cat $CONFIG|grep PACKAGETYPE|cut -d = -f2)
+
 # Set the values for some environment variables:
 export MAKEFLAGS="-j$(nproc --all)"
 
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
-rm -rf /opt/wifislax64-updaters/*/*~ &>/dev/null
+rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
 # Funcion que limpia
 f_exitmode() {
@@ -155,6 +159,14 @@ UPDATER=`echo "$(find /opt/wifislax-updaters/* -name ${D}_updater)"`
 if [ -z "$UPDATER" ]; then
 slapt-src -u &>/dev/null
 xterm -e sh -c "yes y | TAG=sw slapt-src -i ${D}"
+PACKDIR=`echo $(find /usr/src/slapt-src/ -name "${D}-*.txz")`
+XZMPACK=`echo $(find /usr/src/slapt-src/ -name "${D}-*.txz"|rev|cut -d / -f-1|rev|sed 's/.txz/.xzm/g')`
+GROUP=`echo $(find /usr/src/slapt-src/ -name "${D}-*.txz"|rev|cut -d / -f3|rev)`
+if [ ! "${PACKAGETYPE}" = disable ]; then
+if [ ! -d ${HOME}/Desktop/${PRGNAM}_depends ]; then
+mkdir -p ${HOME}/Desktop/${PRGNAM}_depends
+fi
+fi
 VERIFICAR=`echo "$(ls /var/log/packages|rev|cut -d '-' -f4-|rev|grep -x $D)"`
 if [ -z "$VERIFICAR" ]; then
 echo ""
@@ -162,8 +174,15 @@ echo "${ROJO}No se puedo resolver la dependencia ${AMARILLO}${D}${CIERRE}."
 echo ""
 exit 1
 else
+if [ "${PACKAGETYPE}" = txz ]; then
+mv -f "${PACKDIR}" "${HOME}/Desktop/${PRGNAM}_depends/"
+fi
+if [ "${PACKAGETYPE}" = xzm ]; then
+xterm -e sh -c "txz2xzm "${PACKDIR}" "${HOME}/Desktop/${PRGNAM}_depends/$XZMPACK""
+fi
 echo "${BLANCO}Dependencia ${AMARILLO}${D} ${CYAN}RESUELTA${CIERRE}."
 fi
+rm -rf /usr/src/slapt-src/${GROUP}/${D}
 else
 xterm -e sh -c "yes y | $UPDATER"
 VERIFICAR=`echo "$(ls /var/log/packages|rev|cut -d '-' -f4-|rev|grep -x $D)"`
@@ -262,62 +281,98 @@ f_preparar(){
 	-o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
 }
 
-# Creamos xzm , instalamos y salimos
-f_tareasFinales() {
-   # Si el sistema tiene una version anterior se eliminara
-   if [ "$INSTALADA" != "NO INSTALADA" ]; then
-      f_eliminaVersion
-   fi
-   echo ""
-   echo "$VERDE"Instalando y creando modulo xzm ..."$CIERRE"
-   sleep 1
+f_categoria(){
    # Guardamos los modulos en carpetas por categoria
    cd ..
    CATEGORIA=`echo "$(find /opt/wifislax-updaters/* -name ${PRGNAM}_updater| cut -d "/" -f4)"`
    if [ ! -d $HOME/Desktop/$CATEGORIA ]; then
    mkdir -p $HOME/Desktop/$CATEGORIA
    fi
+}
 
-   #Para sigram nos basamos en el log. Para el resto siempre es igual
-   if [ $PRGNAM = sigram ]; then
-	cleandir $PKG &>/dev/null
-	log2xzm $TMP/sigram.log $HOME/Desktop/$CATEGORIA/$PRGNAM-${VERSION}-$ARCH-$BUILD$TAG.xzm
-	xzm2dir $HOME/Desktop/$CATEGORIA/$PRGNAM-${VERSION}-$ARCH-$BUILD$TAG.xzm /
+f_xzm(){
+   ### Package xzm ###
+   if [ $PACKAGETYPE = xzm ]; then
+   echo ""
+   echo "$VERDE"Instalando y creando modulo ${AMARILLO}xzm ..."$CIERRE"
+   sleep 1
+
+   f_categoria
+   
+   #Creamos paquete
+   cleandir $PKG &>/dev/null
+   dir2xzm $PKG $HOME/Desktop/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm
+   xzm2dir $HOME/Desktop/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm /
+   fi
+}
+ 
+f_txz(){
+   ### Package txz ###
+   if [ $PACKAGETYPE = txz ]; then
+   echo ""
+   echo "$VERDE"Instalando y creando paquete ${AMARILLO}txz ..."$CIERRE"
+   sleep 1
+   
+   f_categoria
+   
+   #Creamos paquete
+   cd $PKG
+   cleandir $PKG &>/dev/null
+   /sbin/makepkg -l y -c n $HOME/Desktop/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
+   installpkg $HOME/Desktop/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
+   fi
+}
+
+f_disable(){
+   ### Package disabled ###
+   if [ $PACKAGETYPE = disable ]; then
+   echo ""
+   echo "$VERDE"Instalando ..."$CIERRE"
+   sleep 1
+   
+   #Creamos paquete
+   cd $PKG
+   cleandir $PKG &>/dev/null
+   /sbin/makepkg -l y -c n /tmp/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
+   installpkg /tmp/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
+   rm -rf /tmp/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
+   fi
+}
+
+# Creamos xzm , instalamos y salimos
+f_tareasFinales() {
+
+   # Si el sistema tiene una version anterior se eliminara
+   if [ "$INSTALADA" != "NO INSTALADA" ]; then
+      f_eliminaVersion
+   fi
+   
+   BUSQUEDA=`echo $PRGNAM|rev`
+   SLACKWEB=https://slackbuilds.org
+   SLACKVER=`curl -s $SLACKWEB/|grep repository/[0-9]|cut -d / -f3`
+   SECTION=`cat /etc/wifislax-updaters/SLACKBUILDS.TXT|grep LOCATION|rev|grep "^$BUSQUEDA/"|cut -d / -f2|rev`
+   DESC=`curl -s $SLACKWEB/slackbuilds/$SLACKVER/$SECTION/${PRGNAM}/slack-desc`
+   
+   #Incluir slack-desk
+   if [ ! -z "$SECTION" ]; then
+   mkdir -p $PKG/install
+   echo "$DESC" > $PKG/install/slack-desc
+   fi
+   
+   #Ejecutamos funcion segun config
+   if [ $PACKAGETYPE = xzm ]; then
+   f_xzm
+   elif [ $PACKAGETYPE = txz ]; then
+   f_txz
    else
-	cleandir $PKG &>/dev/null
-	dir2xzm $PKG $HOME/Desktop/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm
-	xzm2dir $HOME/Desktop/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm /
-   fi
-   # Iniciar algun servicio si existe
-   if [ $PRGNAM = teamviewer ]; then
-   /etc/rc.d/rc.teamviewerd start &>/dev/null
-   fi
-   # Variables especiales para renombrar algunos modulos
-   FIRMSNUMBER=017-Extra
-   CHROMENUMBER=018-Extra
-   JAVANUMBER=012-Extra
-   
-   if [ $PRGNAM = jdk ]; then
-   mv $HOME/Desktop/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm $HOME/Desktop/$CATEGORIA/${JAVANUMBER}_$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm
-   fi
-
-   if [ $PRGNAM = "google-chrome" ]; then
-   mv $HOME/Desktop/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm $HOME/Desktop/$CATEGORIA/${CHROMENUMBER}_$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm
-   fi
-   
-   if [ $PRGNAM = firmwares ]; then
-   mv $HOME/Desktop/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm $HOME/Desktop/$CATEGORIA/${FIRMSNUMBER}_$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm
-   fi
+   f_disable
+   fi  
 
    rm -Rf $TMP &>/dev/null
    clear
    
    # Actualizar sistema mimetypes schemas etc
    echo ""$VERDE"Actualizando sistema$BLANCO...$CIERRE"
-   
-   if [ $PRGNAM = metasploit ]; then
-       /etc/rc.d/rc.metasploit start &> /dev/null
-   fi
 
    # Comandos de sistema
    /usr/bin/update-mime-database /usr/share/mime &>/dev/null &
@@ -327,11 +382,24 @@ f_tareasFinales() {
    /usr/bin/fc-cache -f &>/dev/null &
     ldconfig &>/dev/null
    
+   # Iniciar algun servicio si existe
+   if [ $PRGNAM = metasploit ]; then
+       /etc/rc.d/rc.metasploit start &> /dev/null
+   fi
+   
+   if [ $PRGNAM = teamviewer ]; then
+       /etc/rc.d/rc.teamviewerd start &>/dev/null
+   fi
+   
    # Informe final
    clear
-   echo ""$VERDE"Creado modulo del paquete "$AMARILLO"$PRGNAM-$VERSION"$CIERRE""
+   if [ $PACKAGETYPE = disable ]; then
+   echo ""$VERDE"Instalado paquete "$AMARILLO"$PRGNAM-$VERSION"$CIERRE""
    echo ""
-   
+   else
+   echo ""$VERDE"Instalado y Creado paquete "$AMARILLO"$PRGNAM-$VERSION"$CIERRE""
+   echo ""
+   fi
    # Variables para calcular tiempo de acabado
    AHORA=$(($(date +%s)-3600));
    TIEMPO="$(date --date=@$(($AHORA-$COMIENZO)) +%X)"
