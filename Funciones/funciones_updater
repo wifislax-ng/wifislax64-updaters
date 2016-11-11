@@ -17,7 +17,7 @@ ROSA=${ROSA:-"[1;35m"}
 PRGNAM=funciones
 VERSION=$FUNCIONES_VERSION
 BUILD=${BUILD:-1}
-TAG=${TAG:-sw}
+TAG=${TAG:-wifislax}
 CWD=$(pwd)
 
 # Miramos config de empaquetado
