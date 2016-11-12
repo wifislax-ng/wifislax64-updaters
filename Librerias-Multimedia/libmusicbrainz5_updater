@@ -3,7 +3,6 @@
 # Script by www.seguridadwireless.net
 
 SCRIPT_VERSION=20161112
-CATEGORIA="Editores de audio"
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -17,21 +16,19 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=sound-juicer
+	PRGNAM=libmusicbrainz5
+	SRCNAM=libmusicbrainz
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=http://ftp.gnome.org/pub/gnome/sources/$PRGNAM/
-	#RAMA=`curl -s $WEB|grep [0-9]/|tail -1|rev|cut -d '=' -f-1|rev|cut -d / -f-1|rev|sed 's/.$//g'|rev`
-	#VERSION=`curl -s ${WEB}$RAMA/|grep tar.xz|tail -1|cut -d- -f3|cut -d t -f-1|sed 's/.$//g'`
-	RAMA=3.18
-	VERSION=3.18.1
-	EXTENSION=tar.xz
-	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	DOWNLOAD=${WEB}$RAMA/$SOURCES
+	WEB=https://github.com/metabrainz/libmusicbrainz/releases/download/release-5.1.0
+	VERSION=5.1.0
+	EXTENSION=tar.gz
+	SOURCES=$SRCNAM-$VERSION.$EXTENSION
+	DOWNLOAD=$WEB/$SOURCES
 }
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libdiscid brasero hicolor-icon-theme iso-codes libmusicbrainz5"
+DEPENDENCIAS="cppunit"
 f_dependencias
 }
 
@@ -40,19 +37,23 @@ F_compilar(){
 echo 
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
-CFLAGS="$SLKCFLAGS" \
-CXXFLAGS="$SLKCFLAGS" \
-./configure \
-  --prefix=/usr \
-  --libdir=/usr/lib${LIBDIRSUFFIX} \
-  --sysconfdir=/etc \
-  --localstatedir=/var
+
+mkdir -p build
+cd build
+  cmake \
+    -DCMAKE_INSTALL_PREFIX:PATH=/usr \
+    -DLIB_SUFFIX=${LIBDIRSUFFIX} \
+    -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_BUILD_TYPE=Release ..
 
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
-make || exit 1
-make install DESTDIR=$PKG
+
+  make VERBOSE=1 || exit 1
+  make install DESTDIR=$PKG
+cd -
 }
 
 ###################################
@@ -63,6 +64,8 @@ trap f_exitmode SIGHUP SIGINT
 
 #Inicializamos las variables globales
 f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
 #Comprobamos conexion a Internet
 f_comprobarConexion
 #Inicializamos las variables del script
@@ -73,8 +76,6 @@ f_directorioTemporal
 f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
-#Asignamos o detectamos arquitectura
-f_arquitectura
 #Comprobamos version instalada del paquete
 f_versionInstalada
 #Compronar dependencias
