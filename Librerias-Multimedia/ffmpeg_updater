@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161101
+SCRIPT_VERSION=20161112
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,7 +19,8 @@ F_variables() {
 	PRGNAM=ffmpeg
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=http://ffmpeg.org/releases
-	VERSION=`curl -s $WEB/|grep $PRGNAM-2.8.[0-9]|tail -1|cut -d- -f2|cut -d t -f-1|sed 's/.$//g'`
+	#VERSION=`curl -s $WEB/|grep $PRGNAM-2.8.[0-9]|tail -1|cut -d- -f2|cut -d t -f-1|sed 's/.$//g'`
+	VERSION=`curl -s $WEB/|grep $PRGNAM-[0-9]|tail -1|cut -d- -f2|cut -d t -f-1|sed 's/.$//g'`
 	EXTENSION=tar.xz
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
 	DOWNLOAD=$WEB/$SOURCES
@@ -27,7 +28,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="zeromq decklink-sdk libquvi libwebp libass  libass libaacs libbluray celt libdc1394 faac libfdk-aac frei0r gsm libiec61883 libavc1394 libilbc ladspa_sdk lame libmodplug OpenAL opencore-amr opencv opus rtmpdump schroedinger speex twolame vid.stab x264 x265 xvidcore zvbi"
+DEPENDENCIAS="libmp4v2 zeromq decklink-sdk libquvi-scripts libquvi libwebp libass libass libaacs libbluray celt libdc1394 faac libfdk-aac frei0r gsm libiec61883 libavc1394 libilbc ladspa_sdk lame libmodplug OpenAL opencore-amr opencv opus rtmpdump schroedinger speex twolame vid.stab x264 x265 xvidcore zvbi"
 f_dependencias
 }
 
@@ -50,7 +51,6 @@ CXXFLAGS="$SLKCFLAGS -I/usr/include/openmj2-2.1" \
     --disable-doc \
     --enable-avisynth \
     --enable-avresample \
-    --enable-decklink \
     --enable-fontconfig \
     --enable-gnutls \
     --enable-gpl \
@@ -67,7 +67,6 @@ CXXFLAGS="$SLKCFLAGS -I/usr/include/openmj2-2.1" \
     --enable-libopenjpeg \
     --enable-libopus \
     --enable-libpulse \
-    --enable-libquvi \
     --enable-libschroedinger \
     --enable-libspeex \
     --enable-libssh \
