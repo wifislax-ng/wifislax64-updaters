@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161031
+SCRIPT_VERSION=20161112
 CATEGORIA=Grabacion
 
 ############################################################
@@ -29,7 +29,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="amrnb amrwb libass libcdaudio celt libdc1394 libdca faac faad2 flite fluidsynth gsm libkate liblrdf libmodplug libmimic libmusicbrainz libofa libquicktime libwebp lv2 musepack-tools OpenAL opencv soundtouch swfdec xvidcore rtmpdump schroedinger TiMidity++ xvidcore gst-plugins-bad libburn libisofs totem-pl-parser"
+DEPENDENCIAS="amrnb amrwb libass libcdaudio celt libdc1394 libdca faac faad2 flite fluidsynth gsm libkate liblrdf libmodplug libmimic libmusicbrainz libofa libquicktime libwebp lv2 libcuefile libreplaygain musepack-tools OpenAL opencv soundtouch swfdec xvidcore rtmpdump schroedinger TiMidity++ xvidcore gst-plugins-bad libburn libisofs totem-pl-parser"
 f_dependencias
 }
 

@@ -27,7 +27,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="faac faad2 ffmpeg lame libdv schroedinger x264"
+DEPENDENCIAS="libmp4v2 faac faad2 ffmpeg lame libdv schroedinger x264"
 f_dependencias
 }
 
