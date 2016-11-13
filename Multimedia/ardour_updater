@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161102
+SCRIPT_VERSION=20161113
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -67,7 +67,7 @@ echo "[Desktop Entry]
 Name=Ardour $RAMA
 Comment=Multitrack hard disk recorder
 Exec=ardour$RAMA
-Icon=/usr/share/ardour$RAMA/icons/ardour_icon_256px.png
+Icon=/usr/share/ardour$RAMA/icons/ardour-app-icon_osx.png
 Terminal=false
 Type=Application
 X-MultipleArgs=false
