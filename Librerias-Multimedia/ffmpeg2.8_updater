@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161113
+SCRIPT_VERSION=20161112
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -16,13 +16,13 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=ffmpeg
-	echo -ne "\033]2;${PRGNAM}_updater\007"
+	PRGNAM=ffmpeg2.8
+	SRCNAM=ffmpeg
+	echo -ne "\033]2;${SRCNAM}_updater\007"
 	WEB=http://ffmpeg.org/releases
-	#VERSION=`curl -s $WEB/|grep $PRGNAM-2.8.[0-9]|tail -1|cut -d- -f2|cut -d t -f-1|sed 's/.$//g'`
-	VERSION=`curl -s $WEB/|grep $PRGNAM-[0-9]|tail -1|cut -d- -f2|cut -d t -f-1|sed 's/.$//g'`
+	VERSION=2.8.8
 	EXTENSION=tar.xz
-	SOURCES=$PRGNAM-$VERSION.$EXTENSION
+	SOURCES=$SRCNAM-$VERSION.$EXTENSION
 	DOWNLOAD=$WEB/$SOURCES
 }
 
@@ -34,21 +34,17 @@ f_dependencias
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-# Fix linking with flite
-sed -i "s| -lflite\"| -lflite -lm -lasound\"|" \
-  ./configure
-
 SLKCFLAGS="$SLKCFLAGS -I/usr/include/decklink" \
 CFLAGS="$SLKCFLAGS -I/usr/include/openmj2-2.1" \
 CXXFLAGS="$SLKCFLAGS -I/usr/include/openmj2-2.1" \
   ./configure \
     --prefix=/usr \
-    --libdir=/usr/lib${LIBDIRSUFFIX} \
-    --shlibdir=/usr/lib${LIBDIRSUFFIX} \
+    --incdir=/usr/include/ffmpeg2.8 \
+    --libdir=/usr/lib${LIBDIRSUFFIX}/ffmpeg2.8 \
+    --shlibdir=/usr/lib${LIBDIRSUFFIX}/ffmpeg2.8 \
     --disable-debug \
     --disable-static \
     --disable-stripping \
-    --disable-doc \
     --enable-avisynth \
     --enable-avresample \
     --enable-fontconfig \
@@ -57,6 +53,7 @@ CXXFLAGS="$SLKCFLAGS -I/usr/include/openmj2-2.1" \
     --enable-ladspa \
     --enable-libass \
     --enable-libbluray \
+    --enable-libdcadec \
     --enable-libfreetype \
     --enable-libfribidi \
     --enable-libgsm \
@@ -80,16 +77,13 @@ CXXFLAGS="$SLKCFLAGS -I/usr/include/openmj2-2.1" \
     --enable-libx264 \
     --enable-libx265 \
     --enable-libxvid \
-    --enable-libzmq \
-    --enable-nonfree \
-    --enable-openssl \
     --enable-shared \
     --enable-version3 \
     --enable-x11grab
 
   make || exit 1
-  make tools/qt-faststart || exit 1
   make install DESTDIR=$PKG
+  rm -rf $PKG/usr/{bin,share}
 }
 
 ###################################
