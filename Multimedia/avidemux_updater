@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161101
+SCRIPT_VERSION=20161120
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -46,8 +46,8 @@ cmake \
   -DCMAKE_INSTALL_PREFIX=/usr \
   -DFAKEROOT="$PKG" \
   ../avidemux_core
-make -j 1
-make -j 1 install DESTDIR=$PKG
+  make || exit 1
+  make install DESTDIR=$PKG
 cd ..
 
 
@@ -59,8 +59,8 @@ cd ..
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DFAKEROOT="$PKG" \
     ../avidemux/qt4
-  make -j 1
-  make -j 1 install DESTDIR=$PKG
+    make || exit 1
+    make install DESTDIR=$PKG
   cd ..
 
   mkdir -p build_cli
@@ -71,8 +71,8 @@ cd ..
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DFAKEROOT="$PKG" \
     ../avidemux/cli
-  make -j 1
-  make -j 1 install DESTDIR=$PKG
+    make || exit 1
+    make install DESTDIR=$PKG
   cd ..
 
 mkdir -p build_plugins_common
@@ -85,8 +85,8 @@ cd build_plugins_common
     -DPLUGIN_UI=COMMON \
     -DFAKEROOT="$PKG" \
     ../avidemux_plugins
-  make -j 1
-  make -j 1 install DESTDIR=$PKG
+  make || exit 1
+  make install DESTDIR=$PKG
 cd ..
 
 
@@ -100,8 +100,8 @@ cd ..
     -DPLUGIN_UI=QT4 \
     -DFAKEROOT="$PKG" \
     ../avidemux_plugins
-  make -j 1
-  make -j 1 install DESTDIR=$PKG
+  make || exit 1
+  make install DESTDIR=$PKG
   cd ..
 
 
@@ -115,8 +115,8 @@ cd ..
     -DPLUGIN_UI=CLI \
     -DFAKEROOT="$PKG" \
     ../avidemux_plugins
-  make -j 1
-  make -j 1 install DESTDIR=$PKG
+  make || exit 1
+  make install DESTDIR=$PKG
   cd ..
 
 mkdir -p $PKG/usr/share/applications
