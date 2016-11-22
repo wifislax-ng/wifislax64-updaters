@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161112
+SCRIPT_VERSION=20161122
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -28,7 +28,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="soxr libmp4v2 zeromq decklink-sdk libquvi-scripts libquvi libwebp libass libass libaacs libbluray celt libdc1394 faac libfdk-aac frei0r gsm libiec61883 libavc1394 libilbc ladspa_sdk lame libmodplug OpenAL opencore-amr opencv opus rtmpdump schroedinger speex twolame vid.stab x264 x265 xvidcore zvbi"
+DEPENDENCIAS="dcadec soxr libmp4v2 zeromq decklink-sdk libquvi-scripts libquvi libwebp libass libass libaacs libbluray celt libdc1394 faac libfdk-aac frei0r gsm libiec61883 libavc1394 libilbc ladspa_sdk lame libmodplug OpenAL opencore-amr opencv opus rtmpdump schroedinger speex twolame vid.stab x264 x265 xvidcore zvbi"
 f_dependencias
 }
 
