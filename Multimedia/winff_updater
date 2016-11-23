@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160508
+SCRIPT_VERSION=20161123
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -26,7 +26,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="lazarus"
+DEPENDENCIAS="ffmpeg fpc fpc-source lazarus"
 f_dependencias
 }
 

@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161113
+SCRIPT_VERSION=20161123
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -28,67 +28,61 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="soxr libmp4v2 zeromq decklink-sdk libquvi-scripts libquvi libwebp libass libass libaacs libbluray celt libdc1394 faac libfdk-aac frei0r gsm libiec61883 libavc1394 libilbc ladspa_sdk lame libmodplug OpenAL opencore-amr opencv opus rtmpdump schroedinger speex twolame vid.stab x264 x265 xvidcore zvbi"
+DEPENDENCIAS="SDL2 soxr libmp4v2 zeromq decklink-sdk libquvi-scripts libquvi libwebp libass libass libaacs libbluray celt libdc1394 faac libfdk-aac frei0r gsm libiec61883 libavc1394 libilbc ladspa_sdk lame libmodplug OpenAL opencore-amr opencv opus rtmpdump schroedinger speex twolame vid.stab x264 x265 xvidcore zvbi"
 f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-# Fix linking with flite
-sed -i "s| -lflite\"| -lflite -lm -lasound\"|" \
-  ./configure
 
-SLKCFLAGS="$SLKCFLAGS -I/usr/include/decklink" \
-CFLAGS="$SLKCFLAGS -I/usr/include/openmj2-2.1" \
-CXXFLAGS="$SLKCFLAGS -I/usr/include/openmj2-2.1" \
-  ./configure \
-    --prefix=/usr \
-    --libdir=/usr/lib${LIBDIRSUFFIX} \
-    --shlibdir=/usr/lib${LIBDIRSUFFIX} \
-    --disable-debug \
-    --disable-static \
-    --disable-stripping \
-    --disable-doc \
-    --enable-avisynth \
-    --enable-avresample \
-    --enable-fontconfig \
-    --enable-gnutls \
-    --enable-gpl \
-    --enable-ladspa \
-    --enable-libass \
-    --enable-libbluray \
-    --enable-libfreetype \
-    --enable-libfribidi \
-    --enable-libgsm \
-    --enable-libmodplug \
-    --enable-libmp3lame \
-    --enable-libopencore_amrnb \
-    --enable-libopencore_amrwb \
-    --enable-libopenjpeg \
-    --enable-libopus \
-    --enable-libpulse \
-    --enable-libschroedinger \
-    --enable-libsoxr \
-    --enable-libspeex \
-    --enable-libssh \
-    --enable-libtheora \
-    --enable-libv4l2 \
-    --enable-libvidstab \
-    --enable-libvorbis \
-    --enable-libvpx \
-    --enable-libwebp \
-    --enable-libx264 \
-    --enable-libx265 \
-    --enable-libxvid \
-    --enable-libzmq \
-    --enable-nonfree \
-    --enable-openssl \
-    --enable-shared \
-    --enable-version3 \
-    --enable-x11grab
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
 
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --shlibdir=/usr/lib${LIBDIRSUFFIX} \
+  --docdir=/usr/doc/${PRGNAM}-${VERSION} \
+  --mandir=/usr/man \
+  --enable-gpl \
+  --enable-version3 \
+  --enable-avfilter \
+  --enable-avresample \
+  --enable-libass \
+  --enable-libdc1394 \
+  --enable-libgsm \
+  --enable-libopencore-amrnb \
+  --enable-libopencore-amrwb \
+  --enable-libopus \
+  --enable-libschroedinger \
+  --enable-libspeex \
+  --enable-libtheora \
+  --enable-libv4l2 \
+  --enable-libvorbis \
+  --enable-libvpx \
+  --enable-libx264 \
+  --enable-libx265 \
+  --enable-libzvbi \
+  --enable-postproc \
+  --enable-runtime-cpudetect \
+  --enable-vaapi \
+  --enable-vdpau \
+  --enable-memalign-hack \
+  --enable-pthreads \
+  --enable-x11grab \
+  --enable-bzlib \
+  --enable-zlib \
+  --enable-shared \
+  --enable-static \
+  --disable-debug \
+  --enable-libmp3lame \
+  --enable-libfdk-aac \
+  --enable-openssl \
+  --enable-nonfree \
+  --arch=x86_64 --enable-pic \
+  --pkg-config-flags="--static" 
+  
   make || exit 1
-  make tools/qt-faststart || exit 1
   make install DESTDIR=$PKG
 }
 
