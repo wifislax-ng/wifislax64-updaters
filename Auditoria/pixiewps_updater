@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160208
+SCRIPT_VERSION=20161203
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,16 +19,20 @@ F_variables() {
 	PRGNAM=pixiewps
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/wiire/pixiewps
-	VERSION=`curl -s $WEB/releases|grep tar.gz|head -1|cut -d v -f3|cut -d t -f-1|sed 's/.$//g'`
-	EXTENSION=tar.gz
-	SOURCES=v$VERSION.$EXTENSION
-	DOWNLOAD=$WEB/archive/$SOURCES
+	VERSION=$(curl -s $WEB/releases|grep tar.gz|head -1|cut -d v -f3|cut -d t -f-1|sed 's/.$//g')_$(curl -s $WEB|grep /commit/|head -1|rev|cut -d / -f-1|rev|cut -c 1-7)
+	DOWNLOAD="git clone $WEB.git"
 }
+
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 
-cd ./src
+if [ -d $TMP/$PRGNAM ]; then
+rm -rf $TMP/$PRGNAM
+fi
+
+$DOWNLOAD
+cd $TMP/$PRGNAM/src
 
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
@@ -39,7 +43,7 @@ sleep 1
 sed -i 's,/local,,g' Makefile
 make  || exit 1
 mkdir -p $PKG/usr/bin/
-cp -rf $TMP/${PRGNAM}-$VERSION/src/${PRGNAM}  $PKG/usr/bin/
+cp -rf $TMP/$PRGNAM/src/${PRGNAM}  $PKG/usr/bin/
 }
 
 ###################################
@@ -62,13 +66,9 @@ f_presentacion
 f_comprobarUpdates
 #Asignamos o detectamos arquitectura
 f_arquitectura
-#Comprobamos version instalada del paquete
+#Comprobamos version instalada del script
 f_versionInstalada
-#Si no existe el fichero se descargara
-f_download
-#Preparar entorno
-f_preparar
-#Descomprimir fichero descargado y compilamos
+#Compilamos
 F_compilar
 #Hacemos strip sobre el paquete
 f_strip
