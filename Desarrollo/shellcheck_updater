@@ -1,0 +1,101 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20161206
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=shellcheck
+	SRCNAM=ShellCheck
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://github.com/koalaman/shellcheck
+	VERSION=$(curl -s $WEB/releases|grep tar.gz|head -1|rev|cut -d / -f-1|rev|cut -d v -f2|cut -d t -f-1|sed 's/.$//g')
+	EXTENSION=tar.gz
+	SOURCES=v$VERSION.$EXTENSION
+	DOWNLOAD=https://github.com/koalaman/shellcheck/archive/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="ghc haskell-base16-bytestring haskell-random haskell-tar haskell-zlib haskell-stm haskell-async haskell-extensible-exceptions haskell-text haskell-hashable haskell-mtl haskell-text haskell-parsec haskell-network-uri haskell-network haskell-HTTP haskell-cabal-install haskell-syb haskell-json haskell-regex-base haskell-regex-tdfa haskell-random haskell-primitive haskell-tf-random haskell-QuickCheck"
+f_dependencias
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
+sleep 1
+
+GHC_VERSION=$(ghc --numeric-version)
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+runghc Setup configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --libsubdir=ghc-${GHC_VERSION}/$PRGNAM-$VERSION \
+  --enable-shared \
+  --enable-library-profiling \
+  --docdir=/usr/doc/$PRGNAM-$VERSION
+
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
+sleep 1
+
+runghc Setup build
+runghc Setup haddock
+runghc Setup copy --destdir=$PKG
+runghc Setup register --gen-pkg-config
+
+PKGCONFD=/usr/lib${LIBDIRSUFFIX}/ghc-${GHC_VERSION}/package.conf.d
+PKGID=$( grep -E "^id: " $SRCNAM-$VERSION.conf | cut -d" " -f2 )
+mkdir -p $PKG/$PKGCONFD
+mv $SRCNAM-$VERSION.conf $PKG/$PKGCONFD/$PKGID.conf
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Comprobamos version instalada del paquete
+f_versionInstalada
+#Compronar dependencias
+F_dependencias
+#Si no existe el fichero se descargara
+f_download
+#Preparamos entorno
+f_preparar
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales
