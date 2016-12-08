@@ -16,35 +16,24 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=mitmf
-	SRCNAM=MITMf
+	PRGNAM=capstone
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/byt3bl33d3r/MITMf
-	RAMA=`curl -s $WEB/releases|grep .gz|head -1|cut -d / -f5|cut -d t -f-1|sed 's/v//g'|sed 's/.$//g'|sed 's/<m_//g'`
-	VERSION=`echo ${RAMA}_"$(curl -s $WEB|grep commit/|head -1|rev|cut -d / -f1|cut -d '"' -f2|rev|cut -c1-7)"`
-}
-
-# Comprobar dependencias
-F_dependencias(){
-DEPENDENCIAS="capstone pip pyinotify pycrypto pyasn1 pyasn1-modules enum34 ipaddress six pycparser cffi idna cryptography python-pillow MarkupSafe docutils Jinja2 Pygments Sphinx python-netaddr scapy zope.interface python-twisted BeautifulSoup4 html5lib lxml python-future pefile pyOpenSSL characteristic attrs service_identity configobj click itsdangerous werkzeug Jinja2 dnspython BeautifulSoup4 python-magic msgpack-python python-requests python-chardet"
-f_dependencias
+	WEB=https://github.com/aquynh/capstone/archive
+	VERSION=3.0.4
+	EXTENSION=tar.gz
+	SOURCES="${VERSION}"."${EXTENSION}"
+	DOWNLOAD="${WEB}/${SOURCES}"
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-mkdir -p $PKG/opt
-cd $PKG/opt
-echo
-git clone $WEB
-cd MITMf && git submodule init && git submodule update --recursive
-echo 'git+git://github.com/kti/python-netfilterqueue
-dnslib
-ipy
-user_agents
-pypcap' > $PKG/opt/$SRCNAM/requirements.txt
-pip install --disable-pip-version-check --no-cache-dir --install-option="--prefix=$PKG/usr" -r $PKG/opt/$SRCNAM/requirements.txt
-rm -rf $PKG/opt/$SRCNAM/.git
-chmod +x $PKG/opt/$SRCNAM/mitmf.py
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
+sleep 1
+
+make LIBDIRARCH=lib64 DESTDIR="${PKG}" install
+cd "${TMP}/$PRGNAM-${VERSION}/bindings/python"
+python setup.py install -O1 --root="${PKG}" --prefix=/usr
 }
 
 ###################################
@@ -55,6 +44,8 @@ trap f_exitmode SIGHUP SIGINT
 
 #Inicializamos las variables globales
 f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
 #Comprobamos conexion a Internet
 f_comprobarConexion
 #Inicializamos las variables del script
@@ -65,13 +56,15 @@ f_directorioTemporal
 f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
-#Asignamos o detectamos arquitectura
-f_arquitectura
 #Comprobamos version instalada del paquete
 f_versionInstalada
-# Comprobar dependencias
-F_dependencias
+#Si no existe el fichero se descargara
+f_download
+#Preparamos entorno
+f_preparar
 #Descomprimir fichero descargado y compilamos
 F_compilar
+#Hacemos strip sobre el paquete
+f_strip
 #Creamos xzm , instalamos y salimos
 f_tareasFinales
