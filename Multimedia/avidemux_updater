@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161120
+SCRIPT_VERSION=20161209
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -24,7 +24,7 @@ F_variables() {
 	SRCNAM=${PRGNAM}_${VERSION}
 	EXTENSION=tar.gz
 	SOURCES=${PRGNAM}_${VERSION}.$EXTENSION
-	DOWNLOAD=`curl -s http://www.fosshub.com/Avidemux.html/$SOURCES|grep tar\.gz|grep -Po 'src="\K.*(?=">)'`
+	DOWNLOAD=https://downloads.sourceforge.net/avidemux/$SOURCES
 }
 
 F_dependencias(){
@@ -46,8 +46,8 @@ cmake \
   -DCMAKE_INSTALL_PREFIX=/usr \
   -DFAKEROOT="$PKG" \
   ../avidemux_core
-  make || exit 1
-  make install DESTDIR=$PKG
+make || exit 1
+make install DESTDIR=$PKG
 cd ..
 
 
@@ -59,8 +59,8 @@ cd ..
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DFAKEROOT="$PKG" \
     ../avidemux/qt4
-    make || exit 1
-    make install DESTDIR=$PKG
+  make || exit 1
+  make install DESTDIR=$PKG
   cd ..
 
   mkdir -p build_cli
@@ -71,8 +71,8 @@ cd ..
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DFAKEROOT="$PKG" \
     ../avidemux/cli
-    make || exit 1
-    make install DESTDIR=$PKG
+  make || exit 1
+  make install DESTDIR=$PKG
   cd ..
 
 mkdir -p build_plugins_common
