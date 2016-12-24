@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161112
+SCRIPT_VERSION=20161224
 CATEGORIA="Reproductores streaming"
 
 ############################################################
@@ -37,9 +37,16 @@ F_compilar(){
 echo 
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+
+./autogen.sh
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --mandir=/usr/man \
+  --build=$ARCH-slackware-linux
 
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
@@ -49,6 +56,7 @@ make install DESTDIR=$PKG
 
 # Cambio en la categoria
 FICHERO=$PKG/usr/share/applications/gradio.desktop
+mv -f $PKG/usr/share/applications/*.desktop $PKG/usr/share/applications/gradio.desktop
 SECCION=`cat $FICHERO |grep Categories|cut -d '=' -f2`
 sed -i "s/$SECCION/AudioVideo/g" $FICHERO
 }
