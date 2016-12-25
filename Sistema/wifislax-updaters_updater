@@ -2,7 +2,7 @@
 
 # Script for www.seguridadwireless.net by vk496
 
-SCRIPT_VERSION=20160923
+SCRIPT_VERSION=20161225
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -54,6 +54,9 @@ else
   rm -Rf rm -Rf /tmp/$PRGNAM
   mkdir -p /tmp/$PRGNAM
 fi
+
+# Necesario para que funciones calcule el tiempo
+COMIENZO=$(date +%s)
 
 git clone $WEB /tmp/$PRGNAM 2>/dev/null || exit 1
 
@@ -146,11 +149,14 @@ if [ $CREAR_MODULO = SI ]; then
    echo -ne "${CYAN} $ROJO$contador${CYAN} scripts$CIERRE"
    sleep 1
 
-   mkdir -p $PKG/usr/share/applications/wifislax/Actualizadores $PKG/opt/{wifislax-updaters,wifislax-scripts} $PKG/usr/share/pixmaps
+   mkdir -p $PKG/usr/bin/ $PKG/usr/share/applications/wifislax/Actualizadores $PKG/opt/{wifislax-updaters,wifislax-scripts} $PKG/usr/share/pixmaps $PKG/etc/wifislax-updaters
    cp -Ru /usr/share/applications/wifislax/Actualizadores/ $PKG/usr/share/applications/wifislax/
+   cp -Ru /usr/share/applications/{Buscador_updaters.desktop,Config_updaters.desktop} $PKG/usr/share/applications/
    cp -Ru /opt/wifislax-updaters/ $PKG/opt/
-   cp -Ru /usr/share/pixmaps/updaters.png $PKG/usr/share/pixmaps/
+   cp -Ru /usr/share/pixmaps/{updaters.png,buscador_updaters.png,Config_updaters.png} $PKG/usr/share/pixmaps/
    cp -Ru /opt/wifislax-scripts/base_updater $PKG/opt/wifislax-scripts/
+   cp -Ru /etc/wifislax-updaters/* $PKG/etc/wifislax-updaters
+   cp -Ru /usr/bin/{buscador_updaters,Config_updaters} $PKG/usr/bin/
    
 if [ -d $PKG/usr/share/applications/wifislax/Actualizadores/Funciones ]; then
    rm -rf $PKG/usr/share/applications/wifislax/Actualizadores/Funciones
@@ -159,15 +165,14 @@ fi
 }
 
 F_final(){
-if [ $CREAR_MODULO = SI ]; then
-f_tareasFinales
-else
+if [ ! $CREAR_MODULO = SI ]; then
 echo $VERDE
 echo No hay actualizaciones para los updaters
 sleep 1
 echo
 echo Bye Bye
 echo $CIERRE
+exit 1
 fi
 }
 
@@ -201,3 +206,5 @@ F_actualizar
 F_estructura
 #Creamos xzm , instalamos y salimos
 F_final
+#Creamos xzm , instalamos y salimos
+f_tareasFinales
