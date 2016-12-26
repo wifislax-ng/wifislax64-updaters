@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161206
+SCRIPT_VERSION=20161227
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -28,7 +28,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="ghc haskell-base16-bytestring haskell-random haskell-tar haskell-zlib haskell-stm haskell-async haskell-extensible-exceptions haskell-text haskell-hashable haskell-mtl haskell-text haskell-parsec haskell-network-uri haskell-network haskell-HTTP haskell-cabal-install haskell-syb haskell-json haskell-regex-base haskell-regex-tdfa haskell-random haskell-primitive haskell-tf-random haskell-QuickCheck"
+DEPENDENCIAS="ghc haskell-base16-bytestring haskell-random haskell-tar haskell-zlib haskell-stm haskell-async haskell-extensible-exceptions haskell-text haskell-hashable haskell-mtl haskell-parsec haskell-network-uri haskell-network haskell-HTTP haskell-cabal-install haskell-syb haskell-json haskell-regex-base haskell-regex-tdfa haskell-primitive haskell-tf-random haskell-QuickCheck"
 f_dependencias
 }
 
