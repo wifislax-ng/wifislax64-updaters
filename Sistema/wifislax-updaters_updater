@@ -2,7 +2,7 @@
 
 # Script for www.seguridadwireless.net by vk496
 
-SCRIPT_VERSION=20161225
+SCRIPT_VERSION=20161228
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -157,6 +157,7 @@ if [ $CREAR_MODULO = SI ]; then
    cp -Ru /opt/wifislax-scripts/base_updater $PKG/opt/wifislax-scripts/
    cp -Ru /etc/wifislax-updaters/* $PKG/etc/wifislax-updaters
    cp -Ru /usr/bin/{buscador_updaters,Config_updaters} $PKG/usr/bin/
+   ln -sf /opt/wifislax-scripts/base_updater $PKG/usr/bin/
    
 if [ -d $PKG/usr/share/applications/wifislax/Actualizadores/Funciones ]; then
    rm -rf $PKG/usr/share/applications/wifislax/Actualizadores/Funciones
