@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160404
+SCRIPT_VERSION=20161229
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -25,19 +25,11 @@ F_variables() {
 	SRCNAM=master-pdf-editor
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://code-industry.net/free-pdf-editor/
-	VERSION=`curl -s $WEB|grep $ARCH.tar.gz|head -1|cut -d _  -f-1|rev|cut -d- -f1|rev`
+	VERSION=$(curl -s $WEB|grep qt4.$ARCH.tar.gz|head -1|cut -d _  -f-1|rev|cut -d- -f1|rev)_qt4
 	RAMA=`echo $VERSION|cut -d . -f1`
-	DOWNLOAD=http://get.code-industry.net/public/${SRCNAM}-${VERSION}_$ARCH.tar.gz
-}
-
-# Si el paquete no existe se descargara de internet
-F_download(){
-	if [ ! -f ${SRCNAM}-${VERSION}_$ARCH.tar.gz ]; then
-	echo 
-	echo "$CYAN"Descargando sources de $PRGNAM-$VERSION"$CIERRE"
-	sleep 1
-	aria2c -x 3 $DOWNLOAD
-	fi
+	EXTENSION=tar.gz
+	SOURCES=${SRCNAM}-${VERSION}.$ARCH.$EXTENSION
+	DOWNLOAD=http://get.code-industry.net/public/$SOURCES
 }
 
 # Descomprimimos el fichero descargado y compilamos
@@ -46,7 +38,7 @@ echo
 echo "$VERDE"Descomprimiendo ..."$CIERRE"
 sleep 1
 rm -rf $SRCNAM-$RAMA
-tar xvf $TMP/${SRCNAM}-${VERSION}_$ARCH.tar.gz
+tar xvf $TMP/${SRCNAM}-${VERSION}.$ARCH.tar.gz
 mkdir -p $PKG/opt
 mv -f $SRCNAM-$RAMA $PKG/opt/$SRCNAM-$RAMA
 cd $PKG/opt/$SRCNAM-$RAMA
@@ -54,8 +46,18 @@ cd $PKG/opt/$SRCNAM-$RAMA
 mkdir -p $PKG/usr/bin
 ( ln -s /opt/$SRCNAM-$RAMA/masterpdfeditor$RAMA $PKG/usr/bin/ )
 
-mkdir -p $PKG/usr/share/applications/
-mv $PKG/opt/master-pdf-editor-$RAMA/masterpdfeditor$RAMA.desktop $PKG/usr/share/applications/$PRGNAM.desktop
+mkdir -p $PKG/usr/share/{applications,pixmaps}
+cp -rf $PKG/opt/master-pdf-editor-$RAMA/masterpdfeditor$RAMA.png $PKG/usr/share/pixmaps/
+echo "[Desktop Entry]
+Name=Master PDF Editor $RAMA
+Comment=Edit PDF files
+Exec=/opt/master-pdf-editor-$RAMA/masterpdfeditor$RAMA %f
+Path=/opt/master-pdf-editor-$RAMA
+Terminal=false
+Icon=masterpdfeditor$RAMA.png
+Type=Application
+Categories=Office;Graphics;
+MimeType=application/pdf;application/x-bzpdf;application/x-gzpdf;" > $PKG/usr/share/applications/$PRGNAM.desktop
 }
 
 ###################################
@@ -81,7 +83,7 @@ f_comprobarUpdates
 #Comprobamos version instalada del paquete
 f_versionInstalada
 #Si no existe el fichero se descargara
-F_download
+f_download
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete
