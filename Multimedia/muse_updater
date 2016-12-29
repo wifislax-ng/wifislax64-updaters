@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161101
+SCRIPT_VERSION=20161229
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -45,6 +45,7 @@ cd build
         -DCMAKE_BUILD_TYPE=release \
         -DPYTHON_INCLUDE_DIR=/usr/include/python2.7 \
         -DPYTHON_LIBRARY=/usr/lib${LIBDIRSUFFIX}/libpython2.7.so \
+        -DLIB_SUFFIX=${LIBDIRSUFFIX} \
         -DCMAKE_ENABLE_VST_VESTIGE=1 \
         -DCMAKE_ENABLE_VST_NATIVE=1 \
         -DENABLE_PYTHON=1 \
