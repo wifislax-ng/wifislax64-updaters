@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161101
+SCRIPT_VERSION=20161229
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -28,7 +28,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="lame libass x264" 
+DEPENDENCIAS="jansson lame libass x264" 
 f_dependencias
 }
 
