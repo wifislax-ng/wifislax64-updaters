@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161103
+SCRIPT_VERSION=20161229
 
 #################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -24,17 +24,17 @@ F_variables(){
 	GECKO_VERSION=$(curl -s $GECKO_WEB/|egrep -o ">[0-9].[0-9]{1,2}/"|tr -d '>/'|tail -1)
 	MONO_WEB=https://dl.winehq.org/wine/wine-mono
 	MONO_VERSION=$(curl -s $MONO_WEB/|egrep -o ">[0-9].[0-9]{1,2}.[0-9]{1,2}/"|tr -d '>/'|tail -1)
+	WINEPKG=$(curl -s $WEB/$VERSION/$ARCH/|grep -m1 .txz|cut -d '"' -f2)
 }
 
 # Si el paquete no existe se descargara de internet
 F_download(){
 	DESCARGAR="wget -N -L -c -q --show-progress"
-	PKGVER=`curl -s ${WEB}$VERSION/$ARCH/|grep -o [0-9]sg|tail -1`
-	if [ ! -f $PRGNAM-$VERSION-$ARCH-$PKGVER.txz ]; then
+	if [ ! -f $WINEPKG ]; then
 	echo ""
 	echo "$CYAN"Descargando sources de $PRGNAM-$VERSION"$CIERRE"
 	sleep 1
-	$DESCARGAR ${WEB}$VERSION/$ARCH/$PRGNAM-$VERSION-$ARCH-$PKGVER.txz
+	$DESCARGAR ${WEB}$VERSION/$ARCH/$WINEPKG
 	fi
 # Si gecko no existe se descargara de internet
 	if [ ! -f ${PRGNAM}_gecko-$GECKO_VERSIO-$ARCH.msi ]; then
@@ -42,6 +42,12 @@ F_download(){
 	echo "$CYAN"Descargando plugin ${PRGNAM}_gecko-$GECKO_VERSION-$ARCH.msi"$CIERRE"
 	sleep 1
 	$DESCARGAR $GECKO_WEB/$GECKO_VERSION/${PRGNAM}_gecko-$GECKO_VERSION-$ARCH.msi
+	fi
+	if [ ! -f ${PRGNAM}_gecko-$GECKO_VERSIO-x86.msi ]; then
+	echo ""
+	echo "$CYAN"Descargando plugin ${PRGNAM}_gecko-$GECKO_VERSION-x86.msi"$CIERRE"
+	sleep 1
+	$DESCARGAR $GECKO_WEB/$GECKO_VERSION/${PRGNAM}_gecko-$GECKO_VERSION-x86.msi
 	fi
 # Si mono no existe se descargara de internet
 	if [ ! -f ${PRGNAM}-mono-$MONO_VERSION.msi ]; then
@@ -56,10 +62,12 @@ fi
 F_compilar(){
 echo ""
 echo "$VERDE"
-txz2dir $PRGNAM-$VERSION-$ARCH-${PKGVER}.txz $PKG
+txz2dir $WINEPKG $PKG
 mkdir $PKG/usr/share/wine/gecko $PKG/usr/share/wine/mono
 mv ${PRGNAM}_gecko-$GECKO_VERSION-$ARCH.msi $PKG/usr/share/wine/gecko
 chmod 777 $PKG/usr/share/wine/gecko/${PRGNAM}_gecko-$GECKO_VERSION-$ARCH.msi
+mv ${PRGNAM}_gecko-$GECKO_VERSION-x86.msi $PKG/usr/share/wine/gecko
+chmod 777 $PKG/usr/share/wine/gecko/${PRGNAM}_gecko-$GECKO_VERSION-x86.msi
 mv ${PRGNAM}-mono-$MONO_VERSION.msi $PKG/usr/share/wine/mono
 chmod 777 $PKG/usr/share/wine/mono/${PRGNAM}-mono-$MONO_VERSION.msi
 rm $PKG/var/log/packages/wine*
