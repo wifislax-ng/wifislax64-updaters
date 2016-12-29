@@ -19,12 +19,13 @@ F_variables(){
 	PRGNAM=wine
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://sourceforge.net/projects/wine/files/Slackware%20Packages/
-	VERSION=$(curl -s $WEB|grep -v rc|grep -m1 "class=\"folder"|awk '{print $2}'|cut -d "\"" -f 2)
+	RAMA=$(curl -s $WEB|grep -m1 "class=\"folder"|awk '{print $2}'|cut -d "\"" -f 2)
+	VERSION=$(echo $RAMA|sed 's/-/./g')
 	GECKO_WEB=http://dl.winehq.org/wine/wine-gecko
 	GECKO_VERSION=$(curl -s $GECKO_WEB/|egrep -o ">[0-9].[0-9]{1,2}/"|tr -d '>/'|tail -1)
 	MONO_WEB=https://dl.winehq.org/wine/wine-mono
 	MONO_VERSION=$(curl -s $MONO_WEB/|egrep -o ">[0-9].[0-9]{1,2}.[0-9]{1,2}/"|tr -d '>/'|tail -1)
-	WINEPKG=$(curl -s $WEB/$VERSION/$ARCH/|grep -m1 .txz|cut -d '"' -f2)
+	WINEPKG=$(curl -s $WEB/$RAMA/$ARCH/|grep -m1 .txz|cut -d '"' -f2)
 }
 
 # Si el paquete no existe se descargara de internet
@@ -34,7 +35,7 @@ F_download(){
 	echo ""
 	echo "$CYAN"Descargando sources de $PRGNAM-$VERSION"$CIERRE"
 	sleep 1
-	$DESCARGAR ${WEB}$VERSION/$ARCH/$WINEPKG
+	$DESCARGAR ${WEB}$RAMA/$ARCH/$WINEPKG
 	fi
 # Si gecko no existe se descargara de internet
 	if [ ! -f ${PRGNAM}_gecko-$GECKO_VERSIO-$ARCH.msi ]; then
