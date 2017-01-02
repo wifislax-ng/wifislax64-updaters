@@ -28,7 +28,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libgsasl libircclient tinyxml protobuf"
+DEPENDENCIAS="libgsasl libircclient tinyxml pytz six python-dateutil python-gflags protobuf"
 f_dependencias
 }
 
