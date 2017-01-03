@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161103
+SCRIPT_VERSION=20170103
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -29,7 +29,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="qt5 python3 libffado celt jack-audio-connection-kit python3-httplib2 qt5-webkit python3-sip python3-PyQt5 python3-pyzmq zeromq ffmpeg unittest-cpp libopenshot-audio libopenshot"
+DEPENDENCIAS="qt5 python3 libffado celt jack-audio-connection-kit python3-httplib2 qt5-webkit python3-sip python3-PyQt5 python3-Cython python3-pyzmq zeromq ffmpeg unittest-cpp libopenshot-audio libopenshot"
 f_dependencias
 }
 
@@ -38,7 +38,7 @@ F_compilar(){
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
-python3 setup.py install --root=$PKG
+python3 setup.py install --root=$PKG --optimize=1
 }
 
 ###################################
