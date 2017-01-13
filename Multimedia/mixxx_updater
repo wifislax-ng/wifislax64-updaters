@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161112
+SCRIPT_VERSION=20170113
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -17,14 +17,14 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	WEB=http://www.mixxx.org/download/
-	VERSION=`curl -s ${WEB} | grep src.tar.gz |tail -1|cut -d "/" -f4| cut -d "-" -f2`
 	PRGNAM=mixxx
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	SRCNAM=${PRGNAM}-${VERSION}-src
+	WEB=https://github.com/mixxxdj/mixxx
+	VERSION="$(curl -s ${WEB}/releases|grep release-[0-9]|grep tar.gz|head -1|cut -d- -f2|cut -d t -f-1|sed 's/.$//g')"
+	SRCNAM=$PRGNAM-release-${VERSION}
 	EXTENSION=tar.gz
-	SOURCES=${PRGNAM}-${VERSION}-src.$EXTENSION
-	DOWNLOAD=http://downloads.mixxx.org/${PRGNAM}-${VERSION}/$SOURCES
+	SOURCES=release-${VERSION}.$EXTENSION
+	DOWNLOAD=$WEB/archive/$SOURCES
 }
 
 # Comprobar dependencias
@@ -40,16 +40,58 @@ echo ""
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 
+if [ $VERSION = 2.0.0 ]; then
+echo "RGVzY3JpcHRpb246IGNocm9tYXByaW50IDEuNCBjb21wYXRpYmlsaXR5Ck9yaWdpbjogdXBzdHJl
+YW0sCiBodHRwczovL2dpdGh1Yi5jb20vbWl4eHhkai9taXh4eC9jb21taXQvNzFmM2U1ZDBhZGI1
+MTE2YTIzZjkxNjNiMDQ1ZjM0MTliOTA1NmEwOCwKIGh0dHBzOi8vZ2l0aHViLmNvbS9taXh4eGRq
+L21peHh4L2NvbW1pdC84MzBlODY0Mzg0ZWUxYzk2MjcyOTk3ZWUzZjFkYWU0ZjcxYjI4ZjNlLAog
+aHR0cHM6Ly9naXRodWIuY29tL21peHh4ZGovbWl4eHgvY29tbWl0L2M1YjQzNjhmZDIyOGZlZWUy
+OGFmNGZiMzJhYjZmYmZkM2YyOWYyMTIKTGFzdC1VcGRhdGU6IDIwMTctMDEtMTEKCi0tLSBtaXh4
+eC0yLjAuMH5kZnNnLm9yaWcvc3JjL211c2ljYnJhaW56L2Nocm9tYXByaW50ZXIuY3BwCisrKyBt
+aXh4eC0yLjAuMH5kZnNnL3NyYy9tdXNpY2JyYWluei9jaHJvbWFwcmludGVyLmNwcApAQCAtNSw2
+ICs1LDE5IEBACiAjaW5jbHVkZSAibXVzaWNicmFpbnovY2hyb21hcHJpbnRlci5oIgogI2luY2x1
+ZGUgInNvdW5kc291cmNlcHJveHkuaCIKIAorbmFtZXNwYWNlCit7CisgICAgLy8gVHlwZSBkZWNs
+YXJhdGlvbnMgb2YgKmZwcmludCBhbmQgKmVuY29kZWQgcG9pbnRlcnMgbmVlZCB0byBhY2NvdW50
+IGZvciBDaHJvbWFwcmludCBBUEkgdmVyc2lvbgorICAgIC8vICh2b2lkKiAtPiB1aW50MzJfdCop
+IGFuZCAodm9pZCogLT4gY2hhciopIGNoYW5nZWQgaW4gdmVyc2lvbnMgdjEuNC4wIG9yIGxhdGVy
+IC0tIGFseXB0aWsgMTIvMjAxNgorICAgICNpZiAoQ0hST01BUFJJTlRfVkVSU0lPTl9NSU5PUiA+
+IDMpIHx8IChDSFJPTUFQUklOVF9WRVJTSU9OX01BSk9SID4gMSkKKyAgICAgICAgdHlwZWRlZiB1
+aW50MzJfdCogdWludDMyX3A7CisgICAgICAgIHR5cGVkZWYgY2hhciogY2hhcl9wOworICAgICNl
+bHNlCisgICAgICAgIHR5cGVkZWYgdm9pZCogdWludDMyX3A7CisgICAgICAgIHR5cGVkZWYgdm9p
+ZCogY2hhcl9wOworICAgICNlbmRpZgorfQorCiBDaHJvbWFQcmludGVyOjpDaHJvbWFQcmludGVy
+KFFPYmplY3QqIHBhcmVudCkKICAgICAgICAgICAgICA6IFFPYmplY3QocGFyZW50KSB7CiB9CkBA
+IC01NywxMiArNzAsMTIgQEAgUVN0cmluZyBDaHJvbWFQcmludGVyOjpjYWxjRmluZ2VyUHJpbnQo
+YwogICAgIH0KICAgICBjaHJvbWFwcmludF9maW5pc2goY3R4KTsKIAotICAgIHZvaWQqIGZwcmlu
+dCA9IE5VTEw7CisgICAgdWludDMyX3AgZnByaW50ID0gTlVMTDsKICAgICBpbnQgc2l6ZSA9IDA7
+CiAgICAgaW50IHJldCA9IGNocm9tYXByaW50X2dldF9yYXdfZmluZ2VycHJpbnQoY3R4LCAmZnBy
+aW50LCAmc2l6ZSk7CiAgICAgUUJ5dGVBcnJheSBmaW5nZXJwcmludDsKICAgICBpZiAocmV0ID09
+IDEpIHsKLSAgICAgICAgdm9pZCogZW5jb2RlZCA9IE5VTEw7CisgICAgICAgIGNoYXJfcCBlbmNv
+ZGVkID0gTlVMTDsKICAgICAgICAgaW50IGVuY29kZWRfc2l6ZSA9IDA7CiAgICAgICAgIGNocm9t
+YXByaW50X2VuY29kZV9maW5nZXJwcmludChmcHJpbnQsIHNpemUsCiAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICBDSFJPTUFQUklOVF9BTEdPUklUSE1fREVGQVVMVCwK
+" | base64 -d > $TMP/chromaprint-1.4.patch
+
+patch -p1 < $TMP/chromaprint-1.4.patch
+fi
+
+
+# Fix library installation path
+sed -i "s|'lib'|'lib$LIBDIRSUFFIX'|" build/depends.py src/SConscript || exit 1
+sed -i "s|usr/lib|usr/lib$LIBDIRSUFFIX|" src/SConscript || exit 1
+
 CFLAGS="$SLKCFLAGS" \
 QTDIR=/usr/lib$LIBDIRSUFFIX/qt \
 scons \
-  shoutcast=0 \
+  shoutcast=1 \
+  faad=1 \
   prefix=/usr
 
 QTDIR=/usr/lib$LIBDIRSUFFIX/qt \
 scons \
   install_root=$PKG/usr \
   prefix=/usr \
+  shoutcast=1 \
+  faad=1 \
   install
 
 cd $PKG 
