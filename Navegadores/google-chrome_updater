@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160730
+SCRIPT_VERSION=20170113
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -18,34 +18,11 @@ f_variables(){
 F_variables() {
 	PRGNAM=google-chrome
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=http://www.ubuntuupdates.org/package/google_chrome/stable/main/base/google-chrome-stable
+	WEB=https://www.ubuntuupdates.org/package/google_chrome/stable/main/base/google-chrome-stable
 	VERSION="$(curl -s $WEB|grep -om1 "google-chrome-stable_[0-9]*.*"|awk -F'_' '{print $2}'|cut -d- -f-1)"
 	RAMA="$(curl -s $WEB|grep -om1 "google-chrome-stable_[0-9]*.*"|awk -F'_' '{print $2}'|cut -d- -f2)"
 	SOURCES=google-chrome-stable_${VERSION}-${RAMA}_amd64.deb
 	DOWNLOAD=http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/$SOURCES
-	if [ ! $ARCH = x86_64 ]; then
-	clear
-	echo 
-	echo "$ROJO ¡¡¡ Arquitectura 32 bits no soportada !!!$CIERRE"
-	echo
-	exit 0
-	fi
-}
-
-# Comprobar dependencias
-F_dependencias(){
-DEPENDENCIAS="aria2"
-f_dependencias
-}
-
-# Si el paquete no existe se descargara de internet
-F_download(){
-	if [ ! -f $SOURCES ]; then
-	echo ""
-	echo "$CYAN"Descargando sources de $PRGNAM-$VERSION"$CIERRE"
-	sleep 1
-	aria2c -x 3 $DOWNLOAD
-	fi
 }
 
 # Descomprimimos el fichero descargado y compilamos
@@ -155,10 +132,8 @@ f_presentacion
 f_comprobarUpdates
 #Comprobamos version instalada del script
 f_versionInstalada
-# Comprobar dependencias
-F_dependencias
 #Si no existe el fichero se descargara
-F_download
+f_download
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete
