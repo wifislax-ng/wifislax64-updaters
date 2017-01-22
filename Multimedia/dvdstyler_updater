@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161101
+SCRIPT_VERSION=20170122
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -30,7 +30,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="faac faad2 ffmpeg lame libdv schroedinger x264 libavc1394 libmspack libquicktime dvdauthor mjpegtools mpgtx wxsvg"
+DEPENDENCIAS="faac faad2 ffmpeg lame libdv schroedinger x264 libavc1394 libmspack libquicktime dvdauthor mjpegtools mpgtx wxGTK3 wxsvg"
 f_dependencias
 }
 
