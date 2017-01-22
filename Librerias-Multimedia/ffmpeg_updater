@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161227
+SCRIPT_VERSION=20170121
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,7 +19,7 @@ F_variables() {
 	PRGNAM=ffmpeg
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=http://ffmpeg.org/releases
-	VERSION=`curl -s "$WEB/?C=M;O=A"|grep $PRGNAM-3.[0-9]|tail -1|cut -d- -f2|cut -d t -f-1|sed 's/.$//g'`
+	VERSION=`curl -s "$WEB/?C=M;O=A"|grep $PRGNAM-2.[0-9]|tail -1|cut -d- -f2|cut -d t -f-1|sed 's/.$//g'`
 	EXTENSION=tar.xz
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
 	DOWNLOAD=$WEB/$SOURCES
@@ -27,59 +27,133 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="SDL2 soxr libmp4v2 zeromq decklink-sdk libquvi-scripts libquvi libwebp libass libass libaacs libbluray celt libdc1394 faac libfdk-aac frei0r gsm libiec61883 libavc1394 libilbc ladspa_sdk lame libmodplug OpenAL opencore-amr opencv opus rtmpdump schroedinger speex twolame vid.stab x264 x265 xvidcore zvbi"
+DEPENDENCIAS="decklink-sdk
+opencv
+gavl
+frei0r
+ladspa_sdk
+libiec61883
+libavc1394
+enca
+libass
+libaacs
+libbdplus
+libbluray
+celt
+libmp4v2
+faac
+libfdk-aac
+flite
+libgme
+gsm
+libilbc
+libmodplug
+lame
+opencore-amr
+opus
+lua
+libquvi-scripts
+libquvi
+rtmpdump
+schroedinger
+snappy
+speex
+twolame
+vid.stab
+libwebp
+x264
+x265
+xvidcore
+zeromq
+zvbi
+OpenAL
+libdc1394
+libxml++
+libconfig
+libffado
+jack-audio-connection-kit"
 f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 
-CFLAGS="$SLKCFLAGS" \
-CXXFLAGS="$SLKCFLAGS" \
+# Fix linking with flite
+sed -i "s| -lflite\"| -lflite -lm -lasound\"|" \
+  ./configure
 
+SLKCFLAGS="$SLKCFLAGS -I/usr/include/decklink" \
+CFLAGS="$SLKCFLAGS -I/usr/include/openmj2-2.1" \
+CXXFLAGS="$SLKCFLAGS -I/usr/include/openmj2-2.1" \
 ./configure \
   --prefix=/usr \
   --libdir=/usr/lib${LIBDIRSUFFIX} \
   --shlibdir=/usr/lib${LIBDIRSUFFIX} \
-  --docdir=/usr/doc/${PRGNAM}-${VERSION} \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/html \
   --mandir=/usr/man \
+  --disable-debug \
+  --enable-shared \
+  --disable-static \
+  --enable-pthreads \
+  --enable-libtheora \
+  --enable-libvorbis \
   --enable-gpl \
   --enable-version3 \
+  --enable-postproc \
+  --enable-swscale \
+  --enable-x11grab \
   --enable-avfilter \
   --enable-avresample \
-  --enable-libass \
+  --enable-gnutls \
+  --enable-libcdio \
+  --enable-libssh \
+  --enable-libcaca \
+  --enable-libsmbclient \
+  --enable-opengl \
+  --enable-libvpx \
+  --enable-libpulse \
+  --enable-libopenjpeg \
+  --enable-libwavpack \
+  --enable-libfreetype \
+  --enable-libfribidi \
+  --enable-fontconfig \
   --enable-libdc1394 \
+  --enable-libmp3lame \
+  --enable-libfaac \
+  --enable-libxvid \
+  --enable-libx264 \
+  --enable-libspeex \
+  --enable-libschroedinger \
+  --enable-nonfree \
   --enable-libgsm \
+  --enable-librtmp \
   --enable-libopencore-amrnb \
   --enable-libopencore-amrwb \
+  --enable-frei0r \
+  --enable-libcelt \
+  --enable-libbluray \
+  --enable-libass \
+  --enable-openal \
+  --enable-libiec61883 \
+  --enable-libilbc \
+  --enable-libmodplug \
   --enable-libopus \
-  --enable-libschroedinger \
-  --enable-libspeex \
-  --enable-libtheora \
-  --enable-libv4l2 \
-  --enable-libvorbis \
-  --enable-libvpx \
-  --enable-libx264 \
+  --enable-libtwolame \
+  --enable-ladspa \
+  --enable-libfdk-aac \
+  --enable-libflite \
+  --enable-libquvi \
+  --enable-libvidstab \
   --enable-libx265 \
   --enable-libzvbi \
-  --enable-postproc \
-  --enable-runtime-cpudetect \
-  --enable-vaapi \
-  --enable-vdpau \
-  --enable-memalign-hack \
-  --enable-pthreads \
-  --enable-x11grab \
-  --enable-bzlib \
-  --enable-zlib \
-  --enable-shared \
-  --enable-static \
-  --disable-debug \
-  --enable-libmp3lame \
-  --enable-libfdk-aac \
+  --enable-libopencv \
+  --enable-decklink \
+  --enable-libgme \
+  --enable-libsnappy \
+  --enable-libwebp \
   --enable-openssl \
-  --enable-nonfree \
-  --arch=x86_64 --enable-pic \
-  --pkg-config-flags="--static" 
+  --enable-libzmq \
+  --arch=$ARCH
   
   make || exit 1
   make install DESTDIR=$PKG
