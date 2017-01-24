@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-FUNCIONES_VERSION=20161212
+FUNCIONES_VERSION=20170124
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -163,8 +163,8 @@ PACKDIR=`echo $(find /usr/src/slapt-src/ -name "${D}-*.txz")`
 XZMPACK=`echo $(find /usr/src/slapt-src/ -name "${D}-*.txz"|rev|cut -d / -f-1|rev|sed 's/.txz/.xzm/g')`
 GROUP=`echo $(find /usr/src/slapt-src/ -name "${D}-*.txz"|rev|cut -d / -f3|rev)`
 if [ ! "${PACKAGETYPE}" = disable ]; then
-if [ ! -d ${HOME}/Desktop/${PRGNAM}_depends ]; then
-mkdir -p ${HOME}/Desktop/${PRGNAM}_depends
+if [ ! -d ${HOME}/Desktop/${PRGNAM}_depends/$GROUP ]; then
+mkdir -p ${HOME}/Desktop/${PRGNAM}_depends/$GROUP
 fi
 fi
 VERIFICAR=`echo "$(ls /var/log/packages|rev|cut -d '-' -f4-|rev|grep -x $D)"`
@@ -175,10 +175,10 @@ echo ""
 exit 1
 else
 if [ "${PACKAGETYPE}" = txz ]; then
-mv -f "${PACKDIR}" "${HOME}/Desktop/${PRGNAM}_depends/"
+mv -f "${PACKDIR}" "${HOME}/Desktop/${PRGNAM}_depends/$GROUP"
 fi
 if [ "${PACKAGETYPE}" = xzm ]; then
-xterm -e sh -c "txz2xzm "${PACKDIR}" "${HOME}/Desktop/${PRGNAM}_depends/$XZMPACK""
+xterm -e sh -c "txz2xzm "${PACKDIR}" "${HOME}/Desktop/${PRGNAM}_depends/$GROUP/$XZMPACK""
 fi
 echo "${BLANCO}Dependencia ${AMARILLO}${D} ${CYAN}RESUELTA${CIERRE}."
 fi
