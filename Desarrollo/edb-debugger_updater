@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170105
+SCRIPT_VERSION=20170126
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -37,7 +37,19 @@ echo
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
-cmake -DCMAKE_INSTALL_PREFIX="$PKG/usr/"
+echo "ZGlmZiAtcnVOIDEvc3JjL0NNYWtlTGlzdHMudHh0IDIvc3JjL0NNYWtlTGlzdHMudHh0Ci0tLSAx
+L3NyYy9DTWFrZUxpc3RzLnR4dAkyMDE2LTA5LTI4IDIzOjAyOjQxLjAwMDAwMDAwMCArMDIwMAor
+KysgMi9zcmMvQ01ha2VMaXN0cy50eHQJMjAxNi0xMC0wNyAwMDozNDozNC4wMDAwMDAwMDAgKzAy
+MDAKQEAgLTQ1LDcgKzQ1LDcgQEAKIAlzZXQoR0lUX0JSQU5DSCAiVW5rbm93biIpCiBlbmRpZigp
+CiBhZGRfZGVmaW5pdGlvbnMoLURHSVRfQlJBTkNIPSR7R0lUX0JSQU5DSH0pCi1hZGRfZGVmaW5p
+dGlvbnMoLURERUZBVUxUX1BMVUdJTl9QQVRIPSR7Q01BS0VfSU5TVEFMTF9QUkVGSVh9LyR7Q01B
+S0VfSU5TVEFMTF9MSUJESVJ9L2VkYikKK2FkZF9kZWZpbml0aW9ucygtRERFRkFVTFRfUExVR0lO
+X1BBVEg9JHtERUZBVUxUX1BMVUdJTl9QQVRIfSkKIAogaW5jbHVkZV9kaXJlY3RvcmllcygKIAki
+Y2Fwc3RvbmUtZWRiIgo=" | base64 -d > $TMP/plugin_path.patch
+
+patch -p1 -i $TMP/plugin_path.patch || exit 1
+
+cmake -DCMAKE_INSTALL_PREFIX="$PKG/usr/" -DDEFAULT_PLUGIN_PATH="/usr/lib${LIBDIRSUFFIX}/edb/"
 
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
@@ -49,8 +61,8 @@ make install || exit 1
 mkdir -p $PKG/usr/include/edb
 cp -a include/. $PKG/usr/include/edb
 
-install -Dm644 src/images/edb48-logo.png "$pkgdir/usr/share/pixmaps/edb.png"
-install -Dm644 src/images/edb48-logo.png "$pkgdir/usr/share/icons/hicolor/48x48/apps/edb.png"
+install -Dm644 src/images/edb48-logo.png "$PKG/usr/share/pixmaps/edb.png"
+install -Dm644 src/images/edb48-logo.png "$PKG/usr/share/icons/hicolor/48x48/apps/edb.png"
 }
 
 ###################################
