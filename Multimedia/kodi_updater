@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161116
+SCRIPT_VERSION=20170129
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -30,7 +30,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="dcadec libass libmpeg2 tinyxml openjdk yajl bluray-keys libaacs libbdplus libbluray libmicrohttpd crossguid libnfs" 
+DEPENDENCIAS="dcadec libass libmpeg2 tinyxml jdk yajl bluray-keys libaacs libbdplus libbluray libmicrohttpd crossguid libnfs" 
 f_dependencias
 }
 

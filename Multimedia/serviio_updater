@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161116
+SCRIPT_VERSION=20170129
 CATEGORIA="Reproductores streaming"
 
 ############################################################
@@ -28,7 +28,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="ffmpeg openjdk"
+DEPENDENCIAS="ffmpeg jdk"
 f_dependencias
 }
 

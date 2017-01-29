@@ -2,7 +2,7 @@
 
 # Script by vk496 for www.seguridadwireless.net 
 
-SCRIPT_VERSION=20161116
+SCRIPT_VERSION=20170129
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -27,7 +27,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="openjdk"
+DEPENDENCIAS="jdk"
 f_dependencias
 }
 
