@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161224
+SCRIPT_VERSION=20170211
 CATEGORIA="Reproductores streaming"
 
 ############################################################
@@ -28,7 +28,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="geoclue libwebp webkitgtk json-glib vala libgee" 
+DEPENDENCIAS="json-glib vala gst-plugins-ugly" 
 f_dependencias
 }
 
