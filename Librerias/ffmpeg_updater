@@ -21,6 +21,9 @@ F_variables() {
 	WEB=http://ffmpeg.org/releases
 	if [ $(cat /etc/wifislax-version|cut -d ' ' -f2) != current ]; then
 	VERSION=`curl -s "$WEB/?C=M;O=A"|grep $PRGNAM-2.[0-9]|tail -1|cut -d- -f2|cut -d t -f-1|sed 's/.$//g'`
+	faac=--enable-libfaac
+	libquvi=--enable-libquvi
+	decklink=--enable-decklink
 	else
 	VERSION=3.2.3
 	fi
@@ -130,7 +133,7 @@ CXXFLAGS="$SLKCFLAGS -I/usr/include/openmj2-2.1" \
   --enable-fontconfig \
   --enable-libdc1394 \
   --enable-libmp3lame \
-  --enable-libfaac \
+    $faac \
   --enable-libxvid \
   --enable-libx264 \
   --enable-libspeex \
@@ -153,12 +156,12 @@ CXXFLAGS="$SLKCFLAGS -I/usr/include/openmj2-2.1" \
   --enable-ladspa \
   --enable-libfdk-aac \
   --enable-libflite \
-  --enable-libquvi \
+    $libquvi \
   --enable-libvidstab \
   --enable-libx265 \
   --enable-libzvbi \
   --enable-libopencv \
-  --enable-decklink \
+    $decklink \
   --enable-libgme \
   --enable-libsnappy \
   --enable-libwebp \
