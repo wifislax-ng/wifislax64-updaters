@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170112
+SCRIPT_VERSION=20170226
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -18,8 +18,8 @@ f_variables(){
 F_variables() {
 	PRGNAM=libtorrent-rasterbar
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://www.qbittorrent.org/download.php
-	VERSION="$(curl -s $WEB|grep rasterbar|grep .gz|head -1|rev|cut -d- -f2|rev|cut -d t -f-1|sed 's/.$//g')"
+	WEB=https://github.com/arvidn/libtorrent/releases
+	VERSION="$(curl -s $WEB|grep tar.gz|head -1|cut -d- -f4|cut -d t -f-1|sed 's/.$//g')"
 	CONVERT="$(echo $VERSION|tr . _)"
 	EXTENSION=tar.gz
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
