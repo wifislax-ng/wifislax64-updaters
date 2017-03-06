@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20170304
+SCRIPT_VERSION=20170306
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -60,7 +60,7 @@ exit 0
 fi
 
 # Comprobar updates para el script
-SERVIDOR_WEB="https://raw.githubusercontent.com/wifislax-ng/wifislax-updaters/master"
+SERVIDOR_WEB="https://raw.githubusercontent.com/wifislax-ng/wifislax64-updaters/master"
 DIRECTORIO=$(find /opt/wifislax-updaters -type f -name ${SCRIPTNAME} | rev | cut -d/ -f2- | rev | head -1)
 SERVIDOR_VERSION=$(timeout -s SIGTERM 3 curl -s $SERVIDOR_WEB/${DIRECTORIO##*/}/${SCRIPTNAME} | grep "SCRIPT_VERSION=" | head -1 |cut -d "=" -f2)
 
