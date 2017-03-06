@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20161120
+SCRIPT_VERSION=20170304
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -29,8 +29,8 @@ TAG=wifislax
 M0DNUM=000
 MODNAM=Kernel
 BUILD=1
-KERNEL_SISTEMA=`uname -r|cut -d '-' -f1|tr -d " \t\n\r"`
-RAMA_SISTEMA=`uname -r|cut -d '-' -f1|cut -d "." -f-2|tr -d " \t\n\r"`
+KERNEL_SISTEMA=$(uname -r|cut -d '-' -f1|tr -d " \t\n\r")
+RAMA_SISTEMA=$(uname -r|cut -d '-' -f1|cut -d "." -f-2|tr -d " \t\n\r")
 WEB=https://www.kernel.org
 
 export MAKEFLAGS="-j$(nproc --all)"
@@ -97,25 +97,25 @@ select OPT in "${OPCIONES[@]}"
 do
     case $OPT in
         "${VERDE}Seguir rama del sistema ${AMARILLO}(recomendado)${CIERRE}")
-            RAMA=`echo $(uname -r|cut -d . -f-2)`
-            KERNEL_ELEGIDO=`curl -s $WEB/|grep linux-$RAMA.*|head -1 |cut -d 'x' -f 4|cut -d '-' -f 2|cut -d " " -f 2|cut -d "t" -f1|sed 's/.$//g'`
-            RAMA_ELEGIDO=`echo $KERNEL_ELEGIDO |cut -d "." -f-2 |sed 's/ //g'`
-            FAMILIA=`echo $KERNEL_ELEGIDO|cut -d. -f1`
+            RAMA=$(echo $(uname -r|cut -d . -f-2))
+            KERNEL_ELEGIDO=$(curl -s $WEB/|grep linux-$RAMA.*|head -1 |cut -d 'x' -f 4|cut -d '-' -f 2|cut -d " " -f 2|cut -d "t" -f1|sed 's/.$//g')
+            RAMA_ELEGIDO=$(echo $KERNEL_ELEGIDO |cut -d "." -f-2 |sed 's/ //g')
+            FAMILIA=$(echo $KERNEL_ELEGIDO|cut -d. -f1)
             DESCARGA=$WEB/pub/linux/kernel/v$FAMILIA.x/linux-$KERNEL_ELEGIDO.tar.xz
             break;;
         "${VERDE}Ultimo disponible como estable${CIERRE}")
-            KERNEL_ELEGIDO=`curl -s $WEB/|grep .tar.xz|head -1|cut -d "-" -f2|cut -d "t" -f-1|sed "s/.$//g"`
-            RAMA_ELEGIDO=`echo $KERNEL_ELEGIDO|cut -d "." -f-2|sed 's/ //g'`
-            FAMILIA=`echo $KERNEL_ELEGIDO|cut -d. -f1`
+            KERNEL_ELEGIDO=$(curl -s $WEB/|grep .tar.xz|head -1|cut -d "-" -f2|cut -d "t" -f-1|sed "s/.$//g")
+            RAMA_ELEGIDO=$(echo $KERNEL_ELEGIDO|cut -d "." -f-2|sed 's/ //g')
+            FAMILIA=$(echo $KERNEL_ELEGIDO|cut -d. -f1)
             DESCARGA=$WEB/pub/linux/kernel/v$FAMILIA.x/linux-$KERNEL_ELEGIDO.tar.xz
             break;;
         "${VERDE}Elegir uno custom${CIERRE}")
             CUSTOM="TRUE"
             break;;
         "${VERDE}El ultimo disponible rcX${CIERRE}")
-            KERNEL_ELEGIDO=`curl -s $WEB/|grep rc[0-9]|tail -1|cut -d v -f3|cut -d '"' -f-1`
-            RAMA_ELEGIDO=`echo $KERNEL_ELEGIDO|cut -d "-" -f-1|sed 's/ //g'`
-            FAMILIA=`echo $KERNEL_ELEGIDO|cut -d. -f1`
+            KERNEL_ELEGIDO=$(curl -s $WEB/|grep rc[0-9]|tail -1|cut -d v -f3|cut -d '"' -f-1)
+            RAMA_ELEGIDO=$(echo $KERNEL_ELEGIDO|cut -d "-" -f-1|sed 's/ //g')
+            FAMILIA=$(echo $KERNEL_ELEGIDO|cut -d. -f1)
             DESCARGA=$WEB/pub/linux/kernel/v$FAMILIA.x/testing/linux-$KERNEL_ELEGIDO.tar.xz
             break;;
         *)  echo opcion invalida;;
@@ -128,8 +128,8 @@ echo "$VERDE"
 echo "Escribe el numero de kernel exacto que te gustaria compilar y pulsa ${BLANCO}ENTER"
 echo "$ROSA"
 read KERNEL_ELEGIDO
-RAMA_ELEGIDO=`echo $KERNEL_ELEGIDO|cut -d "." -f-2|sed 's/ //g'`
-FAMILIA=`echo $KERNEL_ELEGIDO|cut -d. -f1`
+RAMA_ELEGIDO=$(echo $KERNEL_ELEGIDO|cut -d "." -f-2|sed 's/ //g')
+FAMILIA=$(echo $KERNEL_ELEGIDO|cut -d. -f1)
 DESCARGA=$WEB/pub/linux/kernel/v$FAMILIA.x/linux-$KERNEL_ELEGIDO.tar.xz
 echo "$CIERRE"
 fi
@@ -372,14 +372,16 @@ COMIENZO=$(date +%s)
 make || exit 1
 make modules || exit 1
 
-# Creamos la tuta de destina a instalar el kernel
-mkdir -p $HOME/Desktop/$SMP$MODNAM-$KERNEL_ELEGIDO-$ARCH-$BUILD$TAG
-make modules_install INSTALL_MOD_PATH=$HOME/Desktop/$SMP$MODNAM-$KERNEL_ELEGIDO-$ARCH-$BUILD$TAG || exit 1
+# Creamos la ruta de destino a instalar el kernel
+# Cuando es un kernel rc suele aparecer solo la rama
+# Grepeamos aqui la version completa del kernel en el fichero .config
+KERNEL_VERSION=$(grep $KERNEL_ELEGIDO .config|head -1|cut -d ' ' -f3)
+mkdir -p $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG
+make modules_install INSTALL_MOD_PATH=$HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG || exit 1
 
 # Instalamos las cabeceras kernel-headers
-make INSTALL_HDR_PATH=$HOME/Desktop/$SMP$MODNAM-$KERNEL_ELEGIDO-$ARCH-$BUILD$TAG/usr headers_install|| exit 1
-rm -r $HOME/Desktop/$SMP$MODNAM-$KERNEL_ELEGIDO-$ARCH-$BUILD$TAG/usr/include/*/{.install,..install.cmd}
-#rm -r $HOME/Desktop/$SMP$MODNAM-$KERNEL_ELEGIDO-$ARCH-$BUILD$TAG/usr/include/*/..install.cmd
+make INSTALL_HDR_PATH=$HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/usr headers_install|| exit 1
+rm -r $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/usr/include/*/{.install,..install.cmd}
 
 # Copiamos el vmlinuz
 cp /usr/src/$PRGNAM-$KERNEL_ELEGIDO/arch/$KARCH/boot/bzImage $HOME/Desktop/$VMLINUZ &>/dev/null
@@ -396,25 +398,25 @@ ls -1d include/*|grep asm- |grep -v $KARCH|grep -v generic|xargs rm -Rf
 cp include/generated/* include/linux &>/dev/null
 
 # Preparamos creacion de xzm
-mkdir -p $HOME/Desktop/$SMP$MODNAM-$KERNEL_ELEGIDO-$ARCH-$BUILD$TAG/usr/src
-cp -r /usr/src/$PRGNAM-$KERNEL_ELEGIDO $HOME/Desktop/$SMP$MODNAM-$KERNEL_ELEGIDO-$ARCH-$BUILD$TAG/usr/src
+mkdir -p $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/usr/src
+cp -r /usr/src/$PRGNAM-$KERNEL_ELEGIDO $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/usr/src
 
 # Realizamos limpieza
-RUTA_LIMPIEZA=$HOME/Desktop/$SMP$MODNAM-$KERNEL_ELEGIDO-$ARCH-$BUILD$TAG/usr/src/$PRGNAM-$KERNEL_ELEGIDO
+RUTA_LIMPIEZA=$HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/usr/src/$PRGNAM-$KERNEL_ELEGIDO
 FILES_BORRAR="kernel.txt Negative-channel-multi.patch ralink.patch .config.old"
 for X in $FILES_BORRAR; do
 rm $RUTA_LIMPIEZA/$X &>/dev/null
 done
 
 # Por que usa una script que baja todos los firmwares desde el git
-rm -Rf $HOME/Desktop/$SMP$MODNAM-$KERNEL_ELEGIDO-$ARCH-$BUILD$TAG/lib/firmware
+rm -Rf $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/lib/firmware
 
 # Creamos xzm de kernel + sources
-mksquashfs $HOME/Desktop/$SMP$MODNAM-$KERNEL_ELEGIDO-$ARCH-$BUILD$TAG $HOME/Desktop/$SMP$MODNAM-$KERNEL_ELEGIDO-$ARCH-$BUILD$TAG.xzm -comp xz -b 256K
-mv $HOME/Desktop/$SMP$MODNAM-$KERNEL_ELEGIDO-$ARCH-$BUILD$TAG.xzm $HOME/Desktop/$M0DNUM-$SMP$MODNAM-$KERNEL_ELEGIDO-$ARCH-$BUILD$TAG.xzm
+mksquashfs $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm -comp xz -b 256K
+mv $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm $HOME/Desktop/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm
 
 # Finalizamos
-rm -Rf $HOME/Desktop/$SMP$MODNAM-$KERNEL_ELEGIDO-$ARCH-$BUILD$TAG
+rm -Rf $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG
 AHORA=$(($(date +%s)-3600));
 TIEMPO="$(date --date=@$(($AHORA-$COMIENZO)) +%X)"
 echo ""
@@ -436,10 +438,10 @@ fi
 echo ""$AMARILLO"Pulsa ENTER si quieres instalar el kernel,si no te interesa cierra el scipt."$CIERRE""
 read junk
 echo ""
-echo ""$VERDE"Instalando Kernel $KERNEL_ELEGIDO en sistema ..."$CIERRE""
+echo ""$VERDE"Instalando Kernel $KERNEL_VERSION en sistema ..."$CIERRE""
 VMLINUZNAME=`grep  "CONFIG_LOCALVERSION=" .config|cut -d = -f2|sed 's/"//g'`
-cp -r $HOME/Desktop/$VMLINUZ /boot/vmlinuz-${KERNEL_ELEGIDO}${VMLINUZNAME}
-xzm2dir $HOME/Desktop/$M0DNUM-$SMP$MODNAM-$KERNEL_ELEGIDO-$ARCH-$BUILD$TAG.xzm /
+cp -r $HOME/Desktop/$VMLINUZ /boot/vmlinuz-${KERNEL_VERSION}${VMLINUZNAME}
+xzm2dir $HOME/Desktop/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm /
 update-grub
 echo ""
 echo ""$CYAN"Instalacion completada ..."$CIERRE""
