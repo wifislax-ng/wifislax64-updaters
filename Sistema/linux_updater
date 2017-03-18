@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20170318
+SCRIPT_VERSION=20170319
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -375,7 +375,7 @@ make modules || exit 1
 # Creamos la ruta de destino a instalar el kernel
 # Cuando es un kernel rc suele aparecer solo la rama
 # Grepeamos aqui la version completa del kernel en el fichero .config
-KERNEL_VERSION=$(grep $KERNEL_ELEGIDO .config|head -1|cut -d ' ' -f3)
+KERNEL_VERSION=$(grep $(echo $KERNEL_ELEGIDO|cut -d- -f-1) .config|head -1|cut -d ' ' -f3)
 mkdir -p $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG
 make modules_install INSTALL_MOD_PATH=$HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG || exit 1
 
