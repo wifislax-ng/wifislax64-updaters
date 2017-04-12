@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161031
+SCRIPT_VERSION=20170413
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -56,9 +56,8 @@ CXXFLAGS="$SLKCFLAGS" \
   --with-ssl=/usr/lib${LIBDIRSUFFIX} \
   --without-lua \
   --with-qt=no \
-  --disable-usr-local \
   --with-plugins=/usr/lib${LIBDIRSUFFIX}/wireshark/plugins \
-  --with-gtk2=yes \
+  --with-gtk=2 \
   --enable-packet-editor \
   --enable-setuid-install \
   --build=$ARCH-slackware-linux
