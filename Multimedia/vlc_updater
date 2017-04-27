@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170309
+SCRIPT_VERSION=20170427
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -21,7 +21,7 @@ F_variables() {
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=http://download.videolan.org
 	#VERSION=$(curl -s $WEB/$PRGNAM/ | grep -Po 'href="\K.*(?=")' | sed 's/\///g' | sort -g | tail -1)
-	VERSION=20170225_502e503
+	VERSION=20170406_8268fe0
 	EXTENSION=tar.xz
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
 	#DOWNLOAD=$WEB/$PRGNAM/$VERSION/$SOURCES
@@ -71,6 +71,14 @@ cCBpZiBhdmFpbGFibGUK" | base64 -d > $TMP/patch_vlc_cache_gen.diff
 
 patch -p0 < $TMP/patch_vlc_cache_gen.diff || exit 1
 
+FIND=$(ls /var/log/packages|grep -m1 libva-intel-driver|cut -d- -f4)
+if [ $FIND = 1.6.2 ]; then
+LIBVA="--enable-libva=no"
+else
+""
+LIBVA="--enable-libva"
+fi
+
 autoreconf -fiv
 
 CFLAGS="$SLKCFLAGS" \
@@ -84,10 +92,11 @@ LDFLAGS="$SLKLDFLAGS" \
   --docdir=/usr/doc/vlc-$VERSION \
   --localstatedir=/var \
   --enable-run-as-root \
-  --build=$ARCH-slackware-linux \
   --enable-qt=4 \
   --enable-merge-ffmpeg \
   --with-kde-solid=no \
+  $LIBVA \
+  --build=$ARCH-slackware-linux
   
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
