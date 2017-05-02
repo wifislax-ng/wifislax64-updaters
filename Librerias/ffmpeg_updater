@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170401
+SCRIPT_VERSION=20170502
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -79,7 +79,7 @@ f_dependencias
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 
-if [ -z $(ls /var/log/packages|grep opencl) ]; then
+if [ -z $(ls /var/log/packages|grep -m1 opencl) ]; then
 opencl="--disable-opencl"
 else
 opencl="--enable-opencl"
