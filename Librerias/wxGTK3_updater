@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170408
+SCRIPT_VERSION=20170506
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,12 +19,12 @@ F_variables() {
 	PRGNAM=wxGTK3
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/wxWidgets/wxWidgets/archive
-	VERSION=3.0.2
-	GITVER=a34b9c1e01699c4924357ace906644c03ea9d0bf
+	VERSION=3.0.3
 	SRCNAM=wxWidgets
-	EXTENSION=zip
-	SOURCES=$SRCNAM-$GITVER.$EXTENSION
-	DOWNLOAD=$WEB/$GITVER/$SOURCES
+	EXTENSION=tar.gz
+	SOURCES=$SRCNAM-$VERSION.$EXTENSION
+	DOWNLOAD=$WEB/v$VERSION/$SOURCES
+	
 }
 
 # Descomprimimos el fichero descargado y compilamos
@@ -46,6 +46,21 @@ UAogCg==" | base64 -d > $TMP/make-abicheck-non-fatal.patch
 
 patch -Np1 -i $TMP/make-abicheck-non-fatal.patch || exit 1
 
+# Check for STL
+if [ "${STL:-no}" = "yes" ]; then
+  stl="--enable-stl"
+else
+  stl=""
+fi
+
+# Check for WebKit
+webkit=`pkg-config --exists webkit-1.0`
+if [ "$?" -eq 0 ]; then
+  wk="--enable-webkit"
+else
+  wk=""
+fi
+
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
@@ -60,6 +75,9 @@ CXXFLAGS="$SLKCFLAGS" \
   --enable-unicode \
   --enable-plugins \
   --enable-ipv6 \
+  --enable-webview \
+  $wk \
+  $stl \
   --build=$ARCH-slackware-linux
 
 make  || exit 1
