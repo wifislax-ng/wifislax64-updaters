@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170502
+SCRIPT_VERSION=20170507
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,7 +19,7 @@ F_variables() {
 	PRGNAM=ffmpeg
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=http://ffmpeg.org/releases
-	VERSION=3.2.4
+	VERSION=3.3
 	EXTENSION=tar.xz
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
 	DOWNLOAD=$WEB/$SOURCES
@@ -108,7 +108,6 @@ CXXFLAGS="$SLKCFLAGS -I/usr/include/openmj2-2.1" \
   --enable-version3 \
   --enable-postproc \
   --enable-swscale \
-  --enable-x11grab \
   --enable-avfilter \
   --enable-avresample \
   --enable-gnutls \
