@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170318
+SCRIPT_VERSION=20170507
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -64,23 +64,53 @@ Y29uc3QgY2hhciAqa2V5LCBjb25zdCBBVkRpY3Rpb25hcnlFbnRyeSAqcHJldiwgaW50IGZsYWdz
 KSwKICAgICAgIChtLCBrZXksIHByZXYsIGZsYWdzKQogICAgKTsKICAgIEZGTVBFR19GVU5DVElP
 Tl9XSVRIX1JFVFVSTigK" | base64 -d > $TMP/audacity-ffmpeg.patch
 patch -p1 < $TMP/audacity-ffmpeg.patch
-  
+
+if [ -x /usr/bin/listplugins ];      then do_ladspa="--with-ladspa";          else do_ladspa="--without-ladspa";   fi
+if pkg-config --exists libavcodec;   then do_ffmpeg="-ffmpeg=system";         else do_ffmpeg="out-ffmpeg";         fi
+if pkg-config --exists soundtouch;   then do_soundtouch="-soundtouch=system"; else do_soundtouch="out-soundtouch"; fi
+if pkg-config --exists twolame;      then do_twolame="-libtwolame=system";    else do_twolame="out-libtwolame";    fi
+if pkg-config --exists vamp-hostsdk; then do_vamp="-libvamp=system";          else do_vamp="out-libvamp";          fi
+if $(pkg-config --exists lilv-0) && $(pkg-config --exists suil-0); then do_lv2="-lv2=system"; else do_lv2="out-lv2"; fi
+
+autoreconf -fi
+
 # libsoxr is the new default resampling library
 LDFLAGS="-L/usr/lib$LIBDIRSUFFIX" \
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
-
-   autoreconf -vi
-
-  ./configure \
+./configure \
   --prefix=/usr \
   --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --enable-unicode \
+  --enable-nyquist \
+  --with-expat=system \
+  --with-lame=system \
+  --with-libvorbis=system \
+  --with-libmad=system \
+  --with-libflac=system \
+  --with-libsndfile=system \
+  --with-libid3tag=system \
+  --with-libsoxr \
+  --with-portaudio \
+  $do_ladspa \
+  --with$do_ffmpeg \
+  --with$do_lv2 \
+  --with$do_soundtouch \
+  --with$do_twolame \
+  --with$do_vamp \
+  --without-libresample \
   --without-libsamplerate
 
+# ensure we use the system headers for these: note that we do this after the
+# configure as this last wants to run sub-configures in these dirs
+for i in ffmpeg expat lame libid3tag libflac libmad libresample libsndfile libvamp lv2 soundtouch twolame; do
+  rm -rf lib-src/$i
+done  
+  
 echo ""
 echo "$VERDE"Compilamos ..."$CIERRE"
 sleep 1
-make  || exit 1
+make || exit 1
 make install DESTDIR=$PKG
 }
 
