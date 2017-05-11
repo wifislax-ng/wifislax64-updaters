@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170506
+SCRIPT_VERSION=20170511
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -46,20 +46,7 @@ UAogCg==" | base64 -d > $TMP/make-abicheck-non-fatal.patch
 
 patch -Np1 -i $TMP/make-abicheck-non-fatal.patch || exit 1
 
-# Check for STL
-if [ "${STL:-no}" = "yes" ]; then
-  stl="--enable-stl"
-else
-  stl=""
-fi
-
-# Check for WebKit
-webkit=`pkg-config --exists webkit-1.0`
-if [ "$?" -eq 0 ]; then
-  wk="--enable-webkit"
-else
-  wk=""
-fi
+./autogen.sh
 
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
@@ -76,11 +63,9 @@ CXXFLAGS="$SLKCFLAGS" \
   --enable-plugins \
   --enable-ipv6 \
   --enable-webview \
-  $wk \
-  $stl \
   --build=$ARCH-slackware-linux
 
-make  || exit 1
+make || exit 1
 make install DESTDIR=$PKG
 
 ln -fs /usr/lib${LIBDIRSUFFIX}/wx/config/gtk2-unicode-3.0 \
