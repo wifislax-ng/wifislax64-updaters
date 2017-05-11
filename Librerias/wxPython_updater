@@ -26,9 +26,14 @@ F_variables() {
 	DOWNLOAD=$WEB/$SOURCES
 }
 
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="wxGTK3"
+f_dependencias
+}
+
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-# Configuramos paquete
 echo ""
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
@@ -140,6 +145,8 @@ f_presentacion
 f_comprobarUpdates
 #Comprobamos version instalada del script
 f_versionInstalada
+#Compronar dependencias
+F_dependencias
 #Si no existe el fichero se descargara
 f_download
 #Preparamos entorno
