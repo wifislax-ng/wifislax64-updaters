@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160211
+SCRIPT_VERSION=20170512
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -16,14 +16,14 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	WEB=https://sourceforge.net/projects/wxhexeditor/files/wxHexEditor/
-	VERSION_REAL=$(curl -s $WEB | grep -m1 "class=\"folder" | grep -Po 'title="\K.*(?=" )' | sed 's/ /%20/g')
 	PRGNAM=wxHexEditor
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	VERSION=$(echo $VERSION_REAL | cut -d% -f1 | cut -d "v" -f2)
-	EXTENSION=tar.bz2
-	SOURCES=$PRGNAM-v$VERSION-src.$EXTENSION
-	DOWNLOAD=$WEB/$VERSION_REAL/$SOURCES
+	SRCNAM=$PRGNAM-master
+	WEB=https://sourceforge.net/projects/wxhexeditor/files/wxHexEditor/
+	VERSION=0.24_beta
+	EXTENSION=zip
+	SOURCES=master.$EXTENSION
+	DOWNLOAD=https://github.com/EUA/wxHexEditor/archive/$SOURCES
 }
 
 # Comprobar dependencias
@@ -38,17 +38,9 @@ echo
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1 
 
-CFLAGS="$SLKCFLAGS" \
-CXXFLAGS="$SLKCFLAGS" \
-
-# Forcemos wx-config-2.8
-sed -i 's/wx-config/wx-config-2.8/g' Makefile
-
-make  || exit 1
-make install DESTDIR=$PKG
+make PREFIX=/usr OPTFLAGS="$SLKCFLAGS" HOST=$ARCH-slackware-linux
+make install PREFIX=$PKG/usr
 find $PKG -type f -name *.desktop -exec sed -i 's/Categories=Utility/Categories=Development/g' {} \;
-mv $PKG/usr/local/* $PKG/usr
-rmdir $PKG/usr/local
 }
 
 ###################################
@@ -59,6 +51,8 @@ trap f_exitmode SIGHUP SIGINT
 
 #Inicializamos las variables globales
 f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
 #Comprobamos conexion a Internet
 f_comprobarConexion
 #Inicializamos las variables del script
@@ -69,8 +63,6 @@ f_directorioTemporal
 f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
-#Asignamos o detectamos arquitectura
-f_arquitectura
 #Comprobamos version instalada del paquete
 f_versionInstalada
 #Compronar dependencias
