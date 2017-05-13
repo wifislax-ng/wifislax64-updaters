@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20170319
+SCRIPT_VERSION=20170513
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -33,7 +33,10 @@ KERNEL_SISTEMA=$(uname -r|cut -d '-' -f1|tr -d " \t\n\r")
 RAMA_SISTEMA=$(uname -r|cut -d '-' -f1|cut -d "." -f-2|tr -d " \t\n\r")
 WEB=https://www.kernel.org
 
-export MAKEFLAGS="-j$(nproc --all)"
+# Si el equipo tiene mas de un nucleo usamos todos menos uno
+if [ $(nproc --all) -gt 1 ]; then
+export MAKEFLAGS="-j$(expr $(nproc --all) - 1)"
+fi
 
 echo -ne "\033]2;${PRGNAM}_updater\007"
 
