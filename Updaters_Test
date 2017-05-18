@@ -1,7 +1,8 @@
 #!/bin/bash
 
-SCRIPTVERSION=1.2-mod
+SCRIPTVERSION=1.2
 
+# v1.2 Se añade funcion timeout
 # v1.1 Se añade mensaje si todos los upadters funcionan
 
 clear
@@ -36,7 +37,7 @@ echo ""
 echo "No tengo internet ... el script se cerrara."
 echo ""
 sleep 1
-exit 1
+exit 0
 fi
 
 BUSQUEDA(){
@@ -45,36 +46,34 @@ if [ -d $TMP ]; then
 rm -rf $TMP
 fi
 mkdir -p $TMP
-
-UPDATERS=`find . -type f -name "*_updater"`
+cd /opt/wifislax-updaters
+UPDATERS=$(find . -type f -name "*_updater")
 echo 
 echo "${BLANCO}[${VERDE}*${BLANCO}]$AMARILLO Copiando updaters a directorio temporal ..."
 cp -rf $UPDATERS $TMP &>/dev/null
-rm -rf $TMP/Driver_ATI_updater &>/dev/null
 rm -rf $TMP/linux* &>/dev/null
 rm -rf $TMP/funciones_updater &>/dev/null
 rm -rf $TMP/wifislax-updaters_updater &>/dev/null
 rm -rf $TMP/last_update &>/dev/null
 rm -rf $TMP/firefox_multi_updater &>/dev/null
-rm -rf $TMP/adobe-reader_updater &>/dev/null
 }
 
 TEMPORAL(){
 cd $TMP
-TEMPUPDATERS=`find . -type f -name "*_updater" | sort`
+TEMPUPDATERS=$(find . -type f -name "*_updater"|sort)
 echo "${BLANCO}[${VERDE}*${BLANCO}]$AMARILLO Modificando copias temporales de updaters ..."
-for tempupdater in $TEMPUPDATERS; do
-LINEA=`grep -r "f_exitmode" -n $tempupdater | tr -d [a-zA-Z#_.:/]`
-FINAL=`cat $tempupdater | wc -l`
-ELIMINAR=`expr $FINAL + 1`
-sed -i "${LINEA},${ELIMINAR}d" $tempupdater
-#echo f_variables >> $tempupdater
-echo F_variables >> $tempupdater
-echo 'if [ -z $VERSION ]; then' >> $tempupdater
-echo 'VERSION="[1;31mFallido [0m"' >> $tempupdater
-echo 'echo "$PRGNAM" >> "./FALLIDOS"' >> $tempupdater
-echo 'fi' >> $tempupdater
-echo 'echo -e "[1;37mPrograma:[1;36m${PRGNAM}'"\t"'""[1;37mVersion:[1;32m${VERSION}[0m"' >> $tempupdater
+for UPDATER in $TEMPUPDATERS; do
+LINEA=$(grep -r "f_exitmode" -n $UPDATER|tr -d [a-zA-Z#_.:/])
+FINAL=$(cat $UPDATER|wc -l)
+ELIMINAR=$(expr $FINAL + 1)
+sed -i "${LINEA},${ELIMINAR}d" $UPDATER
+#echo f_variables >> $UPDATER
+echo F_variables >> $UPDATER
+echo 'if [ -z $VERSION ]; then' >> $UPDATER
+echo 'VERSION="[1;31mFallido [0m"' >> $UPDATER
+echo 'echo "$PRGNAM" >> "./FALLIDOS"' >> $UPDATER
+echo 'fi' >> $UPDATER
+echo 'printf "%-52s [1;37mVersion:[1;32m${VERSION}[0m\n" "[1;37mPrograma:[1;36m${PRGNAM}"' >> $UPDATER
 done
 }
 
@@ -82,11 +81,9 @@ MOSTRAR(){
 echo "${BLANCO}[${VERDE}*${BLANCO}]$AMARILLO Testeando updaters..."
 echo
 sleep 3
-for tempupdater in $TEMPUPDATERS ; do
-{ sh -c "$TMP/$tempupdater"; }
-#sh -c "$TMP/$tempupdater"
+for UPDATER in $TEMPUPDATERS ; do
+timeout -s SIGTERM 5 sh -c "$TMP/$UPDATER"||printf "%-52s [1;37mVersion:[1;31mTIMEOUT[0m\n" "[1;37mPrograma:[1;36m$(echo $UPDATER|cut -d / -f2|sed 's/_updater//g')"
 done
-wait
 }
 
 INFORME(){
@@ -101,8 +98,6 @@ echo "${BLANCO}[${VERDE}*${BLANCO}] Los siguientes updaters fallaron"
 echo $BLANCO
 cat $TMP/FALLIDOS
 echo $CIERRE
-LIMPIAR
-exit 1
 else 
 echo "${BLANCO}[${VERDE}*${BLANCO}] ${VERDE}!!! Enhorabuena !!!"
 echo "${BLANCO}[${VERDE}*${BLANCO}] Todos los upadters funcionan."
