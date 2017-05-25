@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170129
+SCRIPT_VERSION=20170525
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -18,11 +18,14 @@ f_variables(){
 F_variables() {
 	PRGNAM=shodan
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://pypi.python.org/pypi/$PRGNAM
-	VERSION="$(curl -s $WEB|grep tar.gz|head -1|grep -Po 'href="\K.*(?=")'|cut -d- -f2|cut -d t -f-1|sed 's/.$//g')"
+	#WEB=https://pypi.python.org/pypi/$PRGNAM
+	WEB=https://pypi.python.org/packages
+	#VERSION="$(curl -s $WEB|grep tar.gz|head -1|grep -Po 'href="\K.*(?=")'|cut -d- -f2|cut -d t -f-1|sed 's/.$//g')"
+	VERSION=1.6.5
 	EXTENSION=tar.gz
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	DOWNLOAD="$(curl -s $WEB|grep tar.gz|head -1|grep -Po 'href="\K.*(?=")')"
+	#DOWNLOAD="$(curl -s $WEB|grep tar.gz|head -1|grep -Po 'href="\K.*(?=")')"
+	DOWNLOAD=$WEB/ae/c8/510acdc63b093cca499023a5d33079c000c743ab2f526f37848b4a63a2f7/$SOURCES
 }
 
 # Descomprimimos el fichero descargado y compilamos
