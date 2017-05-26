@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161103
+SCRIPT_VERSION=20170526
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -17,14 +17,15 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	WEB=http://lives-video.com/index.php?do=downloads
-	VERSION=`curl -s $WEB|grep -a .tar.bz2|cut -d - -f3|cut -d t -f-1|sed "s/.$//g"`
 	PRGNAM=lives
 	SRCNAM=LiVES
 	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=http://lives-video.com
+	VERSION=$(curl -s $WEB/index.php?do=downloads|grep -a .tar.bz2|cut -d - -f3|cut -d t -f-1|sed "s/.$//g")
 	EXTENSION=tar.bz2
 	SOURCES=$SRCNAM-$VERSION.$EXTENSION
-	DOWNLOAD=http://lives-video.com/releases/$SOURCES
+	CD=$PRGNAM-$VERSION
+	DOWNLOAD=$WEB/releases/$SOURCES
 }
 
 # Comprobar dependencias
@@ -69,6 +70,8 @@ trap f_exitmode SIGHUP SIGINT
 
 #Inicializamos las variables globales
 f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
 #Comprobamos conexion a Internet
 f_comprobarConexion
 #Inicializamos las variables del script
@@ -79,8 +82,6 @@ f_directorioTemporal
 f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
-#Asignamos o detectamos arquitectura
-f_arquitectura
 #Comprobamos version instalada del paquete
 f_versionInstalada
 # Comprobar dependencias

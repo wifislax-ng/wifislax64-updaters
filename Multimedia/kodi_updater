@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170202
+SCRIPT_VERSION=20170526
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -22,10 +22,11 @@ F_variables() {
 	WEB=https://github.com/xbmc/xbmc
 	VERSION=$(curl -s $WEB/releases/latest|cut -d "/" -f8|cut -d '"' -f1|cut -d- -f-1)
 	RAMA=$(curl -s $WEB/releases/latest|cut -d "/" -f8|cut -d '"' -f1|cut -d- -f2)
-	SRCNAM=xbmc-$VERSION-$RAMA
+	SRCNAM=xbmc
 	EXTENSION=tar.gz
-	SOURCES=$VERSION-$RAMA.$EXTENSION
-	DOWNLOAD=$WEB/archive/$SOURCES
+	SOURCES=$SRCNAM-$VERSION-$RAMA.$EXTENSION
+	CD=$SRCNAM-$VERSION-$RAMA
+	DOWNLOAD=$WEB/archive/$VERSION-$RAMA/$SOURCES
 }
 
 # Comprobar dependencias
@@ -74,6 +75,7 @@ LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}" \
   --enable-pulse \
   --enable-webserver \
   --enable-shared-libraries \
+  --with-ffmpeg=shared \
   --build=$ARCH-slackware-linux
     
 echo 

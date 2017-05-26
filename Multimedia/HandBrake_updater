@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161229
+SCRIPT_VERSION=20170526
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -20,9 +20,10 @@ F_variables() {
 	PRGNAM=HandBrake
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://handbrake.fr/downloads.php
-	VERSION=`curl -s $WEB|grep Current|cut -d: -f2|cut -d '<' -f-1|sed "s/ //g"`
+	VERSION=$(curl -s $WEB|grep Current|cut -d: -f2|cut -d '<' -f-1|sed "s/ //g")
 	EXTENSION=tar.bz2
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
+	CD=$PRGNAM-$VERSION
 	DOWNLOAD=http://download.handbrake.fr/releases/$VERSION/$SOURCES
 }
 

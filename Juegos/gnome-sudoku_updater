@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161102
+SCRIPT_VERSION=20170526
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,11 +19,11 @@ F_variables() {
 	PRGNAM=gnome-sudoku
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=http://ftp.gnome.org/pub/gnome/sources/$PRGNAM/
-	#RAMA=`curl -s $WEB | grep [0-9]/| tail -1 | cut -d '>' -f3 | cut -d / -f-1`
-	RAMA=3.14
-	VERSION=`curl -s ${WEB}${RAMA}/|grep .xz|tail -1|grep -Po 'href="\K.*(?=")'|cut -d- -f3|sed 's/.tar.xz//g'`
+	RAMA=$(ls /var/log/packages|grep gtk+3|cut -d . -f-2|cut -d- -f2)
+	VERSION=$(curl -s ${WEB}${RAMA}/|grep .xz|tail -1|grep -Po 'href="\K.*(?=")'|cut -d- -f3|sed 's/.tar.xz//g')
 	EXTENSION=tar.xz
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
+	CD=$PRGNAM-$VERSION
 	DOWNLOAD=http://ftp.gnome.org/pub/gnome/sources/$PRGNAM/$RAMA/$SOURCES
 }
 

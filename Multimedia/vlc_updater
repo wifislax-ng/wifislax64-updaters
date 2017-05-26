@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170427
+SCRIPT_VERSION=20170526
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -25,6 +25,7 @@ F_variables() {
 	EXTENSION=tar.xz
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
 	#DOWNLOAD=$WEB/$PRGNAM/$VERSION/$SOURCES
+	CD=$PRGNAM-$VERSION
 	DOWNLOAD=http://ponce.cc/slackware/sources/repo/$SOURCES
 }
 
@@ -116,6 +117,8 @@ trap f_exitmode SIGHUP SIGINT
 
 #Inicializamos las variables globales
 f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
 #Comprobamos conexion a Internet
 f_comprobarConexion
 #Inicializamos las variables del script
@@ -126,8 +129,6 @@ f_directorioTemporal
 f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
-#Asignamos o detectamos arquitectura
-f_arquitectura
 #Comprobamos version instalada del script
 f_versionInstalada
 # Comprobar dependencias

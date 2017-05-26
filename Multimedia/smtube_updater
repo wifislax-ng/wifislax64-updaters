@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170212
+SCRIPT_VERSION=20170526
 CATEGORIA="Reproductores streaming"
 
 ############################################################
@@ -24,6 +24,7 @@ F_variables() {
 	RAMA=$(curl -s $WEB|grep bz2|head -1|cut -d / -f10)
 	EXTENSION=tar.bz2
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
+	CD=$PRGNAM-$VERSION
 	DOWNLOAD=http://sourceforge.net/projects/smtube/files/SMTube/$RAMA/$SOURCES
 }
 
@@ -35,7 +36,7 @@ sed -i "/^PREFIX/s/=.*$/=\/usr/;
         s/^QMAKE_OPTS=/QMAKE_OPTS+=/" Makefile
 
 QMAKE_OPTS="QMAKE_CXXFLAGS=\"$SLKCFLAGS\"" \
-make  || exit 1
+make || exit 1
 make install DESTDIR=$PKG
   
 # Corregimos el nombre en el fichero desktop
@@ -50,6 +51,8 @@ trap f_exitmode SIGHUP SIGINT
 
 #Inicializamos las variables globales
 f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
 #Comprobamos conexion a Internet
 f_comprobarConexion
 #Inicializamos las variables del script
@@ -60,8 +63,6 @@ f_directorioTemporal
 f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
-#Asignamos o detectamos arquitectura
-f_arquitectura
 #Comprobamos version instalada del script
 f_versionInstalada
 #Si no existe el fichero se descargara

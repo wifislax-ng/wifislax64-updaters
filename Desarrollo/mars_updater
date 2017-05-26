@@ -2,7 +2,7 @@
 
 # Script by vk496 for www.seguridadwireless.net 
 
-SCRIPT_VERSION=20170518
+SCRIPT_VERSION=20170526
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -21,8 +21,9 @@ F_variables() {
 	WEB=http://courses.missouristate.edu/KenVollmar//mars/download.htm
 	VERSION=$(curl -s $WEB|grep "jar archive including"|head -1|grep -Po '<font \K.*(?=</font>)'|grep -Po '>\K.*(?=</font>)'|cut -d, -f1 | cut -c 2-)
 	LINK=$(curl -s $WEB|grep -Po '<a\K.*(?=>)'|grep "MARS_"|sort -h|tail -1|grep -Po 'href="\K.*(?=")')
-	DOWNLOAD="$(echo "$WEB"|cut -d/ -f-6)/$LINK"
 	SOURCES=$(echo "$LINK"|rev|cut -d/ -f1|rev)
+	CD=$PRGNAM-$VERSION
+	DOWNLOAD="$(echo "$WEB"|cut -d/ -f-6)/$LINK"
 }
 
 # Comprobar dependencias

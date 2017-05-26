@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160404
+SCRIPT_VERSION=20170526
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -16,15 +16,10 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	if [ $ARCH = i586 ]; then
-	ARCH=x86
-	else
-	ARCH=x86-64
-	fi
 	PRGNAM=openoffice
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://sourceforge.net/projects/openofficeorg.mirror/files/
-	VERSION=`curl -s $WEB|grep -m 1 "<tr title="|cut -d '"' -f2|sed "s/ //g"`
+	WEB=https://sourceforge.net/projects/openofficeorg.mirror/files
+	VERSION=$(curl -s $WEB/|grep -m 1 "<tr title="|cut -d '"' -f2|sed "s/ //g")
 	RAMA=$(echo $VERSION|cut -f1 -d.)
 	EXTENSION=tar.gz
 	if [ $LANG = es_ES.utf8 ]; then
@@ -32,9 +27,9 @@ F_variables() {
 	else
 	IDIOMA=en-US
 	fi
-	SOURCES=Apache_OpenOffice_${VERSION}_Linux_${ARCH}_install-rpm_$IDIOMA.$EXTENSION
+	SOURCES=Apache_OpenOffice_${VERSION}_Linux_x86-64_install-rpm_$IDIOMA.$EXTENSION
 	SRCNAM=$IDIOMA
-	DOWNLOAD=https://sourceforge.net/projects/openofficeorg.mirror/files/$VERSION/binaries/$IDIOMA/$SOURCES
+	DOWNLOAD=$WEB/$VERSION/binaries/$IDIOMA/$SOURCES
 }
 
 # Descomprimimos el fichero descargado y compilamos

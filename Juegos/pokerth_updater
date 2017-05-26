@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170104
+SCRIPT_VERSION=20170526
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_            ##
@@ -19,10 +19,11 @@ F_variables() {
 	PRGNAM=pokerth
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://sourceforge.net/projects/$PRGNAM/files/$PRGNAM/
-	VERSION=`curl -s $WEB|grep -i latest|grep -Po 'PokerTH-\K.*(?=")'|cut -d- -f-1`
+	VERSION=$(curl -s $WEB|grep -i latest|grep -Po 'PokerTH-\K.*(?=")'|cut -d- -f-1)
 	EXTENSION=tar.bz2
 	SRCNAM=PokerTH-$VERSION-src
 	SOURCES=$SRCNAM.$EXTENSION
+	CD=PokerTH-$VERSION-src
 	DOWNLOAD=https://downloads.sourceforge.net/$PRGNAM/$SOURCES
 }
 

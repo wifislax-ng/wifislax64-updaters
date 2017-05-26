@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170421
+SCRIPT_VERSION=20170526
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -19,11 +19,12 @@ f_variables(){
 F_variables() {
 	PRGNAM=exaile
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=http://www.exaile.org/download/
-	VERSION=`curl -s $WEB|grep .tar.gz|tail -1|cut -d ">" -f 3|sed "s/ //g"|cut -d "S" -f1`
+	WEB=https://github.com/exaile/exaile
+	VERSION=$(curl -s $WEB/releases|grep -v beta|grep [0-9].tar.gz|head -1|cut -d- -f2|cut -d t -f-1|sed 's/.$//g')
 	EXTENSION=tar.gz
-	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	DOWNLOAD=https://github.com/exaile/exaile/releases/download/$VERSION/$SOURCES
+	SOURCES=$VERSION.$EXTENSION
+	CD=$PRGNAM-$VERSION
+	DOWNLOAD=$WEB/archive/$SOURCES
 }
 
 # Comprobar dependencias
@@ -54,6 +55,8 @@ trap f_exitmode SIGHUP SIGINT
 
 #Inicializamos las variables globales
 f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
 #Comprobamos conexion a Internet
 f_comprobarConexion
 #Inicializamos las variables del script
@@ -64,8 +67,6 @@ f_directorioTemporal
 f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
-#Asignamos o detectamos arquitectura
-f_arquitectura
 #Comprobamos version instalada del script
 f_versionInstalada
 # Comprobar dependencias

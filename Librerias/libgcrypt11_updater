@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160413
+SCRIPT_VERSION=20170526
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -16,15 +16,13 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	if [ $ARCH = i586 ]; then
-	ARCH=i486
-	fi
 	PRGNAM=libgcrypt11
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=http://slackware.cs.utah.edu/pub/slackware/slackware${LIBDIRSUFFIX}-14.1/slackware${LIBDIRSUFFIX}/n
 	VERSION=1.5.3
 	EXTENSION=txz
 	SOURCES=libgcrypt-$VERSION-$ARCH-1.$EXTENSION
+	CD=libgcrypt-$VERSION
 	DOWNLOAD=$WEB/$SOURCES
 }
 

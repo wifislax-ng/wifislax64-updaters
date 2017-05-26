@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170125
+SCRIPT_VERSION=20170526
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -22,6 +22,7 @@ F_variables() {
 	VERSION="$(curl -s $WEB|grep tar.gz|head -1|grep -Po 'href="\K.*(?=")'|cut -d- -f2|cut -d t -f-1|sed 's/.$//g')"
 	EXTENSION=tar.gz
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
+	CD=$PRGNAM-$VERSION
 	DOWNLOAD="$(curl -s $WEB|grep tar.gz|head -1|grep -Po 'href="\K.*(?=")')"
 }
 

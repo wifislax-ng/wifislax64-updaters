@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170302
+SCRIPT_VERSION=20170526
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -23,7 +23,8 @@ F_variables() {
 	CONVERT="$(echo $VERSION|tr . _)"
 	EXTENSION=tar.gz
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	DOWNLOAD=https://github.com/arvidn/libtorrent/releases/download/libtorrent-$CONVERT/$SOURCES
+	CD=$PRGNAM-$VERSION
+	DOWNLOAD=$WEB/download/libtorrent-$CONVERT/$SOURCES
 }
 
 F_dependencias(){
