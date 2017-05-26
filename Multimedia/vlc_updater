@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170526
+SCRIPT_VERSION=20170527
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -76,7 +76,6 @@ FIND=$(ls /var/log/packages|grep -m1 libva-intel-driver|cut -d- -f4)
 if [ $FIND = 1.6.2 ]; then
 LIBVA="--enable-libva=no"
 else
-""
 LIBVA="--enable-libva"
 fi
 
