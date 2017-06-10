@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170526
+SCRIPT_VERSION=20170611
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -73,18 +73,13 @@ libdc1394
 libxml++
 libconfig
 libffado
-jack-audio-connection-kit"
+jack-audio-connection-kit
+opencl-headers"
 f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-
-if [ -z $(ls /var/log/packages|grep -m1 opencl) ]; then
-opencl="--disable-opencl"
-else
-opencl="--enable-opencl"
-fi
 
 # Fix linking with flite
 sed -i "s| -lflite\"| -lflite -lm -lasound\"|" \
@@ -157,8 +152,8 @@ CXXFLAGS="$SLKCFLAGS -I/usr/include/openmj2-2.1" \
   --enable-libwebp \
   --enable-openssl \
   --enable-libzmq \
-  --arch=$ARCH \
-  $opencl || exit 1
+  --enable-opencl \
+  --arch=$ARCH || exit 1
   
   make || exit 1
   make install DESTDIR=$PKG
