@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170526
+SCRIPT_VERSION=20170709
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -28,7 +28,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="GeoIP portaudio c-ares krb5"
+DEPENDENCIAS="c-ares GeoIP libdbus-c++ libiec61883 libxml++ libconfig libffado celt jack-audio-connection-kit portaudio krb5 libsmi"
 f_dependencias
 }
 
@@ -55,10 +55,10 @@ CXXFLAGS="$SLKCFLAGS" \
   --mandir=/usr/man \
   --docdir=/usr/doc/$PRGNAM-$VERSION \
   --with-ssl=/usr/lib${LIBDIRSUFFIX} \
-  --without-lua \
   --with-qt=no \
   --with-plugins=/usr/lib${LIBDIRSUFFIX}/wireshark/plugins \
   --with-gtk=2 \
+  --without-lua \
   --enable-packet-editor \
   --enable-setuid-install \
   --build=$ARCH-slackware-linux
@@ -73,12 +73,11 @@ make install DESTDIR=$PKG || exit 1
 clear
 echo "$VERDE"Copiando wireshark headers"$BLANCO"...."$CIERRE"
 HEADERS=$PKG/usr/include/wireshark
-find . ! -name "*.h" -exec rm -f {} \; &> /dev/null
-sleep 1
-find . -type d -depth -empty -exec rmdir '{}' ';' &> /dev/null
-sleep 1
-mkdir -p $HEADERS &> /dev/null
-cp -r ./* $HEADERS &> /dev/null
+mkdir -p $PKG/usr/include/$PRGNAM/{epan/{crypt,dfilter,dissectors,ftypes,wmem},wiretap,wsutil}
+install -m644 config.h register.h ws_diag_control.h ws_symbol_export.h $PKG/usr/include/$PRGNAM
+  for d in epan epan/crypt epan/dfilter epan/dissectors epan/ftypes epan/wmem wiretap wsutil; do
+    install -m644 $d/*.h $PKG/usr/include/$PRGNAM/$d
+  done
 
 # Creamos icono
 echo "
