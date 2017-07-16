@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20170607
+SCRIPT_VERSION=20170716
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -116,7 +116,7 @@ do
             KERNEL_ELEGIDO=$(curl -s $WEB/|grep rc[0-9]|tail -1|cut -d v -f3|cut -d '"' -f-1)
             RAMA_ELEGIDO=$(echo $KERNEL_ELEGIDO|cut -d "-" -f-1|sed 's/ //g')
             FAMILIA=$(echo $KERNEL_ELEGIDO|cut -d. -f1)
-            DESCARGA=$WEB/pub/linux/kernel/v$FAMILIA.x/testing/linux-$KERNEL_ELEGIDO.tar.xz
+            DESCARGA=https://git.kernel.org/torvalds/t/linux-$KERNEL_ELEGIDO.tar.gz
             break;;
         *)  echo opcion invalida;;
     esac
@@ -138,7 +138,7 @@ fi
 cd /usr/src/
 
 # Si el paquete no existe se descargara de internet
-if [ ! -f linux-$KERNEL_ELEGIDO.tar.xz ]; then
+if [ ! -f linux-$KERNEL_ELEGIDO.tar.* ]; then
 echo ""
 echo "$CYAN"Descargando sources de $PRGNAM-$KERNEL_ELEGIDO "$CIERRE"
 sleep 1
@@ -154,7 +154,7 @@ rm -rf /usr/src/$PRGNAM-$KERNEL_ELEGIDO &>/dev/null
 echo ""
 echo "$VERDE"Descomprimiendo ..."$CIERRE"
 sleep 1
-tar xvf $PRGNAM-$KERNEL_ELEGIDO.tar.xz
+tar xvf $PRGNAM-$KERNEL_ELEGIDO.tar.xz||tar xvf $PRGNAM-$KERNEL_ELEGIDO.tar.gz
 
 # Entrar a la ruta del kernel descomprimido
 cd $PRGNAM-$KERNEL_ELEGIDO
@@ -362,7 +362,7 @@ modprobe configs && zcat /proc/config.gz > /usr/src/$PRGNAM-$KERNEL_ELEGIDO/.con
 fi
 
 # Compilamos el kernel
-make olddefconfig || exit 1
+make oldconfig || exit 1
 make xconfig || exit 1
 
 # Variables para calcular tiempo de inicio

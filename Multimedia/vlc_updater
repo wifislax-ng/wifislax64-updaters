@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170528
+SCRIPT_VERSION=20170716
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -31,7 +31,58 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libiec61883 libxml++ libconfig libffado celt libass libdc1394 libdvbpsi libmpeg2 libupnp lua portaudio twolame opus ffmpeg libwebp gsm opencv libtar libkate faac libdca libebml libmatroska libshout speex jack-audio-connection-kit libsidplay2 zvbi faad2 libavc1394 libmodplug libcuefile libreplaygain musepack-tools vcdimager dirac gnome-vfs live555 rtmpdump libdvdcss fluidsynth schroedinger libminizip chromaprint x264 x265 bluray-keys libaacs libbdplus libbluray"
+DEPENDENCIAS="libiec61883
+libxml++
+libconfig
+libffado
+celt
+libass
+libdc1394
+libdvbpsi
+libmpeg2
+libupnp
+lua
+portaudio
+twolame
+opus 
+ffmpeg
+libwebp
+gsm
+opencv
+libtar
+libkate
+faac
+libdca
+libebml
+libmatroska
+libshout
+speex
+jack-audio-connection-kit
+libsidplay2
+zvbi
+faad2
+libavc1394
+libmodplug
+libcuefile
+libreplaygain
+musepack-tools
+vcdimager
+dirac
+gnome-vfs
+live555
+rtmpdump
+libdvdcss
+fluidsynth
+schroedinger
+libminizip
+chromaprint
+x264
+x265
+bluray-keys
+libaacs
+libbdplus
+libbluray
+ftgl"
 f_dependencias
 }
 
