@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170613
+SCRIPT_VERSION=20170726
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -42,7 +42,7 @@ make DESTDIR=$PKG install
 
 # Creamos el fichero desktop
 echo "[Desktop Entry]
-Categories=Settings
+Categories=Wine
 Comment=Settings Tool for WINE
 Encoding=UTF-8
 Exec=winetricks

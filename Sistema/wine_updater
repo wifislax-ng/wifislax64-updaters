@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161230
+SCRIPT_VERSION=20170726
 
 #################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -72,19 +72,66 @@ chmod 777 $PKG/usr/share/wine/gecko/${PRGNAM}_gecko-$GECKO_VERSION-x86.msi
 mv ${PRGNAM}-mono-$MONO_VERSION.msi $PKG/usr/share/wine/mono
 chmod 777 $PKG/usr/share/wine/mono/${PRGNAM}-mono-$MONO_VERSION.msi
 rm $PKG/var/log/packages/wine*
+
+# Creamos estructura de menu
+mkdir -p $PKG/etc/xdg/menus/applications-merged
+echo '<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+"http://www.freedesktop.org/standards/menu-spec/menu-1.0.dtd">
+<Menu>
+  <Name>Applications</Name>
+  <Menu>
+    <Name>wine-wine</Name>
+    <Directory>wine-wine.directory</Directory>
+    <Include>
+      <Category>Wine</Category>
+    </Include>
+  </Menu>
+</Menu>' > $PKG/etc/xdg/menus/applications-merged/wine.menu
+
+mkdir -p $PKG/usr/share/desktop-directories/
+echo "[Desktop Entry]
+Icon=winecfg
+Name=Wine
+Type=Directory" > $PKG/usr/share/desktop-directories/wine-wine.directory
+
+# Creamos iconos extras
+convert $PKG/usr/share/pixmaps/winecfg.png -scale 64 $PKG/usr/share/pixmaps/winecfg.png
+convert $PKG/usr/share/pixmaps/winecfg.png -scale 64 $PKG/usr/share/pixmaps/folder-wine.png
+convert $PKG/usr/share/pixmaps/winecfg.png -scale 64 $PKG/usr/share/pixmaps/wine-uninstaller.png
+
 # El desktop winecfg viene mal ..se repara
 rm $PKG/usr/share/applications/winecfg.desktop
 echo "[Desktop Entry]
-[Desktop Entry]
-Categories=Application;Settings
-Comment=Settings Tool for WINE
-Encoding=UTF-8
 Exec=winecfg
 Icon=winecfg
+Terminal=false
 Name=Wine Configuration
+Comment=Configure Wine
+Type=Application
+Categories=Wine;
+" > $PKG/usr/share/applications/winecfg.desktop
+
+# Incluimos unisnstaller
+echo "[Desktop Entry]
+Name=Uninstall Wine Software
+Comment=Uninstall Windows applications for Wine
+Exec=wine uninstaller
 Terminal=false
 Type=Application
-" > $PKG/usr/share/applications/winecfg.desktop
+Icon=wine-uninstaller
+Categories=Wine;
+" > $PKG/usr/share/applications/wine-uninstaller.desktop
+
+# Incluimos explorador c
+echo "[Desktop Entry]
+Name=Browse C: Drive
+Comment=Browse your virtual C: drive
+Exec=wine winebrowser c:
+Terminal=false
+Type=Application
+Icon=folder-wine
+Categories=Wine;
+" > $PKG/usr/share/applications/wine-browsedrive.desktop
 }
 
 ###################################
