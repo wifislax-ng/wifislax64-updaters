@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170730
+SCRIPT_VERSION=20170731
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -21,6 +21,18 @@ F_variables() {
 	WEB=https://www.teamviewer.com/es/download/linux/
 	VERSION=$(curl -sL $WEB|grep tar.xz|grep -v i386|head -1|cut -d '>' -f2|cut -d ' ' -f-1|cut -d v -f2)
 	DOWNLOAD=http://download.teamviewer.com/download/${PRGNAM}_amd64.deb
+}
+
+# Comprobar dependencias
+F_dependencias(){
+if [ -z $(ls /var/log/packages|grep -m1 multilib) ]; then
+xterm -hold -e 'echo "AVISO:
+Este programa (teamviewer) necesita un entorno multilib...
+Parece ser que has suprimido los paquetes compat32...
+El programa no funcionara a menos que cuente con dicho soporte.
+
+Cierra esta ventana para continuar."'
+fi
 }
 
 # Si el paquete no existe se descargara de internet
@@ -121,6 +133,8 @@ f_presentacion
 f_comprobarUpdates
 #Comprobamos version instalada del paquete
 f_versionInstalada
+# Comprobar dependencias
+F_dependencias
 #Si no existe el fichero se descargara
 F_download
 #Descomprimir fichero descargado y compilamos
