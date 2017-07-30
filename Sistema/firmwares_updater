@@ -27,25 +27,18 @@ F_descargar() {
 echo ""
 echo "$VERDE"Se procede a descargar los firmwares desde kernel.org"$CIERRE"
 echo "$AMARILLO"
-git clone git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git iwlwifi
 git clone "$WEB"
-cp -rn $TMP/iwlwifi/* $TMP/linux-firmware/
 echo "$CIERRE"
 }
 
 # Creamos directorios , eliminamos sobrantes .git y movemos
-F_arreglar(){
-rm -Rf $TMP/linux-firmware/.git
-rm -Rf $TMP/linux-firmware/LICENSE*
-rm -Rf $TMP/linux-firmware/LICENCE*
-rm -Rf $TMP/linux-firmware/WHENCE
-rm -Rf $TMP/linux-firmware/README
-rm -Rf $TMP/linux-firmware/Makefile
-rm -Rf $TMP/linux-firmware/GPL-3
-rm -Rf $TMP/linux-firmware/configure
-rm -Rf $TMP/linux-firmware/*.txt
-mkdir -p $PKG/lib/firmware
-mv $TMP/linux-firmware/* $PKG/lib/firmware/
+F_compilar(){
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
+sleep 1
+cd $TMP/linux-firmware
+make DESTDIR=$PKG FIRMWAREDIR=/lib/firmware install
+rm $PKG/lib/firmware/{Makefile,README,configure,GPL-3}
 }
 
 ###################################
@@ -72,9 +65,7 @@ f_arquitectura noarch
 f_versionInstalada
 #Descarga los firmwares mas nuevos disponibles
 F_descargar
-#Eliminar innecesarios
-F_arreglar
-#Hacemos strip sobre el paquete
-f_strip
+#Descomprimir fichero descargado y compilamos
+F_compilar
 #Creamos xzm , instalamos y salimos
 f_tareasFinales
