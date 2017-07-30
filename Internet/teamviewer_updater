@@ -1,0 +1,129 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20170730
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=teamviewer
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://www.teamviewer.com/es/download/linux/
+	VERSION=$(curl -sL $WEB|grep tar.xz|grep -v i386|head -1|cut -d '>' -f2|cut -d ' ' -f-1|cut -d v -f2)
+	DOWNLOAD=http://download.teamviewer.com/download/${PRGNAM}_amd64.deb
+}
+
+# Si el paquete no existe se descargara de internet
+F_download(){
+	if [ ! -f ${PRGNAM}_${VERSION}_amd64.deb ]; then
+	echo 
+	echo "$CYAN"Descargando sources de $PRGNAM-$VERSION"$CIERRE"
+	sleep 1
+	aria2c -x 3 $DOWNLOAD
+	fi
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+echo 
+echo "$VERDE"Descomprimiendo ..."$CIERRE"
+sleep 1
+cd $PKG
+ar p $TMP/teamviewer_${VERSION}_amd64.deb data.tar.bz2 | tar xjv
+
+# Make a .desktop file
+mkdir -p $PKG/usr/share/applications
+cat $PKG/opt/teamviewer/tv_bin/desktop/com.teamviewer.TeamViewer.desktop \
+  | sed -e 's/EXEC/teamviewer/' -e 's/ICON/teamviewer/' \
+  > $PKG/usr/share/applications/teamviewer.desktop
+
+# Remove the dangling symlink first
+rm -f $PKG/usr/bin/teamviewer
+
+# Re-create the generic executable
+( cd $PKG/usr/bin; ln -s /opt/teamviewer/tv_bin/script/teamviewer teamviewer )
+
+# Link icon to /usr/share/pixmaps
+mkdir -p $PKG/usr/share/pixmaps
+( ln -sf /opt/teamviewer/tv_bin/desktop/teamviewer.png  $PKG/usr/share/pixmaps/teamviewer.png )
+
+# Eliminamos doc
+rm -rf $PKG/opt/teamviewer/doc/
+
+# Create daemon
+mkdir -p $PKG/etc/rc.d
+echo '#!/bin/sh
+
+teamviewerd_start() {
+  if [ -x /opt/teamviewer/tv_bin/teamviewerd ]; then
+    echo "Starting TeamViewer Daemon"
+    /opt/teamviewer/tv_bin/teamviewerd --daemon start
+  fi
+}
+
+teamviewerd_stop() {
+    echo "Terminating TeamViewer Daemon"
+  killall teamviewerd
+}
+
+teamviewerd_restart() {
+  teamviewerd_stop
+  sleep 2
+  teamviewerd_start
+}
+
+case "$1" in
+'start')
+  teamviewerd_start
+  ;;
+'stop')
+  teamviewerd_stop
+  ;;
+'restart')
+  teamviewerd_restart
+  ;;
+*)
+  echo "usage $0 start|stop|restart"
+esac' > $PKG/etc/rc.d/rc.teamviewerd
+
+chmod 755 $PKG/etc/rc.d/rc.teamviewerd
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Comprobamos version instalada del paquete
+f_versionInstalada
+#Si no existe el fichero se descargara
+F_download
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Creamos xzm , instalamos y salimos
+f_tareasFinales
