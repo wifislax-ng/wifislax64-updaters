@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170526
+SCRIPT_VERSION=20170821
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -31,7 +31,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="lockdev lockdev platform libcec python3 python3-PyYAML lirc dcadec libass libmpeg2 tinyxml jdk yajl bluray-keys libaacs libbdplus libbluray libmicrohttpd crossguid libnfs python-gattlib pybluez" 
+DEPENDENCIAS="lockdev platform libcec python3 python3-PyYAML lirc dcadec libass libmpeg2 tinyxml jdk yajl bluray-keys libaacs libbdplus libbluray libmicrohttpd crossguid libnfs python-gattlib pybluez" 
 f_dependencias
 }
 
