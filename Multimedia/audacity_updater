@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170526
+SCRIPT_VERSION=20170901
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -21,7 +21,7 @@ F_variables() {
 	SRCNAM=Audacity
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/audacity/audacity
-	VERSION=$(curl -s $WEB/releases|grep [0-9].tar.gz|head -1|cut -d- -f2|cut -d t -f-1|sed 's/.$//g')
+	VERSION=$(curl -s $WEB/releases|grep [0-9].tar.gz|grep -v beta|head -1|cut -d- -f2|cut -d t -f-1|sed 's/.$//g')
 	EXTENSION=tar.gz
 	SOURCES=$SRCNAM-$VERSION.$EXTENSION
 	CD=$PRGNAM-$SRCNAM-$VERSION
