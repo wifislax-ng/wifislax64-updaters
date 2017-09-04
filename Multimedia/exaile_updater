@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170526
+SCRIPT_VERSION=20170904
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -41,7 +41,7 @@ sed -i -e 's|share/man|man|g' Makefile
 make
 PREFIX=/usr \
 LIBINSTALLDIR=/lib${LIBDIRSUFFIX} \
-make install DESTDIR=$PKG
+make install DESTDIR=$PKG PREFIX=/usr LIBINSTALLDIR=/lib${LIBDIRSUFFIX}
 
 # Eliminamos la restriccion root
 sed -i '21,29d' $PKG/usr/lib${LIBDIRSUFFIX}/exaile/exaile.py
