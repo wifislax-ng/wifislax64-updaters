@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170526
+SCRIPT_VERSION=20170910
 CATEGORIA="Reproductores streaming"
 
 ############################################################
@@ -20,7 +20,9 @@ F_variables() {
 	PRGNAM=gradio
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/haecker-felix/gradio
-	VERSION=$(curl -s $WEB/releases|grep .gz|grep v[0-9]|grep -v beta|head -1|cut -d / -f5|cut -d v -f2|cut -d t -f-1|sed 's/.$//g')
+	#VERSION=$(curl -s $WEB/releases|grep .gz|grep v[0-9]|grep -v beta|head -1|cut -d / -f5|cut -d v -f2|cut -d t -f-1|sed 's/.$//g')
+	#VERSIONES MAS ALTAS REQUIEREN GTK3-3.20
+	VERSION=5.0
 	EXTENSION=tar.gz
 	SOURCES=v${VERSION}.${EXTENSION}
 	CD=$PRGNAM-$VERSION
@@ -29,7 +31,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="json-glib vala gst-plugins-ugly" 
+DEPENDENCIAS="json-glib vala gst-plugins-ugly yelp-xsl yelp-tools meson" 
 f_dependencias
 }
 
