@@ -157,7 +157,14 @@ if [ -z "$BUSCAR" ]; then
 echo "${BLANCO}Dependencia ${AMARILLO}${D} ${ROJO}NO INSTALADA${BLANCO} ...resolviendo${CIERRE}."
 UPDATER=$(echo "$(find /opt/wifislax-updaters/* -name ${D}_updater)")
 if [ -z "$UPDATER" ]; then
+if [ "$(ping https://slackbuilds.org -c1 2>/dev/null)" ]; then
 slapt-src -u &>/dev/null
+else
+echo ${ROJO}
+echo "Parece que slackbuilds.org no responde ... intentalo mas tarde"
+echo ${CIERRE}
+exit 1
+fi
 xterm -e sh -c "TAG=slackbuilds slapt-src -y -i ${D}"
 PACKDIR=$(echo $(find /usr/src/slapt-src/ -name "${D}-*.txz"))
 XZMPACK=$(echo $(find /usr/src/slapt-src/ -name "${D}-*.txz"|rev|cut -d / -f-1|rev|sed 's/.txz/.xzm/g'))
