@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170821
+SCRIPT_VERSION=20170930
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -31,7 +31,26 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="lockdev platform libcec python3 python3-PyYAML lirc dcadec libass libmpeg2 tinyxml jdk yajl bluray-keys libaacs libbdplus libbluray libmicrohttpd crossguid libnfs python-gattlib pybluez" 
+DEPENDENCIAS="lockdev
+platform
+libcec
+python3
+python3-PyYAML
+dcadec
+libass
+libmpeg2
+tinyxml
+jdk
+yajl
+bluray-keys
+libaacs
+libbdplus
+libbluray
+libmicrohttpd
+crossguid
+libnfs
+python-gattlib
+pybluez" 
 f_dependencias
 }
 
@@ -40,6 +59,31 @@ F_compilar(){
 echo 
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
+
+# No need to show Git: "Version" in a release build.
+sed -i '/Git:/s|.*|  return GetVersionShort();|' $SRCNAM/utils/SystemInfo.cpp
+
+echo "
+ZGlmZiAtTmF1ciB4Ym1jLTE3LjEtS3J5cHRvbi5vcmlnL3hibWMvZmlsZXN5c3RlbS9TTUJEaXJl
+Y3RvcnkuY3BwIHhibWMtMTcuMS1LcnlwdG9uL3hibWMvZmlsZXN5c3RlbS9TTUJEaXJlY3Rvcnku
+Y3BwCi0tLSB4Ym1jLTE3LjEtS3J5cHRvbi5vcmlnL3hibWMvZmlsZXN5c3RlbS9TTUJEaXJlY3Rv
+cnkuY3BwCTIwMTctMDMtMjAgMTY6MTc6NDkuMDAwMDAwMDAwICswMDAwCisrKyB4Ym1jLTE3LjEt
+S3J5cHRvbi94Ym1jL2ZpbGVzeXN0ZW0vU01CRGlyZWN0b3J5LmNwcAkyMDE3LTAzLTIwIDIzOjAx
+OjUyLjQ0NDE2MDc0OSArMDAwMApAQCAtNDUsNyArNDUsNyBAQAogI2luY2x1ZGUgImxpbnV4L1hU
+aW1lVXRpbHMuaCIKICNlbmRpZgogCi0jaW5jbHVkZSA8bGlic21iY2xpZW50Lmg+CisjaW5jbHVk
+ZSA8c2FtYmEtNC4wL2xpYnNtYmNsaWVudC5oPgogCiBzdHJ1Y3QgQ2FjaGVkRGlyRW50cnkKIHsK
+ZGlmZiAtTmF1ciB4Ym1jLTE3LjEtS3J5cHRvbi5vcmlnL3hibWMvZmlsZXN5c3RlbS9TTUJGaWxl
+LmNwcCB4Ym1jLTE3LjEtS3J5cHRvbi94Ym1jL2ZpbGVzeXN0ZW0vU01CRmlsZS5jcHAKLS0tIHhi
+bWMtMTcuMS1LcnlwdG9uLm9yaWcveGJtYy9maWxlc3lzdGVtL1NNQkZpbGUuY3BwCTIwMTctMDMt
+MjAgMTY6MTc6NDkuMDAwMDAwMDAwICswMDAwCisrKyB4Ym1jLTE3LjEtS3J5cHRvbi94Ym1jL2Zp
+bGVzeXN0ZW0vU01CRmlsZS5jcHAJMjAxNy0wMy0yMCAyMzowMDoxNy4zNTUxNTQwMzQgKzAwMDAK
+QEAgLTI2LDcgKzI2LDcgQEAKICNpbmNsdWRlICJTTUJGaWxlLmgiCiAjaW5jbHVkZSAiUGFzc3dv
+cmRNYW5hZ2VyLmgiCiAjaW5jbHVkZSAiU01CRGlyZWN0b3J5LmgiCi0jaW5jbHVkZSA8bGlic21i
+Y2xpZW50Lmg+CisjaW5jbHVkZSA8c2FtYmEtNC4wL2xpYnNtYmNsaWVudC5oPgogI2luY2x1ZGUg
+ImZpbGVzeXN0ZW0vU3BlY2lhbFByb3RvY29sLmgiCiAjaW5jbHVkZSAic2V0dGluZ3MvQWR2YW5j
+ZWRTZXR0aW5ncy5oIgogI2luY2x1ZGUgInNldHRpbmdzL1NldHRpbmdzLmgiCg==
+" | base64 -d > $TMP/patches/xbmc-Krypton-samba-4.0.patch
+patch -p1 -i $TMP/patches/xbmc-Krypton-samba-4.0.patch || exit 1
 
 echo "
 LS0tIHRvb2xzL2RlcGVuZHMvbmF0aXZlL1RleHR1cmVQYWNrZXIvTWFrZWZpbGUub2xkCTIwMTUt
@@ -82,6 +126,7 @@ echo
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 make VERBOSE=1 || exit 1
+
 
 make install DESTDIR=$PKG || exit 1
 python -m compileall $PKG/usr/share/$PRGNAM/addons/service.xbmc.versioncheck
