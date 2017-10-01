@@ -168,8 +168,6 @@ CXXFLAGS="$SLKCFLAGS" \
   make || exit 1
   make install DESTDIR=$PKG
   make install-man DESTDIR=$PKG
-  
-  find $PKG/usr/man -type f -exec gzip -9 {} \;
 }
 
 ###################################
