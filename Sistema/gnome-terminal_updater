@@ -28,7 +28,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="vte3"
+DEPENDENCIAS="vala pcre2 vte3"
 f_dependencias
 }
 
