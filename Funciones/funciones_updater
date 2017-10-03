@@ -380,7 +380,9 @@ f_tareasFinales() {
    fi
    
    # Comprimimos los ficheros man
+   if [ -d $PKG/usr/man ]; then
    find $PKG/usr/man -type f -exec gzip -9 {} \;
+   fi
    
    #Ejecutamos funcion segun config
    if [ $PACKAGETYPE = xzm ]; then
