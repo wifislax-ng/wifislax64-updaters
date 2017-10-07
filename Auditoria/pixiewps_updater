@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170518
+SCRIPT_VERSION=20171007
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,31 +19,22 @@ F_variables() {
 	PRGNAM=pixiewps
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/wiire-a/pixiewps
-	VERSION=$(curl -s $WEB/releases|grep tar.gz|head -1|cut -d v -f3|cut -d t -f-1|sed 's/.$//g')_$(curl -s $WEB|grep /commit/|head -1|rev|cut -d / -f-1|rev|cut -c 1-7)
-	DOWNLOAD="git clone $WEB.git"
+	VERSION=$(curl -s $WEB/releases|grep tar.gz|head -1|cut -d v -f3|cut -d t -f-1|sed 's/.$//g')
+	EXTENSION=tar.gz
+	SOURCES=v$VERSION.$EXTENSION
+	CD=$PRGNAM-$VERSION
+	DOWNLOAD=$WEB/archive/$SOURCES
 }
 
 
-# Descomprimimos el fichero descargado y compilamos
+# Compilamos
 F_compilar(){
-
-if [ -d $TMP/$PRGNAM ]; then
-rm -rf $TMP/$PRGNAM
-fi
-
-$DOWNLOAD
-cd $TMP/$PRGNAM/src
-
-CFLAGS="$SLKCFLAGS" \
-CXXFLAGS="$SLKCFLAGS" \
-
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
-sed -i 's,/local,,g' Makefile
-make  || exit 1
-mkdir -p $PKG/usr/bin/
-cp -rf $TMP/$PRGNAM/src/${PRGNAM}  $PKG/usr/bin/
+make -C src || exit 1
+make -C src DESTDIR="${PKG}" install || exit 1
+install -Dm 644 pixiewps.1 -t "${PKG}/usr/share/man/man1"
 }
 
 ###################################
@@ -54,6 +45,8 @@ trap f_exitmode SIGHUP SIGINT
 
 #Inicializamos las variables globales
 f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
 #Comprobamos conexion a Internet
 f_comprobarConexion
 #Inicializamos las variables del script
@@ -64,11 +57,13 @@ f_directorioTemporal
 f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
-#Asignamos o detectamos arquitectura
-f_arquitectura
-#Comprobamos version instalada del script
+#Comprobamos version instalada del paquete
 f_versionInstalada
-#Compilamos
+#Si no existe el fichero se descargara
+f_download
+#Preparamos entorno
+f_preparar
+#Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete
 f_strip
