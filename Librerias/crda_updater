@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170526
+SCRIPT_VERSION=20171007
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -101,6 +101,8 @@ sleep 1
 
 # Antes de compilar hay que mover unos ficheros ,para que la regdb sea validada
 cp -rf $TMP/$REGDBNAM-$REGDBVERSION/*pem $TMP/$PRGNAM-$VERSION/pubkeys/
+
+sed -i -e "s,-Werror ,,g" -e "s,fpic,fPIC,g" Makefile
 
 make ; make clean ; make
 
