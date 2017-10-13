@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170901
+SCRIPT_VERSION=20171013
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -19,10 +19,10 @@ f_variables(){
 F_variables() {
 	PRGNAM=audacity
 	SRCNAM=Audacity
+	EXTENSION=tar.gz
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/audacity/audacity
-	VERSION=$(curl -s $WEB/releases|grep [0-9].tar.gz|grep -v beta|head -1|cut -d- -f2|cut -d t -f-1|sed 's/.$//g')
-	EXTENSION=tar.gz
+	VERSION=$(curl -s $WEB/releases|grep [0-9].$EXTENSION|grep -v beta|grep -v rc[0-9]|head -1|cut -d- -f2|cut -d '"' -f-1|sed s/.$EXTENSION//g)
 	SOURCES=$SRCNAM-$VERSION.$EXTENSION
 	CD=$PRGNAM-$SRCNAM-$VERSION
 	DOWNLOAD=$WEB/archive/$SOURCES
@@ -30,7 +30,25 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libiec61883 libxml++ libconfig libffado celt wxGTK3 jack-audio-connection-kit ffmpeg ladspa_sdk lame soundtouch twolame vamp-plugin-sdk serd sord lv2 sratom lilv suil"
+DEPENDENCIAS="libiec61883
+libxml++
+libconfig
+libffado
+celt
+wxGTK3
+jack-audio-connection-kit
+ffmpeg
+ladspa_sdk
+lame
+soundtouch
+twolame
+vamp-plugin-sdk
+serd
+sord
+lv2
+sratom
+lilv
+suil"
 f_dependencias
 }
 
@@ -66,13 +84,6 @@ KSwKICAgICAgIChtLCBrZXksIHByZXYsIGZsYWdzKQogICAgKTsKICAgIEZGTVBFR19GVU5DVElP
 Tl9XSVRIX1JFVFVSTigK" | base64 -d > $TMP/audacity-ffmpeg.patch
 patch -p1 < $TMP/audacity-ffmpeg.patch
 
-if [ -x /usr/bin/listplugins ];      then do_ladspa="--with-ladspa";          else do_ladspa="--without-ladspa";   fi
-if pkg-config --exists libavcodec;   then do_ffmpeg="-ffmpeg=system";         else do_ffmpeg="out-ffmpeg";         fi
-if pkg-config --exists soundtouch;   then do_soundtouch="-soundtouch=system"; else do_soundtouch="out-soundtouch"; fi
-if pkg-config --exists twolame;      then do_twolame="-libtwolame=system";    else do_twolame="out-libtwolame";    fi
-if pkg-config --exists vamp-hostsdk; then do_vamp="-libvamp=system";          else do_vamp="out-libvamp";          fi
-if $(pkg-config --exists lilv-0) && $(pkg-config --exists suil-0); then do_lv2="-lv2=system"; else do_lv2="out-lv2"; fi
-
 autoreconf -fi
 
 # libsoxr is the new default resampling library
@@ -93,12 +104,12 @@ CXXFLAGS="$SLKCFLAGS" \
   --with-libid3tag=system \
   --with-libsoxr \
   --with-portaudio \
-  $do_ladspa \
-  --with$do_ffmpeg \
-  --with$do_lv2 \
-  --with$do_soundtouch \
-  --with$do_twolame \
-  --with$do_vamp \
+  --with-ladspa \
+  --with-ffmpeg=system \
+  --with-lv2=system \
+  --with-soundtouch=system \
+  --with-libtwolame=system \
+  --with-libvamp=system \
   --without-libresample \
   --without-libsamplerate
 
