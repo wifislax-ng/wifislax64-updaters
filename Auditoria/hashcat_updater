@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20171027
+SCRIPT_VERSION=20171031
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -20,6 +20,10 @@ F_variables() {
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/hashcat/hashcat
 	VERSION=$(curl -s $WEB/releases|grep tar.gz|head -1|cut -d / -f5|cut -d t -f-1|sed 's/.$//g'|cut -d v -f2)
+	EXTENSION=tar.gz
+	SOURCES=v$VERSION.$EXTENSION
+	CD=$PRGNAM-$VERSION
+	DOWNLOAD=$WEB/archive/$SOURCES
 }
 
 # Comprobar dependencias
@@ -28,21 +32,25 @@ DEPENDENCIAS="opencl-headers ocl-icd"
 f_dependencias
 }
 
-F_download(){
-echo 
-echo "$VERDE"Clonando git hashcat ..."$CIERRE"
-sleep 1
-
-git clone https://github.com/hashcat/hashcat.git
-cd $TMP/$PRGNAM
-git submodule update --init
-}
-
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
+
+if [ $VERSION = 4.0.0 ]; then
+echo "LS0tIGEvc3JjL01ha2VmaWxlCisrKyBiL3NyYy9NYWtlZmlsZQpAQCAtMTI3LDcgKzEyNyw3IEBA
+CiAjIHRoZSB2YWx1ZSB3aWxsIGJlIHNvbWV0aGluZyBsaWtlIHRoaXM6ICJ0YWc6IHZYLlkuWiwg
+cmVmcy9wdWxsL1kvaGVhZCIKIAogVkVSU0lPTl9FWFBPUlQgICAgICAgICAgOj0gdGFnOiB2NC4w
+LjAKLVZFUlNJT05fVEFHICAgICAgICAgICAgIDo9ICQoc2hlbGwgdGVzdCAtZCAuZ2l0ICYmIGdp
+dCBkZXNjcmliZSAtLXRhZ3MgLS1kaXJ0eT0rIHx8IGVjaG8gIiQoVkVSU0lPTl9FWFBPUlQpIiB8
+ICQoU0VEKSAncy8uKjogdlwoW1wuMC05XSpcKSwuKi92XDEvJykKK1ZFUlNJT05fVEFHICAgICAg
+ICAgICAgIDo9ICQoc2hlbGwgdGVzdCAtZCAuZ2l0ICYmIGdpdCBkZXNjcmliZSAtLXRhZ3MgLS1k
+aXJ0eT0rIHx8IGVjaG8gIiQoVkVSU0lPTl9FWFBPUlQpIiB8ICQoU0VEKSAncy8uKjogdlwoW1wu
+MC05XSpcKS4qL3ZcMS8nKQogCiAjIwogIyMgR2VuZXJhbCBjb21waWxlciBhbmQgbGlua2VyIG9w
+dGlvbnMKCg=="|base64 -d > $TMP/makefile.patch
+patch -p1 -i $TMP/makefile.patch||exit 1
+fi
 
 sed -i "s|/lib|/lib${LIBDIRSUFFIX}|" src/Makefile
 
@@ -75,7 +83,9 @@ f_versionInstalada
 #Compronar dependencias
 F_dependencias
 #Si no existe el fichero se descargara
-F_download
+f_download
+#Preparamos entorno
+f_preparar
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete
