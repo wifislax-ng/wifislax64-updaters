@@ -26,6 +26,8 @@ PACKAGETYPE=$(cat $CONFIG|grep PACKAGETYPE|cut -d = -f2)
 
 # Si el equipo tiene mas de un nucleo usamos todos
 export MAKEFLAGS=-j$(nproc)
+# Se exporta variable para que slapt-src compile los plugins python3
+export PYTHON3=yes
 
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
