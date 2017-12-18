@@ -72,7 +72,7 @@ echo '#!/bin/sh
 
 teamviewerd_start() {
   if [ -x /opt/teamviewer/tv_bin/teamviewerd ]; then
-    echo "Starting TeamViewer Daemon"
+    echo "[1;37m[[1;32m+[1;37m] Starting [1;36mTeamViewer [1;37mDaemon [0m"
     /opt/teamviewer/tv_bin/teamviewerd --daemon start
   fi
 }
