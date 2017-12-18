@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170731
+SCRIPT_VERSION=20171218
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,25 +19,19 @@ F_variables() {
 	PRGNAM=teamviewer
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://www.teamviewer.com/es/download/linux/
-	VERSION=$(curl -sL $WEB|grep tar.xz|grep -v i386|head -1|cut -d '>' -f2|cut -d ' ' -f-1|cut -d v -f2)
-	DOWNLOAD=http://download.teamviewer.com/download/${PRGNAM}_amd64.deb
+	VERSION=$(curl -s $WEB|grep *.deb|head -1|cut -dv -f2|cut -d '<' -f-1)
+	DOWNLOAD=https://download.teamviewer.com/download/linux/teamviewer_amd64.deb
 }
 
-# Comprobar dependencias
-F_dependencias(){
-if [ -z $(ls /var/log/packages|grep -m1 multilib) ]; then
-xterm -hold -e 'echo "AVISO:
-Este programa (teamviewer) necesita un entorno multilib...
-Parece ser que has suprimido los paquetes compat32...
-El programa no funcionara a menos que cuente con dicho soporte.
-
-Cierra esta ventana para continuar."'
-fi
+#Comprobar dependencias
+F_dependencias() {
+DEPENDENCIAS="libwebp libxkbcommon libinput libwacom qt5 qt5-webkit"
+f_dependencias
 }
 
 # Si el paquete no existe se descargara de internet
 F_download(){
-	if [ ! -f ${PRGNAM}_${VERSION}_amd64.deb ]; then
+	if [ ! -f teamviewer_${VERSION}_amd64.deb ]; then
 	echo 
 	echo "$CYAN"Descargando sources de $PRGNAM-$VERSION"$CIERRE"
 	sleep 1
@@ -51,7 +45,7 @@ echo
 echo "$VERDE"Descomprimiendo ..."$CIERRE"
 sleep 1
 cd $PKG
-ar p $TMP/teamviewer_${VERSION}_amd64.deb data.tar.bz2 | tar xjv
+ar p $TMP/teamviewer_${VERSION}_amd64.deb data.tar.xz | tar xJv
 
 # Make a .desktop file
 mkdir -p $PKG/usr/share/applications
