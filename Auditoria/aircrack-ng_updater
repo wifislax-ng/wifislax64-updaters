@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160325
+SCRIPT_VERSION=20180112
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -47,6 +47,8 @@ F_compila() {
 	echo $CYAN
 	echo "Compilamos las sources de$VERDE $PRGNAM-$VERSION"
 	sleep 1
+        export LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}"
+	./autogen.sh
 	make experimental=true prefix=/usr sqlite=true libnl=true pcre=true 
 	sleep 1
 	make experimental=true prefix=/usr sqlite=true libnl=true pcre=true install
@@ -60,8 +62,6 @@ F_compila() {
 	make experimental=true prefix=/usr sqlite=true libnl=true pcre=true DESTDIR=$PKG install &>/dev/null
 	mkdir -p $PKG/etc/aircrack-ng/ &>/dev/null
 	cp /etc/aircrack-ng/airodump-ng-oui.txt $PKG/etc/aircrack-ng/airodump-ng-oui.txt &>/dev/null
-	
-
 
 # Meto una version clasica de airmon-ng
 mv -f $PKG/usr/sbin/airmon-ng $PKG/usr/sbin/airmon-zc
