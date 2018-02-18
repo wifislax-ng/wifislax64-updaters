@@ -36,7 +36,7 @@ F_compilar() {
         export LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}"
 	make sqlite=true experimental=true
 	sleep 1
-	make sqlite=true experimental=true bindir=/usr/bin sbindir=/usr/bin install
+	make sqlite=true experimental=true prefix=/usr sbindir=/usr/bin install
 # Actualizamos la oui.list
 	echo $VERDE
 	echo "Actualizando aircrack oui.list ...."
@@ -44,10 +44,14 @@ F_compilar() {
 	airodump-ng-oui-update
 	sleep 1
 # Instalamos
-	make sqlite=true experimental=true bindir=/usr/bin sbindir=/usr/bin DESTDIR=$PKG install &>/dev/null
+	make sqlite=true experimental=true prefix=/usr sbindir=/usr/bin DESTDIR=$PKG install &>/dev/null
 	mkdir -p $PKG/etc/aircrack-ng/ &>/dev/null
 	cp /etc/aircrack-ng/airodump-ng-oui.txt $PKG/etc/aircrack-ng/airodump-ng-oui.txt &>/dev/null
-
+# Comprimimos man
+	mv $PKG/usr/share/man $PKG/usr/man
+	find $PKG/usr/man -type f -exec gzip -9 {} \;
+	for i in $( find $PKG/usr/man -type l ) ; do ln -s $( readlink $i ).gz $i.gz ; rm $i ; done
+	rmdir $PKG/usr/share
 # Meto una version clasica de airmon-ng
 mv -f $PKG/usr/bin/airmon-ng $PKG/usr/bin/airmon-zc
 
