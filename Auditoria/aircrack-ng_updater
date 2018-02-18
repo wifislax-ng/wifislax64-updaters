@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20180112
+SCRIPT_VERSION=20180219
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -17,41 +17,26 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	PRGNAM=aircrack-ng
+	SRCNAM=aircrack-ng-1.2-rc4
+	WEB=https://download.aircrack-ng.org
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=http://svn.aircrack-ng.org/trunk
-	VERSION=`echo $(curl -s $WEB/VERSION | sed "s/-/_/g")_r$(curl -s $WEB/ | grep -i revision | head -1 | cut -d ":" -f 1 | cut -d ' ' -f4)`
-	SVN="svn co http://svn.aircrack-ng.org/trunk/"
-}
-
-# Verificamos
-F_verificar() {
-	TEST_SVN=`svn info http://svn.aircrack-ng.org|grep -i url|cut -d ":" -f1|head -1`
-	if [ $TEST_SVN = URL ]; then
-		echo ""
-		echo "$CYAN"Descargando sources de $PRGNAM-$VERSION"$CIERRE"
-		sleep 1
-		echo ""
-		$SVN
-	else 
-		echo "$ROJO"El sitio svn de aircrack-ng no responde"$CIERRE ... $BLANCO"el script se cerrara."$CIERRE"
-		echo ""
-		sleep 1
-		exit 0
-	fi
+	VERSION=1.2_rc4
+	EXTENSION=tar.gz
+	SOURCES=$SRCNAM.$EXTENSION
+	CD=$SRCNAM
+	DOWNLOAD=$WEB/$SOURCES
 }
 
 # Compilamos
-F_compila() {
-	cd $TMP/trunk
-	echo -n -e 'NEWSSE=false\nSIMDCORE=false\nPTHREAD=Y' > $TMP/trunk/common.cfg
+F_compilar() {
+	echo -n -e 'NEWSSE=false\nSIMDCORE=false\nPTHREAD=Y' > $TMP/$SRCNAM/common.cfg
 	echo $CYAN
 	echo "Compilamos las sources de$VERDE $PRGNAM-$VERSION"
 	sleep 1
         export LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}"
-	./autogen.sh
-	make experimental=true prefix=/usr sqlite=true libnl=true pcre=true 
+	make sqlite=true experimental=true
 	sleep 1
-	make experimental=true prefix=/usr sqlite=true libnl=true pcre=true install
+	make sqlite=true experimental=true bindir=/usr/bin sbindir=/usr/bin install
 # Actualizamos la oui.list
 	echo $VERDE
 	echo "Actualizando aircrack oui.list ...."
@@ -59,12 +44,12 @@ F_compila() {
 	airodump-ng-oui-update
 	sleep 1
 # Instalamos
-	make experimental=true prefix=/usr sqlite=true libnl=true pcre=true DESTDIR=$PKG install &>/dev/null
+	make sqlite=true experimental=true bindir=/usr/bin sbindir=/usr/bin DESTDIR=$PKG install &>/dev/null
 	mkdir -p $PKG/etc/aircrack-ng/ &>/dev/null
 	cp /etc/aircrack-ng/airodump-ng-oui.txt $PKG/etc/aircrack-ng/airodump-ng-oui.txt &>/dev/null
 
 # Meto una version clasica de airmon-ng
-mv -f $PKG/usr/sbin/airmon-ng $PKG/usr/sbin/airmon-zc
+mv -f $PKG/usr/bin/airmon-ng $PKG/usr/bin/airmon-zc
 
 echo "
 IyEvYmluL3NoCgpVU0VSSUQ9IiIKSUZBQ0U9IiIKS0lTTUVUPS9ldGMva2lzbWV0L2tpc21ldC5j
@@ -675,9 +660,9 @@ RVZfSVNTVUUgIT0gMCBdIDsgdGhlbgoJZWNobyB1ZGV2IHJlbmFtZWQgdGhlIGludGVyZmFjZS4g
 UmVhZCB0aGUgZm9sbG93aW5nIGZvciBhIHNvbHV0aW9uOgoJZWNobyBodHRwOi8vd3d3LmFpcmNy
 YWNrLW5nLm9yZy9kb2t1LnBocD9pZD1haXJtb24tbmcjaW50ZXJmYWNlX2F0aHhfbnVtYmVyX3Jp
 c2luZ19hdGgwX2F0aDFfYXRoMi4uLi5fYXRoNDUKCWVjaG8gCmZpCgppd2NvbmZpZyAkMiB0eHBv
-d2VyIG9uID4vZGV2L251bGwgMj4mMQ==" | base64 -d > $PKG/usr/sbin/airmon-ng
+d2VyIG9uID4vZGV2L251bGwgMj4mMQ==" | base64 -d > $PKG/usr/bin/airmon-ng
 
-chmod 777 $PKG/usr/sbin/airmon-ng
+chmod 777 $PKG/usr/bin/airmon-ng
 }
 
 ###################################
@@ -702,10 +687,12 @@ f_comprobarUpdates
 f_arquitectura
 #Comprobamos version instalada del script
 f_versionInstalada
-# Verificamos
-F_verificar
-#Compilamos
-F_compila
+#Descargamos el paquete si no existe
+f_download
+#Prepara entorno
+f_preparar
+#Compilamos el paquete
+F_compilar
 #Hacemos strip sobre el paquete
 f_strip
 #Creamos xzm , instalamos y salimos
