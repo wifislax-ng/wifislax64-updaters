@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161229
+SCRIPT_VERSION=20180325
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -42,17 +42,14 @@ F_variables() {
 	WEB=https://download.mozilla.org/?product=firefox-latest\&os=linux\&lang=$LANGUAGE
 	VERSION=$(curl -s $WEB|grep .tar.bz2|tail -1|rev|cut -d- -f1|rev|cut -d t -f-1|sed 's/.$//g')
 	EXTENSION=tar.bz2
-	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	if [ ! $ARCH = x86_64 ]; then
-	ARCH=i686
-	fi
+	SOURCES=$SRCNAM-$VERSION.$EXTENSION
 	DOWNLOAD=https://ftp.mozilla.org/pub/firefox/releases/$VERSION/linux-$ARCH/$LANGUAGE/$SOURCES
 }
 
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-mkdir -p $PKG/usr/{lib,bin${LIBDIRSUFFIX},share/pixmaps,share/applications}
+mkdir -p $PKG/usr/{lib${LIBDIRSUFFIX},bin,share/pixmaps,share/applications}
 cp -r $TMP/$SRCNAM $PKG/usr/lib${LIBDIRSUFFIX}
 cd $PKG
 
@@ -63,11 +60,11 @@ fi
 
 (ln -s /usr/lib${LIBDIRSUFFIX}/firefox/firefox ./usr/bin/firefox)
    
-cp $TMP/firefox/browser/icons/mozicon128.png $PKG/usr/share/pixmaps/firefox.png
+cp $TMP/firefox/browser/chrome/icons/default/default128.png $PKG/usr/share/pixmaps/firefox.png
 
 # Linkeamos plugins en /usr/lib
 mkdir -p $PKG/usr/lib/mozilla
-ln -s /usr/lib64/mozilla/plugins $PKG/usr/lib/mozilla/
+ln -s /usr/lib${LIBDIRSUFFIX}/mozilla/plugins $PKG/usr/lib/mozilla/
 
 echo "[Desktop Entry]
 Encoding=UTF-8
@@ -98,8 +95,6 @@ f_comprobarConexion
 F_variables
 #Creamos directorio de trabajo
 f_directorioTemporal
-# Creamos directorios extra
-F_extradirs
 #Mostramos el mensaje de presentacion
 f_presentacion
 #Comprobamos updates del script
