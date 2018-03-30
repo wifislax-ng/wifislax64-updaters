@@ -16,7 +16,7 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=rtl8812au
+	PRGNAM=rtl8814au
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/aircrack-ng/rtl8812au/tree/v5.1.5
 	VERSION="5.1.5_$(curl -s $WEB|grep commit/|head -1|cut -d / -f5|cut -c 1-7)"
@@ -36,18 +36,18 @@ echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 
 cd $TMP/rtl8812au
-make || exit 1
+make RTL8814=1 || exit 1
 
 mkdir -p $PKG/lib/modules/$(uname -r)/kernel/drivers/net/wireless/
-cp -rf 8812au.ko $PKG/lib/modules/$(uname -r)/kernel/drivers/net/wireless/
+cp -rf 8814au.ko $PKG/lib/modules/$(uname -r)/kernel/drivers/net/wireless/
 
 echo 
 echo "$VERDE"Instalando en sistema ..."$CIERRE"
 sleep 1
-make install|| exit 1
+make RTL8814=1 install|| exit 1
 depmod -a
-modprobe -r 8812au
-modprobe 8812au
+modprobe -r 8814au
+modprobe 8814au
 }
 
 ###################################
