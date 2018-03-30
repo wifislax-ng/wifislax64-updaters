@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20171030
+SCRIPT_VERSION=20180401
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -17,22 +17,26 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	PRGNAM=rtl8192eu
-	SRCNAM=RTL8192EU-linux
+	BRANCH=5.2.7
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/masterzorag/$SRCNAM
-	VERSION=4.4.1_linux-4.11
-	EXTENSION=tar.gz
-	SOURCES=v$VERSION.$EXTENSION
-	CD=$SRCNAM-$VERSION
-	DOWNLOAD=$WEB/archive/$SOURCES
+	WEB=https://github.com/masterzorag/RTL8192EU-linux/tree/v$BRANCH
+	VERSION="${BRANCH}_$(curl -s $WEB|grep commit/|head -1|cut -d / -f5|cut -c 1-7)"
+	SVN="https://github.com/masterzorag/RTL8192EU-linux.git"
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 echo 
+echo "$VERDE"Clonando git ..."$CIERRE"
+sleep 1
+
+git clone -b v$BRANCH $SVN
+
+echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 
+cd $TMP/RTL8192EU-linux
 make || exit 1
 
 mkdir -p $PKG/lib/modules/$(uname -r)/kernel/drivers/net/wireless/
@@ -43,6 +47,7 @@ echo "$VERDE"Instalando en sistema ..."$CIERRE"
 sleep 1
 make install|| exit 1
 depmod -a
+modprobe -r 8192eu
 modprobe 8192eu
 }
 
@@ -68,10 +73,6 @@ f_presentacion
 f_comprobarUpdates
 #Comprobamos version instalada del paquete
 f_versionInstalada
-#Si no existe el fichero se descargara
-f_download
-#Preparamos entorno
-f_preparar
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete
