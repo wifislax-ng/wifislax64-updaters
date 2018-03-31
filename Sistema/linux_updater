@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20180325
+SCRIPT_VERSION=20180331
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -413,7 +413,7 @@ done
 rm -Rf $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/lib/firmware
 
 # Creamos xzm de kernel + sources
-mksquashfs $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm -Xbcj x86 -noappend -comp xz -b 128K
+mksquashfs $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm -comp xz -b 64K
 mv $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm $HOME/Desktop/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm
 
 # Finalizamos
