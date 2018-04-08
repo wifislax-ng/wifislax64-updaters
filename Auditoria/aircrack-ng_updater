@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20180321
+SCRIPT_VERSION=20180408
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -34,7 +34,6 @@ F_download() {
 # Compilamos
 F_compila() {
 	cd $TMP/$PRGNAM
-	echo -n -e 'NEWSSE=false\nSIMDCORE=false\nPTHREAD=Y' > $TMP/$PRGNAM/common.cfg
 	echo $CYAN
 	echo "Compilamos las sources de$VERDE $PRGNAM-$VERSION"
 	sleep 1
