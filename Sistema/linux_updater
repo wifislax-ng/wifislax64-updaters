@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20180331
+SCRIPT_VERSION=20180408
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -384,7 +384,7 @@ make modules_install INSTALL_MOD_PATH=$HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARC
 make INSTALL_HDR_PATH=$HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/usr headers_install|| exit 1
 rm -r $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/usr/include/*/{.install,..install.cmd}
 
-# Copiamos el vmlinuz
+# Copiamos el vmlinuz (este con nombre generico para el modo live)
 cp /usr/src/$PRGNAM-$KERNEL_ELEGIDO/arch/$KARCH/boot/bzImage $HOME/Desktop/$VMLINUZ &>/dev/null
 
 # Generamos kernel sources recortadas
@@ -399,8 +399,10 @@ ls -1d include/*|grep asm- |grep -v $KARCH|grep -v generic|xargs rm -Rf
 cp include/generated/* include/linux &>/dev/null
 
 # Preparamos creacion de xzm
-mkdir -p $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/usr/src
+VMLINUZNAME=$(grep  "CONFIG_LOCALVERSION=" .config|cut -d = -f2|sed 's/"//g')
+mkdir -p $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/{boot,usr/src}
 cp -r /usr/src/$PRGNAM-$KERNEL_ELEGIDO $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/usr/src
+cp -r $HOME/Desktop/$VMLINUZ $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/boot/vmlinuz-${KERNEL_VERSION}${VMLINUZNAME}
 
 # Realizamos limpieza
 RUTA_LIMPIEZA=$HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/usr/src/$PRGNAM-$KERNEL_ELEGIDO
@@ -440,8 +442,6 @@ echo ""$AMARILLO"Pulsa ENTER si quieres instalar el kernel,si no te interesa cie
 read junk
 echo ""
 echo ""$VERDE"Instalando Kernel $KERNEL_VERSION en sistema ..."$CIERRE""
-VMLINUZNAME=`grep  "CONFIG_LOCALVERSION=" .config|cut -d = -f2|sed 's/"//g'`
-cp -r $HOME/Desktop/$VMLINUZ /boot/vmlinuz-${KERNEL_VERSION}${VMLINUZNAME}
 xzm2dir $HOME/Desktop/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm /
 update-grub
 echo ""
