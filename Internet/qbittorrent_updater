@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170526
+SCRIPT_VERSION=20180409
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -28,7 +28,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias() {
-DEPENDENCIAS="GeoIP libtorrent-rasterbar"
+DEPENDENCIAS="GeoIP libtorrent-rasterbar qt5"
 f_dependencias
 }
 
@@ -38,17 +38,21 @@ echo ""
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
-./bootstrap.sh \
-
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
-
 ./configure \
---prefix=/usr \
---with-qt4
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --infodir=/usr/info \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --build=$ARCH-slackware-linux
 
-make  || exit 1
+make
 make install INSTALL_ROOT=$PKG
+make clean
 }
 
 
