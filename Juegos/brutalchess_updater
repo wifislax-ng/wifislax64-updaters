@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170526
+SCRIPT_VERSION=20180421
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,7 +19,7 @@ F_variables() {
 	PRGNAM=brutalchess
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://sourceforge.net/projects/${PRGNAM}/files/${PRGNAM}-alpha
-	VERSION=$(curl -s $WEB/|grep ${PRGNAM}-alpha-[0-9]|head -1|cut -d- -f4|cut -d / -f-1)
+	VERSION=$(curl -s $WEB/|grep ${PRGNAM}-alpha-[0-9]|head -1|rev|cut -d / -f2|cut -d- -f-1|rev)
 	EXTENSION=tar.gz
 	SOURCES=$PRGNAM-alpha-$VERSION-src.$EXTENSION
 	CD=$PRGNAM-$VERSION
