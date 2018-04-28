@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170719
+SCRIPT_VERSION=20180428
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -87,12 +87,10 @@ make install DESTDIR=$PKG || exit 1
 # Creamos las headers
 clear
 echo "$VERDE"Copiando wireshark headers"$BLANCO"...."$CIERRE"
-HEADERS=$PKG/usr/include/wireshark
-mkdir -p $PKG/usr/include/$PRGNAM/{epan/{crypt,dfilter,dissectors,ftypes,wmem},wiretap,wsutil}
-install -m644 config.h register.h ws_diag_control.h ws_symbol_export.h $PKG/usr/include/$PRGNAM
-  for d in epan epan/crypt epan/dfilter epan/dissectors epan/ftypes epan/wmem wiretap wsutil; do
-    install -m644 $d/*.h $PKG/usr/include/$PRGNAM/$d
-  done
+install -Dm 644 *.h -t "$PKG/usr/include/$PRGNAM"
+for d in epan epan/crypt epan/dfilter epan/dissectors epan/ftypes epan/wmem wiretap wsutil; do
+install -Dm 644 ${d}/*.h -t "$PKG/usr/include/$PRGNAM/${d}"
+done
 
 # Creamos icono
 echo "
