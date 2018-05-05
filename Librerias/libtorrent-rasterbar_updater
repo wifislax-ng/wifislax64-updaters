@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20171105
+SCRIPT_VERSION=20180505
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -40,6 +40,8 @@ echo ""
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
+BOOSTVERSION=$(cat /usr/include/boost/version.hpp | grep "BOOST_LIB_VERSION"|tail -1|cut -d '"' -f2)
+if [ $BOOSTVERSION != 1_59 ]; then
 echo "RnJvbSA2NGQ2YjQ5MDA0NDgwOTdiMDE1N2FiYjMyODYyMWRkMjExZTI5NDdkIE1vbiBTZXAgMTcg
 MDA6MDA6MDAgMjAwMQpGcm9tOiBhcnZpZG4gPGFydmlkQGxpYnRvcnJlbnQub3JnPgpEYXRlOiBX
 ZWQsIDExIEFwciAyMDE4IDEzOjQ4OjQyICswMjAwClN1YmplY3Q6IFtQQVRDSF0gZml4IGJvb3N0
@@ -71,34 +73,24 @@ PGJvb3N0L25leHRfcHJpb3IuaHBwPgorI2Vsc2UKKyNpbmNsdWRlIDxib29zdC91dGlsaXR5Lmhw
 cD4KKyNlbmRpZgorCiAjaW5jbHVkZSAibGlidG9ycmVudC9hdXhfL2Rpc2FibGVfd2FybmluZ3Nf
 cG9wLmhwcCIKIAogdXNpbmcgYm9vc3Q6OnVpbnQ4X3Q7Cg==
 "|base64 -d > $TMP/libtorrent-rasterbar_boost_167.diff
-
 patch -p1 -i $TMP/libtorrent-rasterbar_boost_167.diff||exit 1
-
-if [ -f /usr/lib${LIBDIRSUFFIX}/libboost_system-mt.so ]; then
-  MT="-mt"
-else
-  MT=""
 fi
 
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS -std=c++11" \
 LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}" \
-PYTHON=/usr/bin/python
-  ./configure \
-    --prefix=/usr \
-    --libdir=/usr/lib${LIBDIRSUFFIX} \
-    --mandir=/usr/man \
-    --docdir=/usr/doc/$PRGNAM-$VERSION \
-    --localstatedir=/var/lib \
-    --sysconfdir=/etc \
-    --enable-python-binding \
-    --disable-static \
-    --with-boost-libdir=/usr/lib${LIBDIRSUFFIX} \
-    --with-boost-system=boost_system$MT \
-    --with-boost-python=boost_python \
-    --program-prefix= \
-    --program-suffix= \
-    --build=$ARCH-slackware-linux
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --sysconfdir=/etc \
+  --localstatedir=/var/lib \
+  --disable-static \
+  --enable-python-binding \
+  --enable-encryption \
+  --with-boost-libdir=/usr/lib${LIBDIRSUFFIX} \
+  --with-libgeoip \
+  --disable-debug \
+  --build=$ARCH-slackware-linux
   
 # Compilamos paquete
 echo ""
