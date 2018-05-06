@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20180310
+SCRIPT_VERSION=20180506
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -78,7 +78,6 @@ libconfig
 libffado
 jack-audio-connection-kit
 opencl-headers
-libclc
 ocl-icd"
 f_dependencias
 }
