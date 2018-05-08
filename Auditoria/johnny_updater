@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170526
+SCRIPT_VERSION=20180508
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -42,8 +42,8 @@ sleep 1
 qmake
 make || exit 1
 
-install -D -m755 "${TMP}/${SRCNAM}/${PRGNAM}" "${PKG}/usr/bin/${PRGNAM}"
-install -D -m644 "${TMP}/${SRCNAM}/resources/icons/${PRGNAM}_128.png" "${PKG}/usr/share/pixmaps/${PRGNAM}.png"
+install -D -m755 "${TMP}/${PRGNAM}-master/${PRGNAM}" "${PKG}/usr/bin/${PRGNAM}"
+install -D -m644 "${TMP}/${PRGNAM}-master/resources/icons/${PRGNAM}_128.png" "${PKG}/usr/share/pixmaps/${PRGNAM}.png"
 
 mkdir -p $PKG/usr/share/applications/wifislax/Diccionarios
 
