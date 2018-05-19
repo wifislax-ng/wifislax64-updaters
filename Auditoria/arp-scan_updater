@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170125
+SCRIPT_VERSION=20180520
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -37,8 +37,13 @@ perl-html-parser
 perl-http-message
 perl-http-negotiate
 perl-http-cookies
-perl-http-daemon
-libwww-perl" 
+perl-http-daemon 
+libwww-perl
+perl-Mozilla-CA
+Net-SSLeay
+perl-Net-LibIDN
+perl-IO-Socket-SSL
+perl-LWP-Protocol-https"
 f_dependencias
 }
 
