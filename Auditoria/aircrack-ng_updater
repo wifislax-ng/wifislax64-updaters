@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20180421
+SCRIPT_VERSION=20180526
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -32,37 +32,39 @@ echo
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
-./autogen.sh
+NOCONFIGURE=1 ./autogen.sh
 
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}" \
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
-LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}" \
 ./configure \
   --prefix=/usr \
-  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --libdir=/usr/lib$LIBDIRSUFFIX \
   --sysconfdir=/etc \
   --localstatedir=/var \
   --mandir=/usr/man \
-  --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --infodir=/usr/info \
+  --docdir=/usr/doc/$PKGNAM-$VERSION \
+  --enable-static=no \
+  --enable-shared=yes \
+  --with-experimental=yes \
+  --with-ext-scripts \
+  --with-gcrypt \
+  --host=$ARCH-slackware-linux \
   --build=$ARCH-slackware-linux
-
 
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 
-make sqlite=true experimental=true||exit 1
-make DESTDIR=$PKG \
-sqlite=true \
-experimental=true \
-bindir=/usr/bin \
-sbindir=/usr/bin \
-mandir=/usr/share/man/man1 \
-smandir=/usr/share/man/man8 \
-install
+make
+make docdir="/usr/doc/$PKGNAM-$VERSION" DESTDIR=$PKG install
+
+# Don't ship .la files:
+rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
 
 # Meto una version clasica de airmon-ng
-mv -f $PKG/usr/bin/airmon-ng $PKG/usr/bin/airmon-zc
+mv -f $PKG/usr/sbin/airmon-ng $PKG/usr/sbin/airmon-zc
 
 echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4I3/F7pdADCaSquOCryy5gSyFPoV+nQ49gTAN4ll2OAU
 JM0RiRQgn2d4ady6ZqPqibTaaUmDt8iYhyXSB/WEKV9rHq2OqNFEsR6KHERnvg6rZBJF5TfoHmJj
@@ -174,14 +176,14 @@ sLlEm9IoQr/9oU2rWPsgrr9yodrGKdtWbTr3g/qdqItgYT0K32c6OOUa18ksqacznN2CM9XjSpsP
 21V9LoVAAAAAj4sQyhvT3jEAAdYvgJwCABcGxW+xxGf7AgAAAAAEWVo=
 "|base64 -d > $TMP/airmon-ng.txz
 tar xvf $TMP/airmon-ng.txz -C $TMP
-cp -rf $TMP/airmon-ng $PKG/usr/bin
-chmod 777 $PKG/usr/bin/airmon-ng
+cp -rf $TMP/airmon-ng $PKG/usr/sbin
+chmod 777 $PKG/usr/sbin/airmon-ng
 
 # Creamos el fichero oui
 echo $VERDE
 echo "Actualizando aircrack oui.list ...."
 echo $AMARILLO
-cp -rf $PKG/usr/bin/airodump-ng-oui-update /usr/bin
+cp -rf $PKG/usr/sbin/airodump-ng-oui-update /usr/sbin
 airodump-ng-oui-update
 mkdir -p $PKG/etc/aircrack-ng/
 cp /etc/aircrack-ng/airodump-ng-oui.txt $PKG/etc/aircrack-ng/airodump-ng-oui.txt
