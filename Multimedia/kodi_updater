@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170930
+SCRIPT_VERSION=20180527
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -82,8 +82,8 @@ cmRNYW5hZ2VyLmgiCiAjaW5jbHVkZSAiU01CRGlyZWN0b3J5LmgiCi0jaW5jbHVkZSA8bGlic21i
 Y2xpZW50Lmg+CisjaW5jbHVkZSA8c2FtYmEtNC4wL2xpYnNtYmNsaWVudC5oPgogI2luY2x1ZGUg
 ImZpbGVzeXN0ZW0vU3BlY2lhbFByb3RvY29sLmgiCiAjaW5jbHVkZSAic2V0dGluZ3MvQWR2YW5j
 ZWRTZXR0aW5ncy5oIgogI2luY2x1ZGUgInNldHRpbmdzL1NldHRpbmdzLmgiCg==
-" | base64 -d > $TMP/patches/xbmc-Krypton-samba-4.0.patch
-patch -p1 -i $TMP/patches/xbmc-Krypton-samba-4.0.patch || exit 1
+" | base64 -d > $TMP/xbmc-Krypton-samba-4.0.patch
+patch -p1 -i $TMP/xbmc-Krypton-samba-4.0.patch || exit 1
 
 echo "
 LS0tIHRvb2xzL2RlcGVuZHMvbmF0aXZlL1RleHR1cmVQYWNrZXIvTWFrZWZpbGUub2xkCTIwMTUt
