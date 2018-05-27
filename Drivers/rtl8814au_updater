@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20180330
+SCRIPT_VERSION=20180527
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -16,33 +16,11 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-
-	echo ""
-	PS3='
-	Elige rama: '
-	options=("4.3.21" "5.1.5")
-	select opt in "${options[@]}"
-	
-		do
-		case $opt in
-		"4.3.21")
-		 echo -e "\033[40m\033[1;32mElegida rama 4.3.21\033[0m"
-		 export BRANCH=4.3.21
-		 break
-		 ;;
-		"5.1.5")
-		 echo -e "\033[40m\033[1;32mElegida rama 5.1.5\033[0m"
-		 export BRANCH=5.1.5
-		 break
-		 ;;
-		*)  echo -e "\033[40m\033[1;31mOpcion Invalida\033[0m";;
-		esac
-		done
-		
-	PRGNAM=rtl8814au_$BRANCH
+	PRGNAM=rtl8814au
+	RAMA=5.1.5
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/aircrack-ng/rtl8812au/tree/v$BRANCH
-	VERSION="${BRANCH}_$(curl -s $WEB|grep commit/|head -1|cut -d / -f5|cut -c 1-7)"
+	WEB=https://github.com/aircrack-ng/rtl8812au/tree/v$RAMA
+	VERSION="${RAMA}_$(curl -s $WEB|grep commit/|head -1|cut -d / -f5|cut -c 1-7)"
 	SVN="https://github.com/aircrack-ng/rtl8812au.git" 
 }
 
@@ -52,7 +30,7 @@ echo
 echo "$VERDE"Clonando git ..."$CIERRE"
 sleep 1
 
-git clone -b v$BRANCH $SVN
+git clone -b v$RAMA $SVN
 
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
