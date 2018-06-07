@@ -28,56 +28,39 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="SDL2
-gavl
-frei0r
-ladspa_sdk
-libiec61883
-libavc1394
-enca
-libass
-libaacs
-libbdplus
-libbluray
-celt
-libmp4v2
-faac
-libfdk-aac
-flite
-libgme
-gsm
-libilbc
-libmodplug
-lame
-opencore-amr
-opus
-lua
-libquvi-scripts
-libquvi
-rtmpdump
-snappy
+DEPENDENCIAS="lame
 speex
-libebur128
-libbs2b
-hdf5
-leptonica
-tesseract
-twolame
-vid.stab
+libmodplug
+celt
+ladspa_sdk
+libdbus-c++
+libconfig
+libxml++
+libavc1394
+libiec61883
+libffado
+jack-audio-connection-kit
+opus
+libfdk-aac
+soxr
 libwebp
 x264
 x265
 xvidcore
-zeromq
-zvbi
-OpenAL
-libdc1394
-libxml++
-libconfig
-libffado
-jack-audio-connection-kit
-opencl-headers
-ocl-icd"
+recode
+perl-Cstools
+perl-Unicode-Map
+perl-Unicode-String
+perl-Unicode-Map8
+enca
+libass
+libaacs
+libaacs
+libbluray
+gsm
+opencore-amr
+vid.stab
+SDL2"
 f_dependencias
 }
 
@@ -100,64 +83,47 @@ CXXFLAGS="$SLKCFLAGS" \
   --disable-podpages \
   --disable-txtpages \
   --disable-debug \
-  --enable-shared \
   --disable-static \
-  --enable-pthreads \
-  --enable-libtheora \
-  --enable-libvorbis \
-  --enable-gpl \
-  --enable-version3 \
-  --enable-postproc \
-  --enable-swscale \
-  --enable-avfilter \
+  --disable-stripping \
   --enable-avresample \
+  --enable-fontconfig \
+  --enable-gmp \
   --enable-gnutls \
-  --enable-libcdio \
-  --enable-libssh \
-  --enable-libcaca \
-  --enable-libsmbclient \
-  --enable-opengl \
-  --enable-libvpx \
-  --enable-libpulse \
-  --enable-libopenjpeg \
-  --enable-libwavpack \
+  --enable-gpl \
+  --enable-ladspa \
+  --enable-libass \
+  --enable-libbluray \
+  --enable-libdrm \
   --enable-libfreetype \
   --enable-libfribidi \
-  --enable-fontconfig \
-  --enable-libdc1394 \
-  --enable-libmp3lame \
-  --enable-libxvid \
-  --enable-libx264 \
-  --enable-libspeex \
-  --enable-nonfree \
   --enable-libgsm \
-  --enable-librtmp \
-  --enable-libopencore-amrnb \
-  --enable-libopencore-amrwb \
-  --enable-frei0r \
-  --enable-libcelt \
-  --enable-libbluray \
-  --enable-libass \
-  --enable-openal \
   --enable-libiec61883 \
-  --enable-libilbc \
   --enable-libmodplug \
+  --enable-libmp3lame \
+  --enable-libopencore_amrnb \
+  --enable-libopencore_amrwb \
+  --enable-libopenjpeg \
   --enable-libopus \
-  --enable-libtwolame \
-  --enable-ladspa \
-  --enable-libfdk-aac \
-  --enable-libflite \
+  --enable-libpulse \
+  --enable-libsoxr \
+  --enable-libspeex \
+  --enable-libssh \
+  --enable-libtheora \
+  --enable-libv4l2 \
   --enable-libvidstab \
-  --enable-libx265 \
-  --enable-libzvbi \
-  --enable-libgme \
-  --enable-libsnappy \
+  --enable-libvorbis \
+  --enable-libvpx \
   --enable-libwebp \
-  --enable-openssl \
-  --enable-libzmq \
-  --enable-opencl \
-  --enable-libbs2b \
-  --enable-libtesseract \
+  --enable-libx264 \
+  --enable-libx265 \
+  --enable-libxcb \
+  --enable-libxml2 \
+  --enable-libxvid \
+  --enable-nvenc \
+  --enable-shared \
+  --enable-version3 \
+  --enable-nonfree \
+  --enable-libfdk-aac \
   --arch=$ARCH
   
   make || exit 1

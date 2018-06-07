@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20151106
+SCRIPT_VERSION=20180607
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -19,19 +19,10 @@ f_variables(){
 F_variables() {
 	PRGNAM=bluray-keys
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=http://www.labdv.com/aacs/KEYDB.cfg
-	VERSION=`curl -s $WEB | grep VUK | head -1 | cut -d ' ' -f5`
+	WEB=https://vlc-bluray.whoknowsmy.name/files/KEYDB.cfg
+	VERSION=$(curl -s $WEB|grep VUK|head -1|cut -d ' ' -f5)
+	SOURCES=KEYDB.cfg
 	DOWNLOAD=$WEB
-}
-
-# Si el paquete no existe se descargara de internet
-F_download(){
-	if [ ! -f KEYDB.cfg ]; then
-	echo 
-	echo "$CYAN"Descargando sources de $PRGNAM-$VERSION"$CIERRE"
-	sleep 1
-	aria2c -x 3 $DOWNLOAD
-	fi
 }
 
 # Descomprimimos el fichero descargado y compilamos
@@ -66,10 +57,8 @@ f_arquitectura noarch
 #Comprobamos version instalada del paquete
 f_versionInstalada
 #Si no existe el fichero se descargara
-F_download
+f_download
 #Descomprimir fichero descargado y compilamos
 F_compilar
-#Hacemos strip sobre el paquete
-f_strip
 #Creamos xzm , instalamos y salimos
 f_tareasFinales
