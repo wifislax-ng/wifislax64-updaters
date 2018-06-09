@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20180527
+SCRIPT_VERSION=20180609
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -50,7 +50,8 @@ libmicrohttpd
 crossguid
 libnfs
 python-gattlib
-pybluez" 
+pybluez
+ffmpeg" 
 f_dependencias
 }
 
