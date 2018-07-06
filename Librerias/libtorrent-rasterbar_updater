@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20180505
+SCRIPT_VERSION=20180706
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -40,41 +40,9 @@ echo ""
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
-BOOSTVERSION=$(cat /usr/include/boost/version.hpp | grep "BOOST_LIB_VERSION"|tail -1|cut -d '"' -f2)
-if [ $BOOSTVERSION != 1_59 ]; then
-echo "RnJvbSA2NGQ2YjQ5MDA0NDgwOTdiMDE1N2FiYjMyODYyMWRkMjExZTI5NDdkIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBhcnZpZG4gPGFydmlkQGxpYnRvcnJlbnQub3JnPgpEYXRlOiBX
-ZWQsIDExIEFwciAyMDE4IDEzOjQ4OjQyICswMjAwClN1YmplY3Q6IFtQQVRDSF0gZml4IGJvb3N0
-LTEuNjcgYnVpbGQKCi0tLQogaW5jbHVkZS9saWJ0b3JyZW50L2lwX2ZpbHRlci5ocHAgfCA4ICsr
-KysrKystCiAxIGZpbGUgY2hhbmdlZCwgNyBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCgpk
-aWZmIC0tZ2l0IGEvaW5jbHVkZS9saWJ0b3JyZW50L2lwX2ZpbHRlci5ocHAgYi9pbmNsdWRlL2xp
-YnRvcnJlbnQvaXBfZmlsdGVyLmhwcAppbmRleCA0ZTQ3YjM5YTFkLi40NDU1NjI0NDQ5IDEwMDY0
-NAotLS0gYS9pbmNsdWRlL2xpYnRvcnJlbnQvaXBfZmlsdGVyLmhwcAorKysgYi9pbmNsdWRlL2xp
-YnRvcnJlbnQvaXBfZmlsdGVyLmhwcApAQCAtNDEsMTAgKzQxLDE2IEBAIFBPU1NJQklMSVRZIE9G
-IFNVQ0ggREFNQUdFLgogI2luY2x1ZGUgPHZlY3Rvcj4KIAogI2luY2x1ZGUgPGJvb3N0L2xpbWl0
-cy5ocHA+Ci0jaW5jbHVkZSA8Ym9vc3QvdXRpbGl0eS5ocHA+CiAjaW5jbHVkZSA8Ym9vc3QvY3N0
-ZGludC5ocHA+CiAjaW5jbHVkZSA8Ym9vc3QvdHVwbGUvdHVwbGUuaHBwPgogCisjaW5jbHVkZSA8
-Ym9vc3QvdmVyc2lvbi5ocHA+CisjaWYgQk9PU1RfVkVSU0lPTiA+PSAxMDY3MDAKKyNpbmNsdWRl
-IDxib29zdC9uZXh0X3ByaW9yLmhwcD4KKyNlbHNlCisjaW5jbHVkZSA8Ym9vc3QvdXRpbGl0eS5o
-cHA+CisjZW5kaWYKKwogI2luY2x1ZGUgImxpYnRvcnJlbnQvYXV4Xy9kaXNhYmxlX3dhcm5pbmdz
-X3BvcC5ocHAiCiAKICNpbmNsdWRlICJsaWJ0b3JyZW50L2FkZHJlc3MuaHBwIgoKRnJvbSA5Y2Qw
-YWU2N2U3NGE1MDdjMWI5ZmY5YzA1N2VlOTdkZGEzOGNjYjgxIE1vbiBTZXAgMTcgMDA6MDA6MDAg
-MjAwbwpGcm9tOiBhcnZpZG4gPGFydmlkQGxpYnRvcnJlbnQub3JnPgpEYXRlOiBGcmksIDEzIEFw
-ciAyMDE4IDA4OjQyOjM5ICswMjAwClN1YmplY3Q6IFtQQVRDSF0gYW5vdGhlciBib29zdC0xLjY3
-IGJ1aWxkIGZpeAoKLS0tCiBzcmMva2FkZW1saWEvcm91dGluZ190YWJsZS5jcHAgfCA3ICsrKysr
-KysKIDEgZmlsZSBjaGFuZ2VkLCA3IGluc2VydGlvbnMoKykKCmRpZmYgLS1naXQgYS9zcmMva2Fk
-ZW1saWEvcm91dGluZ190YWJsZS5jcHAgYi9zcmMva2FkZW1saWEvcm91dGluZ190YWJsZS5jcHAK
-aW5kZXggYTIzNTAwYjY5Zi4uZGZjMzUwMDkzMCAxMDA2NDQKLS0tIGEvc3JjL2thZGVtbGlhL3Jv
-dXRpbmdfdGFibGUuY3BwCisrKyBiL3NyYy9rYWRlbWxpYS9yb3V0aW5nX3RhYmxlLmNwcApAQCAt
-NTQsNiArNTQsMTMgQEAgUE9TU0lCSUxJVFkgT0YgU1VDSCBEQU1BR0UuCiAjaW5jbHVkZSA8Ym9v
-c3QvY3N0ZGludC5ocHA+CiAjaW5jbHVkZSA8Ym9vc3QvYmluZC5ocHA+CiAKKyNpbmNsdWRlIDxi
-b29zdC92ZXJzaW9uLmhwcD4KKyNpZiBCT09TVF9WRVJTSU9OID49IDEwNjcwMAorI2luY2x1ZGUg
-PGJvb3N0L25leHRfcHJpb3IuaHBwPgorI2Vsc2UKKyNpbmNsdWRlIDxib29zdC91dGlsaXR5Lmhw
-cD4KKyNlbmRpZgorCiAjaW5jbHVkZSAibGlidG9ycmVudC9hdXhfL2Rpc2FibGVfd2FybmluZ3Nf
-cG9wLmhwcCIKIAogdXNpbmcgYm9vc3Q6OnVpbnQ4X3Q7Cg==
-"|base64 -d > $TMP/libtorrent-rasterbar_boost_167.diff
-patch -p1 -i $TMP/libtorrent-rasterbar_boost_167.diff||exit 1
-fi
+# https://github.com/qbittorrent/qBittorrent/issues/6383#issuecomment-281535787
+sed -i -e "s/+ target_specific(),/+ target_specific() + ['-std=c++11'],/" \
+  bindings/python/setup.py
 
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS -std=c++11" \
@@ -88,7 +56,6 @@ LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}" \
   --enable-python-binding \
   --enable-encryption \
   --with-boost-libdir=/usr/lib${LIBDIRSUFFIX} \
-  --with-libgeoip \
   --disable-debug \
   --build=$ARCH-slackware-linux
   
