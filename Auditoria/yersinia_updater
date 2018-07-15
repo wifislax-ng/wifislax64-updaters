@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170526
+SCRIPT_VERSION=20180715
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -17,13 +17,13 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	PRGNAM=yersinia
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=http://www.yersinia.net/download.htm
-	VERSION=$(curl -s $WEB|grep Current|head -1|cut -d " " -f7|cut -d "<" -f-1|sed "s/ //g")
 	EXTENSION=tar.gz
-	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	CD=.
-	DOWNLOAD=http://www.yersinia.net/download/$SOURCES
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://github.com/tomac/yersinia
+	VERSION=$(curl -s $WEB/releases|grep $EXTENSION|head -1|cut -d v -f3|cut -d t -f-1|sed 's/.$//g')
+	SOURCES=v$VERSION.$EXTENSION
+	CD=$PRGNAM-$VERSION
+	DOWNLOAD=$WEB/archive/$SOURCES
 }
 
 # Comprobar dependencias
@@ -37,18 +37,7 @@ F_compilar(){
 LDFLAGS="$SLKLDFLAGS" \
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
-./configure \
-  --prefix=/usr \
-  --libdir=/usr/lib${LIBDIRSUFFIX} \
-  --sysconfdir=/etc \
-  --localstatedir=/var \
-  --mandir=/usr/man \
-  --with-ncurses \
-  --with-pcap-includes=/usr/include/pcap \
-  --host=$ARCH-slackware-linux \
-  --build=$ARCH-slackware-linux
-  
-make clean || exit 1
+./autogen.sh --prefix=/usr
 make || exit 1
 make DESTDIR=$PKG install-strip || exit 1
 
@@ -132,7 +121,7 @@ f+IHJ5OJ39jY4N69e2xtbVHWFc1mk8HSMmtraywuLJMkDcraUhmL94KqNngqKufxTvKdb32H6aTG
 ecXFaJ98csgf/+c/+Fv9cvDxter/Za1W628MdHp66tc3HvPDt9/hzf/5v8iLgs7cgIWlZRaW1uj1
 B0RRQlV7vLAIrRFBhPU5ewcPCUX9t3b+qQD+X1tYWPgbgx/s7fv7D97n/nvv8ejhfYz1zA36DPrL
 LK4u0+0v4Lxla+sBzabiD3/vy/9/f/b4Sfb+wwf+wYMH3H9/g9HFCKUCLi7HCG/4vX/7O39n4/6d
-2Hh46QG+9rU/8D/td/9vN8EGowtn9ZYAAAAASUVORK5CYII=" | base64 -d > $PKG/usr/share/pixmaps/$PRGNAM.png
+2Hh46QG+9rU/8D/td/9vN8EGowtn9ZYAAAAASUVORK5CYII="|base64 -d > $PKG/usr/share/pixmaps/$PRGNAM.png
 
 echo "[Desktop Entry]
 Categories=Redes;
