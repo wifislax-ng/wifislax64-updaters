@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20180409
+SCRIPT_VERSION=20180814
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -37,6 +37,16 @@ F_compilar() {
 echo ""
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
+
+# Bug https://github.com/qbittorrent/qBittorrent/pull/9318
+if [ $VERSION = 4.1.2 ]; then
+echo "LS0tIGEvdW5peGNvbmYucHJpCisrKyBiL3VuaXhjb25mLnByaQpAQCAtMzYsNyArMzYsNyBAQCBu
+b2d1aTpzeXN0ZW1kIHsKIAogIyBNZW51IEljb24KICFub2d1aSB7Ci0gICAgbWVudWljb24uZmls
+ZXMgPSBkaXN0L3VuaXgvcWJpdHRvcnJlbnQuZGVza3RvcAorICAgIG1lbnVpY29uLmZpbGVzID0g
+JCRESVNUX1BBVEgvcWJpdHRvcnJlbnQuZGVza3RvcAogICAgIG1lbnVpY29uLnBhdGggPSAkJERB
+VEFESVIvYXBwbGljYXRpb25zLwogICAgIElOU1RBTExTICs9IG1lbnVpY29uCiAK"|base64 -d > $TMP/parche.patch
+patch -p1 < $TMP/parche.patch||exit 1
+fi
 
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
