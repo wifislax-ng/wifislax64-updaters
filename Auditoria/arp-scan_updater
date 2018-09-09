@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20180521
+SCRIPT_VERSION=20180909
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -20,7 +20,7 @@ F_variables() {
 	EXTENSION=tar.gz
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/royhills/arp-scan
-	VERSION=$(curl -s $WEB/releases|grep $EXTENSION|head -1|cut -d / -f6)
+	VERSION=$(curl -s $WEB/releases|grep $EXTENSION|head -1|rev|cut -d/ -f1|rev|cut -dt -f-1|sed 's/.$//g')
 	SOURCES=$VERSION.$EXTENSION
 	CD=$PRGNAM-$VERSION
 	DOWNLOAD=$WEB/archive/$SOURCES
@@ -56,19 +56,6 @@ F_compilar(){
 echo 
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
-
-echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4An/AaddADmbyI3LPOCbhRpT/bL8xkExluYKu8oBXO3W
-H0VEhCLLNzZNMGdcv1TO4vw4m6mX0IjMFJdTD5MIPk/OSpMBWw7rAlqVKB556o0BT+uN246SkiDF
-YyVSz2Z5DC+VNd2hobi5N38R2d8nDXQdTzRCMwelKVYBeoITtJhNYseHxaoJnaQr/3teTmw1n0R5
-IMkdK2rbXRQdXzW5bYsbhV3yXp81FYz1v+oShNtNGZP9PfFg7snVYj2KoiJd2nucw150TwQQC5LD
-dJ3ZJ2Gf1Yp3Q7Fs5MZ3Imh2xelyTXlwLFxNDn7iaxIxhN3i3P6D+ft8YjDATuaW+MN2BjW4Qy3y
-P3jQ//T4GCinhn1qHwCeOcgUB7EnD9Tv9IqOw/4hmVSYaE0g5VRodXYB2QrKzsCXSJkOX/9RyYmY
-IjH3zninZhi41KKDxaW456Y1tES0ZQmiZsxdX+NxSzpiWUWgWZHBIcPHsdooxbb93lI2tcm8nm1l
-YMQueMxBxJkBZVqk3k0FzB3/xKOSrOd533gvRwVWzg5LyDV1OuVjdhCmzmea8rXWUcuR9hZKAAAA
-601Zb7ohvuoAAcMDgBQAAIB//+WxxGf7AgAAAAAEWVo="|base64 -d > $TMP/patches.txz
-
-tar xvf $TMP/patches.txz &>/dev/null
-patch -p1 -i ./socket-error.patch||exit 1
 
 autoreconf -fiv
 CFLAGS="$SLKCFLAGS" \
