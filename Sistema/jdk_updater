@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20160409
+SCRIPT_VERSION=20180925
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -18,7 +18,7 @@ f_variables(){
 F_variables() {
 	PRGNAM=jdk
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+	WEB=https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
 	VERSION=$(curl -s $WEB|grep -E tar.gz|grep linux|cut -d ":" -f4-|cut -d "\"" -f2|tail -1|cut -d- -f2|cut -d / -f4)
 	DVER=1.8.0_$(printf $VERSION|cut -du -f2)
 }
