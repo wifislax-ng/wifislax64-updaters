@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20180723
+SCRIPT_VERSION=20181012
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -28,8 +28,9 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="c-ares
-GeoIP
+DEPENDENCIAS="
+libmaxminddb
+c-ares
 libdbus-c++
 libiec61883
 libxml++
@@ -38,13 +39,29 @@ libffado
 celt
 jack-audio-connection-kit
 portaudio
-krb5
 libsmi
+krb5
 jansson
 nghttp2
 spandsp
 lz4
 snappy
+libxkbcommon
+gts
+graphviz
+python3
+ninja
+meson
+pyudev
+libwacom
+python-evdev
+libinput
+freetds
+OpenAL
+libwebp
+opus
+postgresql
+qt5
 "
 f_dependencias
 }
@@ -57,17 +74,6 @@ echo ""
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
-echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Af/AT1dADIbyAMZLj8ePy2fI3xKp7ZGyzx38+Fs27KA
-gRW7JAGBqsRX86QM2uuDq1jBzbKeizv+5l412P5LWY+ZZMUO+zoiCdpEG3zrr6h2HgxJd1Yd7dpL
-BQ6q3d1YnZTutU6cw4M3BT2CbTndRuxHUFraolM6/wMhEVVNK1oyeDDmxnNrVuDh/EJAizRHW/NU
-pj5oASxraEyE7llQvRDcZlFv/a9XEk2Fz54f4XifrEa5JspzajUaue0aK8g5X8d8ZRWaUU+h5kCq
-j4+pne7HbUs49OljZAGoH1AN8ohqyw8usIO/1ADtb6AnzGTarI6Ek1zy1TZLpmz4odPReFD3kFX2
-9bySnYHwk7q8TsNJ2NoWsbNGbJBVnkIA0xYN+Da5xC7OWZZSfb4N3zPeZ1wBcJ8ZNwCZD01NL7zk
-qZAORDkgAAAAAGYBDA9G0HvZAAHZAoAQAAAR39t9scRn+wIAAAAABFla"|base64 -d > $TMP/patches.txz
-
-tar xvf $TMP/patches.txz &>/dev/null
-patch -p1 -i ./do_not_use_svn_version.patch||exit 1
-
 # Esto evita problemas en sistemas multilib
 sed -i "s|/lib)|/lib$LIBDIRSUFFIX)|g" configure.ac
 
@@ -77,18 +83,15 @@ CXXFLAGS="$SLKCFLAGS" \
   ./configure \
       --prefix=/usr \
       --libdir=/usr/lib${LIBDIRSUFFIX} \
-      --mandir=/usr/man \
-      --docdir=/usr/doc/$PRGNAM-$VERSION \
+      --without-lua \
       --with-qt=no \
-      --with-gtk=3 \
+      --with-gtk=2 \
       --with-pcap \
       --with-zlib \
       --with-portaudio \
-      --with-ssl=/usr/lib${LIBDIRSUFFIX} \
       --with-krb5 \
       --with-c-ares \
-      --with-geoip \
-      --without-lua \
+      --with-maxminddb \
       --build=$ARCH-slackware-linux
 
 # Compilamos
@@ -104,16 +107,8 @@ for d in epan epan/crypt epan/dfilter epan/dissectors epan/ftypes epan/wmem wire
 install -Dm 644 ${d}/*.h -t "${PKG}/usr/include/wireshark/${d}"
 done
 
-# Instalamos entrada desktop
-mkdir -p $PKG/usr/share/applications/wifislax/Redes
-mv -f $PRGNAM.desktop $PKG/usr/share/applications/wifislax/Redes/$PRGNAM.desktop
-rm -rf $PKG/usr/share/applications/*.desktop
-
-# Corregimos nombre de ejecutable
-mv -f $PKG/usr/bin/wireshark-gtk $PKG/usr/bin/wireshark
-
-# Corregimos entrada de menu
-sed 's/Network;Monitor;Qt;/Redes;/'g -i $PKG/usr/share/applications/wifislax/Redes/$PRGNAM.desktop
+# desktop
+install -Dm 644 wireshark.desktop -t "${PKG}/usr/share/applications"
 
 # Eliminamos los ficheros .la
 rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
