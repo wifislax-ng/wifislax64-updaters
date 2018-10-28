@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20171107
+SCRIPT_VERSION=20181028
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -17,19 +17,27 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	PRGNAM=hashcat
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/hashcat/hashcat
-	VERSION=$(curl -s $WEB/releases|grep tar.gz|head -1|cut -d / -f5|cut -d t -f-1|sed 's/.$//g'|cut -d v -f2)
 	EXTENSION=tar.gz
-	SOURCES=v$VERSION.$EXTENSION
-	CD=$PRGNAM-$VERSION
-	DOWNLOAD=$WEB/archive/$SOURCES
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://github.com/$PRGNAM/$PRGNAM
+	VERSION=$(curl -s $WEB/releases|grep $EXTENSION|head -1|cut -d / -f5|cut -d t -f-1|sed 's/.$//g'|cut -d v -f2)
+	COMMIT=$(curl -s $WEB/releases/tag/v$VERSION|grep -m1 commit/|cut -d/ -f5|cut -d '"' -f-1)
 }
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="opencl-headers ocl-icd"
+DEPENDENCIAS="ocl-icd"
 f_dependencias
+}
+
+# Descarga los firmwares mas nuevos disponibles
+F_descargar() {
+echo ""
+echo "$VERDE"Clonando $PRGNAM git ..."$CIERRE"
+git clone $WEB
+cd $PRGNAM
+git reset --hard $COMMIT
+git submodule update --init
 }
 
 # Descomprimimos el fichero descargado y compilamos
@@ -37,9 +45,7 @@ F_compilar(){
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
-
 sed -i "s|/lib|/lib${LIBDIRSUFFIX}|" src/Makefile
-
 make PREFIX=/usr SHARED=1
 make DESTDIR=$PKG PREFIX=/usr SHARED=1 install
 }
@@ -69,9 +75,7 @@ f_versionInstalada
 #Compronar dependencias
 F_dependencias
 #Si no existe el fichero se descargara
-f_download
-#Preparamos entorno
-f_preparar
+F_descargar
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete
