@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181028
+SCRIPT_VERSION=20181110
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -17,27 +17,19 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	PRGNAM=hashcat
-	EXTENSION=tar.gz
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/$PRGNAM/$PRGNAM
-	VERSION=$(curl -s $WEB/releases|grep $EXTENSION|head -1|cut -d / -f5|cut -d t -f-1|sed 's/.$//g'|cut -d v -f2)
-	COMMIT=$(curl -s $WEB/releases/tag/v$VERSION|grep -m1 commit/|cut -d/ -f5|cut -d '"' -f-1)
+	WEB=https://github.com/hashcat/hashcat
+	VERSION=$(curl -s $WEB/releases|grep tar.gz|head -1|cut -d / -f5|cut -d t -f-1|sed 's/.$//g'|cut -d v -f2)
+	EXTENSION=tar.gz
+	SOURCES=v$VERSION.$EXTENSION
+	CD=$PRGNAM-$VERSION
+	DOWNLOAD=$WEB/archive/$SOURCES
 }
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="ocl-icd"
+DEPENDENCIAS="opencl-headers ocl-icd xxHash"
 f_dependencias
-}
-
-# Descarga los firmwares mas nuevos disponibles
-F_descargar() {
-echo ""
-echo "$VERDE"Clonando $PRGNAM git ..."$CIERRE"
-git clone $WEB
-cd $PRGNAM
-git reset --hard $COMMIT
-git submodule update --init
 }
 
 # Descomprimimos el fichero descargado y compilamos
@@ -45,9 +37,29 @@ F_compilar(){
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
-sed -i "s|/lib|/lib${LIBDIRSUFFIX}|" src/Makefile
-make PREFIX=/usr SHARED=1
-make DESTDIR=$PKG PREFIX=/usr SHARED=1 install
+
+if [ $VERSION = 5.0.0 ]; then
+echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4A//AwJdABhoCEWmU6Eyh1L4kzZmvRH5dB6jf38aNQhl
+UGhoJxmvnKyOs/PbidXKMgk2XrO1R2zw6urGFOpwYtjtltlkRQefZRKZiKJcL3MU+o/hKcXuvlqg
++H/aq2en0oo7BAKn9q2YF6eTDPEUh7BT1Io8P8EJC82HfB7+aM5i3zZYi4/wJfDv0HGKPNMV1Kt4
+wMEdvA9cN6o8b4eZXSY1Vy2BSjux2F7oHSnc9aPrlOI+zbOI/uqHOobH6i655kh03maWXM/ViFtK
+VocXQtKTW3SJ4jkD+oZbdZ+lvtfdY8wK6dnG7rI715KqxbBwAq2vk99e7L3dkneXvOMtdh0in6zW
+OEm9/N74VLwWE1YXrZ4LXR7FzFSN3FzuqqIvm7XQNHjEVkIYRizIqsbLBQc649Xu8NgFTOfQHBw3
+qolTPaW1sdj2c09Uk0KRW5D9z5eZq72WEsb9APiYxDXDJAsOQf4H06FY6Eynq+OuQ9blBI1l0ZUc
+36E3DkuytvWWt+2K93YEqDKdqjqPMY5mFcmmWOVxy2YvvWNvFAfuj6GsdsBLsPF1TZHZ1D5Q/2Qi
+laUHSvsgElK4tuE+uhlfI8Q/REFQyyfXK8suLX03ItyxYnEYKsLCrIoMQVdZRvSchas9fpZWPKYX
+dVzP5LHr1hGOwqWNuB4iCbNjOMhKQ6GOC2GsK6ykzlmyG/kdsQaK7zTrerX9SrZZrYmVzID2OIbA
+vtmujOKP737kh2jmF7jUp39pZRGAkiu/hHQtPWDBAUlEs9pB4XaVlZ6fqkxIsAKB+Gjcxuh+o0UG
+AQWv28UHsNydqzKpcIW54yFnRkWMGh3xocqWPGXbNlTr/E+Yuj+9p5CsCMe6eFrVGHQDyXf/j6ml
+8GgLkyGCrpjthYZ/z+pEzBKcwk3bECwnN7prlMp8dBfRpwE2dd/z/BeSpvIi5FaCBblA+lU7ZAQD
+hUWMLU7YPuRwz/OSpqV0pknrU9OXCjfp4Y3PGjezjZhUHZCvXFSpheUGlCYbhF6sBTOJb+jl/fGb
+NBwAAAAARMxR16ds50kAAZ4GgCAAAJWmbb6xxGf7AgAAAAAEWVo="|base64 -d > $TMP/patch.txz
+tar xvf $TMP/patch.txz &>/dev/null||exit 1
+patch -p1 -i ./0001-add-optional-support-for-system-xxhash.patch||exit 1
+fi
+
+make PREFIX=/usr SHARED=1 SYSTEM_XXHASH=1 LIBRARY_FOLDER=/usr/lib${LIBDIRSUFFIX}||exit 1
+make DESTDIR=$PKG PREFIX=/usr SHARED=1 SYSTEM_XXHASH=1 LIBRARY_FOLDER=/usr/lib${LIBDIRSUFFIX} install||exit 1
 }
 
 ###################################
@@ -75,7 +87,9 @@ f_versionInstalada
 #Compronar dependencias
 F_dependencias
 #Si no existe el fichero se descargara
-F_descargar
+f_download
+#Preparamos entorno
+f_preparar
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete
