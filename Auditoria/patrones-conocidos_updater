@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20151116
+SCRIPT_VERSION=20181116
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -16,30 +16,14 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	LOCAL="$(cat "$HOME/swireless/patrones_conocidos.txt" 2>/dev/null|grep "^# VERSION [0-9]*$"|awk '{print $3}')"
-	VERSION="$(timeout -s SIGTERM 3 curl -s "http://www.downloadwireless.net/scripts-live/patrones_conocidos.txt"|grep "^# VERSION [0-9]*$"|awk '{print $3}')"
 	PRGNAM=patrones-conocidos
+	SRCNAM=patrones_conocidos
+	SOURCES=$SRCNAM.txt
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	EXTENSION=txt
-	SOURCES=patrones_conocidos.$EXTENSION
-	DOWNLOAD=http://www.downloadwireless.net/scripts-live/$SOURCES
-}
-
-# Comprobar dependencias
-F_dependencias(){
-	if [ ! "$(ping downloadwireless.net -c1 2>/dev/null)" ]; then
-	echo ""
-	echo "$ROJO"Parece que el FTP no responde ..."$CIERRE"
-	sleep 1
-	echo ""
-	echo "$AMARILLO"Prueba mas tarde."$CIERRE"
-	sleep 1
-	echo ""
-	echo "$VERDE"Bye Bye"$CIERRE"
-	echo ""
-	sleep 1
-	exit 0
-	fi
+	WEB=https://github.com/wifislax-ng/wifislax64-updaters/blob/master
+	LOCAL="$(cat "$HOME/swireless/$SOURCES" 2>/dev/null|grep "^# VERSION [0-9]*$"|awk '{print $3}')"
+	VERSION="$(curl -s $WEB/$SOURCES|grep -o "VERSION [0-9]*****[0-9]"|awk '{print $2}')"
+	DOWNLOAD=$WEB/$SOURCES
 }
 
 # Descomprimimos el fichero descargado y compilamos
@@ -70,8 +54,6 @@ f_comprobarUpdates
 f_arquitectura noarch
 #Comprobamos version instalada del paquete
 f_versionInstalada
-#Comprobamos dependencias
-F_dependencias
 #Si no existe el fichero se descargara
 f_download
 #Descomprimir fichero descargado y compilamos
