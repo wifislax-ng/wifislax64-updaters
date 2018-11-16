@@ -17,13 +17,13 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	PRGNAM=slapt-get
+	EXTENSION=tar.gz
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://software.jaos.org
-	VERSION=$(curl -s $WEB/|grep slapt-get|grep source|grep .tar.gz|cut -d- -f4|cut -d '>' -f2|cut -d ' ' -f1|sed "s/ //g")
-	EXTENSION=tar.gz
+	VERSION=$(curl -s $WEB/|grep $PRGNAM|grep source|grep .$EXTENSION|cut -d- -f4|cut -d '>' -f2|cut -d ' ' -f1|sed "s/ //g")
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
 	CD=$PRGNAM-$VERSION
-	DOWNLOAD=${WEB}/source/slapt-get/$SOURCES
+	DOWNLOAD=${WEB}/source/$PRGNAM/$SOURCES
 }
 
 # Descomprimimos el fichero descargado y compilamos
