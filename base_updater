@@ -19,7 +19,6 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	PRGNAM=
-	#SRCNAM=
 	EXTENSION=
 	echo -ne "'"\033]2;${PRGNAM}_updater\007"'"
 	WEB=
