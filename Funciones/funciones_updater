@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-FUNCIONES_VERSION=20171030
+FUNCIONES_VERSION=20181122
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -28,6 +28,9 @@ PACKAGETYPE=$(cat $CONFIG|grep PACKAGETYPE|cut -d = -f2)
 export MAKEFLAGS=-j$(nproc)
 # Se exporta variable para que slapt-src compile los plugins python3
 export PYTHON3=yes
+# Se define idioma de sistema
+IDIOMA=$(echo $LANG|cut -d_ -f1)
+export IDIOMA
 
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
@@ -96,7 +99,6 @@ if [ -z "$ARCH" ]; then
        *) ARCH=$( uname -m ) ;;
   esac
 fi
-
 if [ "$ARCH" = "i586" ]; then
   SLKCFLAGS="-O2 -march=i586 -mtune=i686"
   LIBDIRSUFFIX=""
@@ -110,7 +112,6 @@ else
   SLKCFLAGS="-O2"
   LIBDIRSUFFIX=""
 fi
-
 set -e
 }
 
@@ -212,7 +213,7 @@ done
 }
 
 # Elimina una version anterior
-f_eliminaVersion() {
+f_elimina() {
    if [ $PRGNAM = xampp ]; then
    if [ -f /opt/lampp/lampp ]; then
    /opt/lampp/lampp stop
@@ -243,9 +244,7 @@ f_directorioTemporal() {
    OUTPUT=${OUTPUT:-/tmp}
    if [ -d $TMP ]; then
    cd $TMP
-   find * -type d -print 2>/dev/null | while read line ; do
-   rm -rf $TMP/$line
-   done
+   rm -rf $(ls|grep -v $SOURCES)
    fi
    rm -rf $PKG
    mkdir -p $TMP $PKG $OUTPUT
@@ -260,39 +259,47 @@ f_strip() {
 
 # Descargar sources
 f_download(){
-GESTOR="wget -N -L -c -q --show-progress --no-passive-ftp"
-if [ $PRGNAM = hydra ]; then
-GESTOR="$GESTOR --no-check-certificate "
+if [ $GESTOR = wget ]; then
+ARGS="-N -L -c -q --show-progress --no-passive-ftp"
+elif [ $PRGNAM = hydra ]; then
+ARGS="-N -L -c -q --show-progress --no-passive-ftp --no-check-certificate"
 fi
+if
+[ $PRGNAM = jdk ]; then
+echo ".oracle.com	TRUE	/	FALSE	1906724535	oraclelicense	accept-securebackup-cookie">cookie
+ARGS="-N -L -c -q --show-progress --no-passive-ftp --load-cookies=cookie"
+fi
+
+if [ $GESTOR = git ]; then
+ARGS=clone
+fi
+
 if [ ! -f $SOURCES ]; then
 echo 
 echo "$CYAN"Descargando sources de $PRGNAM-$VERSION"$CIERRE"
 echo "${ROSA}"
-$GESTOR $DOWNLOAD
+$GESTOR $ARGS $DOWNLOAD
 echo "${CIERRE}"
 fi
-sleep 1
 }
 
 #Preparamos entorno
-f_preparar(){
-	if [ ! -z $SOURCES ]; then
-	echo ""
+f_descomprimir(){
 	echo "$VERDE"Descomprimiendo ..."$CIERRE"
 	sleep 1
 	rm -rf $PRGNAM-$VERSION
-	if [ ! -z $EXTENSION ]; then
 	if [ $EXTENSION = zip ]; then
 	unzip $SOURCES
 	else
 	tar xvf $SOURCES||tar xvf $SRCNAM-$VERSION.$EXTENSION||tar xvf $PRGNAM-src-$VERSION.$EXTENSION
 	fi
-	fi
+}
+
+f_cd(){
 	if [ -z $CD ]; then
 	echo "${ROJO}La funcion CD no existe o esta vacia.${CIERRE}"
 	fi
 	cd $TMP/$CD||echo "${ROJO}Error en funcion CD.${CIERRE}"
-	fi
 	chown -R root:root .
 	find -L . \
 	\( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
@@ -378,7 +385,7 @@ f_tareasFinales() {
 
    # Si el sistema tiene una version anterior se eliminara
    if [ "$INSTALADA" != "NO INSTALADA" ]; then
-      f_eliminaVersion
+      f_elimina
    fi
    
    # Comprimimos los ficheros man
@@ -419,7 +426,7 @@ f_tareasFinales() {
    
    # Iniciar algun servicio si existe
    if [ $PRGNAM = metasploit ]; then
-       /etc/rc.d/rc.metasploit start &> /dev/null
+   /etc/rc.d/rc.metasploit start &> /dev/null
    fi
    if [ $PRGNAM = teamviewer ]; then
    /etc/rc.d/rc.teamviewerd start &>/dev/null

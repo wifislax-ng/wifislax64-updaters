@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20180925
+SCRIPT_VERSION=20181122
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -17,52 +17,18 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	PRGNAM=jdk
+	EXTENSION=tar.gz
+	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
-	VERSION=$(curl -s $WEB|grep -E tar.gz|grep linux|cut -d ":" -f4-|cut -d "\"" -f2|tail -1|cut -d- -f2|cut -d / -f4)
-	DVER=1.8.0_$(printf $VERSION|cut -du -f2)
-}
-
-# Comprobar dependencias
-F_dependencias(){
-DEPENDENCIAS="aria2"
-f_dependencias
-}
-
-# Si el paquete no existe se descargara de internet
-F_download(){
-        if [ $ARCH = x86_64 ]; then
-        ARCH=x64
-        LIB_ARCH=amd64
-	else
-	LIB_ARCH=i386
-        fi
-        DESCARGA=$(curl -s $WEB|grep -E $ARCH.tar.gz|grep linux|cut -d ":" -f4-|cut -d "\"" -f2|tail -1)
-	ARCHIVO=${DESCARGA##*/}
-
-	echo ".oracle.com	TRUE	/	FALSE	1906724535	oraclelicense	accept-securebackup-cookie">cookie
-	if [ ! -f $ARCHIVO ]; then
-		echo ""
-		echo "$CYAN"Descargando sources de $PRGNAM-$VERSION"$CIERRE"
-		sleep 1
-		aria2c -x 3 --load-cookies=cookie $DESCARGA
-	fi
+	VERSION=$(curl -s $WEB|grep -E $EXTENSION|grep linux|cut -d ":" -f4-|cut -d "\"" -f2|tail -1|cut -d- -f2|cut -d / -f4)
+	SOURCES=$PRGNAM-$VERSION-linux-x64.$EXTENSION
+	DOWNLOAD=$(curl -s $WEB|grep -E x64.$EXTENSION|grep linux|cut -d ":" -f4-|cut -d "\"" -f2|tail -1)
 }
 
 # Empezamos a crear el paquete
-F_crearpaquete(){
-	echo ""
-	echo "$VERDE"Descomprimiendo ..."$CIERRE"
-	sleep 1
-	cd $TMP
-	tar xvf $PRGNAM-$VERSION-linux-$ARCH.tar.gz
-	chown -R root.root $PKG
-	find $PKG \
-	\( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 -o -perm 511 \) \
-	-exec chmod 755 {} \; -o \
-	\( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
-	-exec chmod 644 {} \;
-
+F_compilar(){
+DVER=1.8.0_$(printf $VERSION|cut -du -f2)
 mkdir -p $PKG/etc/profile.d
 echo "#!/bin/csh
 setenv JAVA_HOME /usr/lib${LIBDIRSUFFIX}/java
@@ -85,10 +51,10 @@ mkdir -p $PKG/usr/lib${LIBDIRSUFFIX}
 
 	mkdir -p $PKG/usr/lib${LIBDIRSUFFIX}/mozilla/plugins
 	cd $PKG/usr/lib${LIBDIRSUFFIX}/mozilla/plugins
-	ln -sf /usr/lib${LIBDIRSUFFIX}/java/jre/lib/${LIB_ARCH}/libnpjp2.so libnpjp2.so
+	ln -sf /usr/lib${LIBDIRSUFFIX}/java/jre/lib/amd64/libnpjp2.so libnpjp2.so
 
 	cd $PKG/usr/lib${LIBDIRSUFFIX}
-	ln -sf ./java/jre/lib/${LIB_ARCH}/server/libjvm.so .
+	ln -sf ./java/jre/lib/amd64/server/libjvm.so .
 
 # Entrada a escritorio
 mkdir -p $PKG/usr/share/{applications,icons,mime}
@@ -135,12 +101,14 @@ f_presentacion
 f_comprobarUpdates
 #Comprobamos version instalada del script
 f_versionInstalada
-# Comprobar dependencias
-F_dependencias
 #Si no existe el fichero se descargara
-F_download
-# Empezamos a crear el paquete
-F_crearpaquete
+f_download
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
 #Hacemos strip sobre el paquete
 f_strip
 #Creamos xzm , instalamos y salimos

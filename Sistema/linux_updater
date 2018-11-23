@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20181020
+SCRIPT_VERSION=20181122
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}

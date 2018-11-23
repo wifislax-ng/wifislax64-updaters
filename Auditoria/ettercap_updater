@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20180421
+SCRIPT_VERSION=20181122
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -18,6 +18,7 @@ f_variables(){
 F_variables() {
 	PRGNAM=ettercap
 	EXTENSION=tar.gz
+	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/Ettercap/$PRGNAM/releases
 	VERSION=$(curl -s $WEB|grep $EXTENSION|head -1|cut -d- -f2|cut -d t -f-1|sed 's/.$//g')
@@ -113,34 +114,20 @@ patch -p1 -i $TMP/CVE-2017-8366.patch||exit 1
 mkdir -p build
 cd build
   cmake \
-    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+    -D ENABLE_GTK=ON \
     -DCMAKE_INSTALL_PREFIX=/usr \
+    -D INSTALL_PREFIX=/usr \
     -DLIB_SUFFIX=${LIBDIRSUFFIX} \
     -DMAN_INSTALLDIR=/usr/man \
-    -DBUNDLED_LIBS=OFF \
     -DCMAKE_BUILD_TYPE=Release ..
-
+    
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 
-  make  || exit 1
+  make || exit 1
   make install DESTDIR=$PKG || exit 1
 cd ..
-
-# Creamos un nuevo desktop
-mkdir -p $PKG/usr/share/applications/wifislax/Redes
-rm -rf $PKG/usr/share/pixmaps/$PRGNAM.svg
-rm -f $PKG/usr/share/applications/$PRGNAM.desktop 
-cp -rf $PKG/usr/share/$PRGNAM/$PRGNAM.png $PKG/usr/share/pixmaps/$PRGNAM-gtk.png
-echo "[Desktop Entry]
-Name=Ettercap GTK
-Comment=Nework sniffer/analyser
-Exec=ettercap-pkexec -G
-Icon=ettercap-gtk
-Terminal=false
-Type=Application
-Categories=Redes" > $PKG/usr/share/applications/wifislax/Redes/$PRGNAM.desktop
 }
 
 ###################################
@@ -169,8 +156,10 @@ f_versionInstalada
 F_dependencias
 #Si no existe el fichero se descargara
 f_download
-#Preparamos entorno
-f_preparar
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete

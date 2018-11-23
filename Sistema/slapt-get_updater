@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181116
+SCRIPT_VERSION=20181122
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -18,6 +18,7 @@ f_variables(){
 F_variables() {
 	PRGNAM=slapt-get
 	EXTENSION=tar.gz
+	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://software.jaos.org
 	VERSION=$(curl -s $WEB/|grep $PRGNAM|grep source|grep .$EXTENSION|cut -d- -f4|cut -d '>' -f2|cut -d ' ' -f1|sed "s/ //g")
@@ -61,8 +62,10 @@ f_comprobarUpdates
 f_versionInstalada
 #Si no existe el fichero se descargara
 f_download
-#Preparamos entorno
-f_preparar
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete

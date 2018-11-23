@@ -20,6 +20,7 @@ f_variables(){
 F_variables() {
 	PRGNAM=
 	EXTENSION=
+	GESTOR=
 	echo -ne "'"\033]2;${PRGNAM}_updater\007"'"
 	WEB=
 	VERSION=
@@ -75,8 +76,10 @@ f_versionInstalada
 #F_dependencias
 #Si no existe el fichero se descargara
 f_download
-#Preparamos entorno
-f_preparar
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete

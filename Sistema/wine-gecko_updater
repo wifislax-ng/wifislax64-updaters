@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170526
+SCRIPT_VERSION=20181122
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -16,45 +16,24 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=glabels
+	PRGNAM=wine-gecko
+	SRCNAM=wine_gecko
+	EXTENSION=msi
+	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://download.gnome.org/sources/$PRGNAM
-	RAMA=$(curl -s $WEB/|egrep -o ">[0-9].[0-9]{1,2}/"|tr -d '>/'|egrep -v "1$|3$|5$|7$|9$"|tail -1)
-	VERSION=$(curl -s ${WEB}/${RAMA}/|grep LATEST|tail -1|cut -d- -f3|cut -d '"' -f-1)
-	EXTENSION=tar.xz
-	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	CD=$PRGNAM-$VERSION
-	DOWNLOAD=${WEB}/${RAMA}/$SOURCES
-}
-
-# Comprobar dependencias
-F_dependencias(){
-DEPENDENCIAS="qrencode"
-f_dependencias
+	WEB=http://dl.winehq.org/wine/$PRGNAM
+	VERSION=$(curl -s $WEB/|egrep -o ">[0-9].[0-9]{1,2}/"|tr -d '>/'|tail -1)
+	SOURCES=$SRCNAM-$VERSION-$ARCH.$EXTENSION
+	DOWNLOAD=$WEB/$VERSION/$SOURCES
 }
 
 # Descomprimimos el fichero descargado y compilamos
-F_compilar(){
-echo 
-echo "$VERDE"Configurando ..."$CIERRE"
-sleep 1
-
-	CFLAGS="$SLKCFLAGS" \
-	CXXFLAGS="$SLKCFLAGS" \
-	./configure \
-	--prefix=/usr  \
-	--libdir=/usr/lib${LIBDIRSUFFIX} \
-	--sysconfdir=/etc  \
-	--localstatedir=/var \
-	--disable-static  \
-	--disable-schemas-compile
-  
-echo 
-echo "$VERDE"Compilando ..."$CIERRE"
-sleep 1
-  
-make  || exit 1
-make install DESTDIR=$PKG
+F_compilar(){           
+echo "Incluyendo version x86 ..."
+wget -N -L -c -q --show-progress $WEB/$VERSION/$SRCNAM-$VERSION-x86.$EXTENSION
+mkdir -p $PKG/usr/share/wine/gecko
+mv -f *.$EXTENSION $PKG/usr/share/wine/gecko
+chmod 777 $PKG/usr/share/wine/gecko/*
 }
 
 ###################################
@@ -65,6 +44,8 @@ trap f_exitmode SIGHUP SIGINT
 
 #Inicializamos las variables globales
 f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
 #Comprobamos conexion a Internet
 f_comprobarConexion
 #Inicializamos las variables del script
@@ -75,16 +56,10 @@ f_directorioTemporal
 f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
-#Asignamos o detectamos arquitectura
-f_arquitectura
 #Comprobamos version instalada del paquete
 f_versionInstalada
-# Comprobar dependencias
-F_dependencias
 #Si no existe el fichero se descargara
 f_download
-#Preparamos entorno
-f_preparar
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete

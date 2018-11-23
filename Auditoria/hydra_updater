@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20180421
+SCRIPT_VERSION=20181122
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,6 +19,7 @@ F_variables() {
 	PRGNAM=hydra
 	SRCNAM=thc-hydra
 	EXTENSION=tar.gz
+	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/vanhauser-thc/$SRCNAM
 	VERSION=$(curl -s $WEB/releases|grep $EXTENSION|head -1|rev|cut -d / -f-1|rev|cut -d t -f-1|sed 's/.$//g')
@@ -169,6 +170,8 @@ trap f_exitmode SIGHUP SIGINT
 
 #Inicializamos las variables globales
 f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
 #Comprobamos conexion a Internet
 f_comprobarConexion
 #Inicializamos las variables del script
@@ -179,16 +182,14 @@ f_directorioTemporal
 f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
-#Asignamos o detectamos arquitectura
-f_arquitectura
 #Comprobamos version instalada del paquete
 f_versionInstalada
-#Comprobar dependencias
-F_dependencias
 #Si no existe el fichero se descargara
 f_download
-#Preparamos entorno
-f_preparar
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete

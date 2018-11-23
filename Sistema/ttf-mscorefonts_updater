@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20161229
+SCRIPT_VERSION=20181122
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -28,23 +28,17 @@ DEPENDENCIAS="cabextract"
 f_dependencias
 }
 
-# Si el paquete no existe se descargara de internet
-F_download(){
-	echo 
-	echo "$CYAN"Descargando sources de $PRGNAM-$VERSION"$CIERRE"
-	sleep 1
-	for x in andale32.exe arial32.exe arialb32.exe comic32.exe courie32.exe georgi32.exe impact32.exe times32.exe trebuc32.exe verdan32.exe wd97vwr32.exe webdin32.exe; do
-	if [ ! -f $x ]; then
-	aria2c -x 3 ${WEB}$x
-	fi
-	done
-}
-
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 	echo 
 	echo "$CYAN"Descargando sources de $PRGNAM-$VERSION"$CIERRE"
 	sleep 1
+	for x in andale32.exe arial32.exe arialb32.exe comic32.exe courie32.exe georgi32.exe impact32.exe times32.exe trebuc32.exe verdan32.exe wd97vwr32.exe webdin32.exe; do
+	if [ ! -f $x ]; then
+	wget -N -L -c -q --show-progress --no-passive-ftp ${WEB}$x
+	fi
+	done
+	
 	rm -rf $PRGNAM-$VERSION
 	mkdir $PRGNAM-$VERSION
 	mv *.exe $PRGNAM-$VERSION
@@ -84,8 +78,6 @@ f_arquitectura
 f_versionInstalada
 # Comprobar dependencias
 F_dependencias
-#Si no existe el fichero se descargara
-F_download
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete

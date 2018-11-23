@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20171105
+SCRIPT_VERSION=20181122
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -19,10 +19,11 @@ f_variables(){
 F_variables() {
 	PRGNAM=audacity
 	SRCNAM=Audacity
+	EXTENSION=tar.gz
+	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/audacity/audacity
 	VERSION=$(curl -s $WEB/releases|grep $SRCNAM-[0-9]|grep -v beta|grep -v rc[0-9]|head -1|cut -d- -f2|cut -d '"' -f-1)
-	EXTENSION=tar.gz
 	SOURCES=$SRCNAM-$VERSION.$EXTENSION
 	CD=$PRGNAM-$SRCNAM-$VERSION
 	DOWNLOAD=$WEB/archive/$SOURCES
@@ -152,8 +153,10 @@ f_versionInstalada
 F_dependencias
 #Si no existe el fichero se descargara
 f_download
-#Preparamos entorno
-f_preparar
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete

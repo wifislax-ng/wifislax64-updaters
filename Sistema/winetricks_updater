@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170726
+SCRIPT_VERSION=20181122
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -17,10 +17,11 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	PRGNAM=winetricks
+	EXTENSION=tar.gz
+	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/Winetricks/winetricks
 	VERSION=$(curl -s $WEB/releases/|grep tag/|head -1|cut -d / -f6|cut -d '"' -f-1)
-	EXTENSION=tar.gz
 	SOURCES=$VERSION.$EXTENSION
 	CD=$PRGNAM-$VERSION
 	DOWNLOAD=$WEB/archive/$SOURCES
@@ -28,7 +29,7 @@ F_variables() {
 
 # Comprobar dependencias ( si hay mas de una se separan por un espacio )
 F_dependencias(){
-DEPENDENCIAS="wine cabextract"
+DEPENDENCIAS="cabextract wine"
 f_dependencias
 }
 
@@ -50,7 +51,6 @@ Icon=winetricks
 Name=winetricks
 Terminal=false
 Type=Application" > $PKG/usr/share/applications/$PRGNAM.desktop
-
 
 # Creamos el icono
 echo "
@@ -128,8 +128,10 @@ f_versionInstalada
 F_dependencias
 #Si no existe el fichero se descargara
 f_download
-#Preparamos entorno
-f_preparar
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete

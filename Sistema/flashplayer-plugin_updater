@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170518
+SCRIPT_VERSION=20181122
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -17,61 +17,36 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	PRGNAM=flashplayer-plugin
+	EXTENSION=tar.gz
+	SRCNAM=flash_player_npapi_linux
+	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=http://get.adobe.com/es/flashplayer/about/
 	VERSION=$(curl -s $WEB|grep Linux -A3|grep '<td>'[0-9]|cut -d '>' -f2|cut -d '<' -f-1)
-	EXTENSION=tar.gz
-	SRCNAM=flash_player_npapi_linux
 	SOURCES=$SRCNAM.$ARCH.$EXTENSION
 	DOWNLOAD=http://fpdownload.adobe.com/get/flashplayer/pdc/$VERSION/$SOURCES
 }
 
-# Descomprimimos el fichero descargado
-F_descomprimir(){
-	echo ""
-	echo "$VERDE"Descomprimiendo ..."$CIERRE"
-	sleep 1
-	tar xvf $SOURCES -C $PKG
-
-	mkdir -p $PKG/usr/lib${LIBDIRSUFFIX}/mozilla/plugins
-	mv $PKG/libflashplayer.so $PKG/usr/lib${LIBDIRSUFFIX}/mozilla/plugins
-
-	cd $PKG
-	rm -rf readme.txt
-	chown -R root:root $PKG
-	chmod -R g-w $PKG
-	find $PKG -type f -name "*.so" -exec chmod 0755 {} \;
-}
-
 # Creamos paquete
 F_compilar(){
-rm -rf $PKG/usr/share/applications/*.desktop
-echo "[Desktop Entry]
-Name=Adobe Flash Player
-Comment=Preferences for Adobe Flash Player
-Comment[es]=Preferencias para Adobe Flash Player
-Exec=flash-player-properties
-Icon=flash-player-properties
-Terminal=false
-Type=Application
-StartupNotify=true
-Categories=Settings" > $PKG/usr/share/applications/$PRGNAM.desktop
+mv usr $PKG
+mkdir -p $PKG/usr/lib${LIBDIRSUFFIX}/mozilla/plugins
+mv libflashplayer.so $PKG/usr/lib${LIBDIRSUFFIX}/mozilla/plugins
+cd $PKG
+chown -R root:root $PKG
+chmod -R g-w $PKG
+find $PKG -type f -name "*.so" -exec chmod 0755 {} \;
 
 # Creamos config
 mkdir -p $PKG/etc/adobe
 echo "#Hardware video decoding
 #EnableLinuxHWVideoDecode=1" > $PKG/etc/adobe/mms.cfg
 
+# Hacemos visible la entrada de menu
+sed 's/NotShowIn=KDE;//g' -i $PKG/usr/share/applications/flash-player-properties.desktop
+
 # Limpiamos paquete
-if [ -d $PKG/LGPL ]; then
-rm -rf $PKG/LGPL
-fi
-if [ -f $PKG/license.pdf ]; then
-rm -rf $PKG/license.pdf
-fi
-if [ -d $PKG/usr/lib ]; then
 rm -rf $PKG/usr/lib
-fi
 }
 
 ###################################
@@ -99,7 +74,7 @@ f_versionInstalada
 #Si no existe el fichero se descargara
 f_download
 # Descomprimimos el fichero descargado
-F_descomprimir
+f_descomprimir
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete

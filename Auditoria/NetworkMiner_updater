@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170526
+SCRIPT_VERSION=20181122
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -16,14 +16,14 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	WEB=https://sourceforge.net/projects/networkminer/files/networkminer/
-	VERSION=$(curl -s $WEB|grep /latest|cut -d "/" -f8|cut -d "-" -f 2)
-	VERSION2=$(echo $VERSION|tr '.' '-')
 	PRGNAM=NetworkMiner
-	echo -ne "\033]2;${PRGNAM}_updater\007"
+	SRCNAM=networkminer
 	EXTENSION=zip
-	SOURCES=${PRGNAM}_${VERSION2}.$EXTENSION
-	CD=${PRGNAM}_${VERSION2}
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://sourceforge.net/projects/$SRCNAM/files/$SRCNAM
+	VERSION=$(curl -s $WEB/|grep /latest|cut -d "/" -f8|cut -d "-" -f 2)
+	SOURCES=${PRGNAM}_$(echo $VERSION|tr '.' '-').$EXTENSION
 	DOWNLOAD=$WEB/$PRGNAM-$VERSION/$SOURCES
 }
 
@@ -36,11 +36,7 @@ f_dependencias
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 mkdir -p $PKG/{opt,usr/share/applications/wifislax/Testing,usr/share/pixmaps}
-echo ""
-echo "$VERDE"Descomprimiendo ..."$CIERRE"
-sleep 1
-unzip $SOURCES -d $PKG/opt/
-mv -f $PKG/opt/${PRGNAM}_${VERSION2} $PKG/opt/$PRGNAM
+mv -f $TMP/${PRGNAM}_$(echo $VERSION|tr '.' '-') $PKG/opt/$PRGNAM
 
 # Creamos icono
 echo "iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
@@ -91,7 +87,7 @@ GNmMn5QH/gPJROxyC87rGwAAAABJRU5ErkJggg==" | base64 -d > $PKG/usr/share/pixmaps/$
 # Generamos desktop file
 cat > $PKG/usr/share/applications/wifislax/Testing/$PRGNAM.desktop << "EOF"
 [Desktop Entry]
-Categories=testing
+Categories=Pentesting
 Exec=sh -c "wine /opt/NetworkMiner/NetworkMiner.exe;${SHELL:-bash}"
 GenericName[es]=Analizador de capturas
 GenericName=Capture file analyzer
@@ -132,6 +128,8 @@ f_versionInstalada
 F_dependencias
 #Si no existe el fichero se descargara
 f_download
+#Descomprimir sources
+f_descomprimir
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Creamos xzm , instalamos y salimos

@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170818
+SCRIPT_VERSION=20181122
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -17,10 +17,11 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	PRGNAM=transcode
+	EXTENSION=tar.bz2
+	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://bitbucket.org/france/transcode-tcforge/downloads
 	VERSION=$(curl -s $WEB/|grep .bz2|head -1|cut -d- -f 3|cut -d t -f1|sed "s/.$//g")
-	EXTENSION=tar.bz2
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
 	CD=$PRGNAM-$VERSION
 	DOWNLOAD=$WEB/$SOURCES
@@ -332,8 +333,10 @@ f_versionInstalada
 F_dependencias
 #Si no existe el fichero se descargara
 f_download
-#Preparando entorno
-f_preparar
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete

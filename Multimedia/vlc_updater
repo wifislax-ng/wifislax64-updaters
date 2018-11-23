@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20180623
+SCRIPT_VERSION=20181122
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -18,11 +18,12 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	PRGNAM=vlc
+	EXTENSION=tar.xz
+	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=http://download.videolan.org
-	VERSION=$(curl -s $WEB/$PRGNAM/ | grep -Po 'href="\K.*(?=")' | sed 's/\///g' | sort -g | tail -1)
+	VERSION=$(curl -s $WEB/$PRGNAM/|grep -Po 'href="\K.*(?=")'|sed 's/\///g'|sort -g|tail -1)
 	CD=$PRGNAM-$VERSION
-	EXTENSION=tar.xz
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
 	DOWNLOAD=$WEB/$PRGNAM/$VERSION/$SOURCES
 }
@@ -188,8 +189,10 @@ f_versionInstalada
 F_dependencias
 #Si no existe el fichero se descargara
 f_download
-#Preparamos entorno
-f_preparar
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete

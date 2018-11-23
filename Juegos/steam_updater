@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170526
+SCRIPT_VERSION=20181122
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -17,14 +17,20 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	PRGNAM=steam
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=http://repo.steampowered.com/steam/archive/precise/
-	VERSION=$(curl -s $WEB | grep .tar.gz | tail -2 | grep steam_ | head -1 | cut -d '"' -f12 | sed "s/steam_//g" | sed 's/.tar.gz//g')
 	EXTENSION=tar.gz
-	SRCNAM=${PRGNAM}_${VERSION}
-	SOURCES=$SRCNAM.$EXTENSION
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=http://repo.steampowered.com/steam/archive/precise
+	VERSION=$(curl -s $WEB/|grep .$EXTENSION| tail -2|grep steam_|head -1|cut -d '"' -f12|sed "s/steam_//g"|sed 's/.tar.gz//g')
+	SOURCES=${PRGNAM}_${VERSION}.$EXTENSION
 	CD=${PRGNAM}
-	DOWNLOAD=${WEB}${SOURCES}
+	DOWNLOAD=${WEB}/${SOURCES}
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="libtxc_dxtn"
+f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
@@ -61,10 +67,14 @@ f_comprobarUpdates
 f_arquitectura
 #Comprobamos version instalada del paquete
 f_versionInstalada
+# Comprobar dependencias
+F_dependencias
 #Si no existe el fichero se descargara
 f_download
-#Preparamos entorno
-f_preparar
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete

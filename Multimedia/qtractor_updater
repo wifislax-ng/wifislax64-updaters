@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20170526
+SCRIPT_VERSION=20181122
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -18,12 +18,13 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	PRGNAM=qtractor
+	EXTENSION=tar.gz
+	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	#WEB=https://sourceforge.net/projects/$PRGNAM/files/$PRGNAM/
 	WEB=https://sourceforge.net/projects/qtractor/files/qtractor%20%28attic%29
 	#VERSION=$(curl -s $WEB| grep [0-9]/$PRGNAM|head -1|cut -d- -f2|cut -d t -f-1|sed 's/.$//g')
 	VERSION=0.7.1
-	EXTENSION=tar.gz
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
 	CD=$PRGNAM-$VERSION
 	DOWNLOAD=${WEB}/$SOURCES
@@ -85,8 +86,10 @@ f_versionInstalada
 F_dependencias
 #Si no existe el fichero se descargara
 f_download
-#Preparamos entorno
-f_preparar
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete

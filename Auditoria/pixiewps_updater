@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20180125
+SCRIPT_VERSION=20181122
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -17,10 +17,11 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	PRGNAM=pixiewps
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/wiire-a/pixiewps
-	VERSION=$(curl -s $WEB/releases|grep tar.gz|head -1|cut -d v -f3|cut -d t -f-1|sed 's/.$//g')
 	EXTENSION=tar.gz
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://github.com/wiire-a/$PRGNAM
+	VERSION=$(curl -s $WEB/releases|grep $EXTENSION|head -1|cut -d v -f3|cut -d t -f-1|sed 's/.$//g')
 	SOURCES=v$VERSION.$EXTENSION
 	CD=$PRGNAM-$VERSION
 	DOWNLOAD=$WEB/archive/$SOURCES
@@ -34,7 +35,6 @@ echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 make OPENSSL=1 || exit 1
 make DESTDIR="${PKG}" PREFIX=/usr install || exit 1
-install -Dm 644 pixiewps.1 -t "${PKG}/usr/share/man/man1"
 }
 
 ###################################
@@ -61,8 +61,10 @@ f_comprobarUpdates
 f_versionInstalada
 #Si no existe el fichero se descargara
 f_download
-#Preparamos entorno
-f_preparar
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete
