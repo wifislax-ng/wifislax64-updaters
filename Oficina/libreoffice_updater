@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20181123
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -83,6 +83,14 @@ cd $PKG/opt/libreoffice$SRCSHORT/share/xdg/
     sed -i "s%Exec=libreoffice -%Exec=/opt/libreoffice$SRCSHORT/program/s%" $APP.desktop ;
   done
 cd -
+
+# Eliminamos de los desktop la categoria education
+cd $PKG/opt/libreoffice*/share/xdg/
+  for DESKTOP in $(find -type f); do
+  cat $DESKTOP | sed 's/Cate.*/Categories=Office;/g' >${DESKTOP}2
+  rm $DESKTOP
+  mv ${DESKTOP}2 ${DESKTOP}
+  done
 }
 
 ###################################
