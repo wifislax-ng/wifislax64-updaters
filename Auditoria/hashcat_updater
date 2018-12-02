@@ -29,7 +29,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="opencl-headers ocl-icd xxHash"
+DEPENDENCIAS="opencl-headers ocl-icd"
 f_dependencias
 }
 
@@ -39,8 +39,8 @@ echo
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 
-make PREFIX=/usr SHARED=1 USE_SYSTEM_XXHASH=1 LIBRARY_FOLDER=/usr/lib${LIBDIRSUFFIX}||exit 1
-make DESTDIR=$PKG PREFIX=/usr SHARED=1 USE_SYSTEM_XXHASH=1 LIBRARY_FOLDER=/usr/lib${LIBDIRSUFFIX} install||exit 1
+make PREFIX=/usr SHARED=1 LIBRARY_FOLDER=/usr/lib${LIBDIRSUFFIX}||exit 1
+make DESTDIR=$PKG PREFIX=/usr SHARED=1 LIBRARY_FOLDER=/usr/lib${LIBDIRSUFFIX} install||exit 1
 }
 
 ###################################
