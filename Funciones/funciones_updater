@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-FUNCIONES_VERSION=20181122
+FUNCIONES_VERSION=20181204
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -242,9 +242,8 @@ f_directorioTemporal() {
    TMP=${TMP:-/tmp/build/$PRGNAM}
    PKG=$TMP/package-$PRGNAM
    OUTPUT=${OUTPUT:-/tmp}
-   if [ -d $TMP ]; then
-   cd $TMP
-   rm -rf $(ls|grep -v $SOURCES)
+   if [ $GESTOR = git ]; then
+   rm -rf $TMP > /dev/null
    fi
    rm -rf $PKG
    mkdir -p $TMP $PKG $OUTPUT
