@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20181209
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -21,7 +21,8 @@ F_variables() {
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=http://ffmpeg.org/releases
-	VERSION=3.4.4
+	RAMA=3.4
+	VERSION=$(curl -s $WEB/|grep -o $RAMA.[0-9]*.$EXTENSION|sort -u|tail -1|cut -dt -f-1|sed 's/.$//g')
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
 	CD=$PRGNAM-$VERSION
 	DOWNLOAD=$WEB/$SOURCES
@@ -43,7 +44,6 @@ libiec61883
 libffado
 jack-audio-connection-kit
 opus
-libfdk-aac
 soxr
 libwebp
 x264
@@ -91,7 +91,6 @@ CXXFLAGS="$SLKCFLAGS" \
   --enable-fontconfig \
   --enable-gmp \
   --enable-gnutls \
-  --enable-gpl \
   --enable-ladspa \
   --enable-libass \
   --enable-libbluray \
@@ -123,14 +122,13 @@ CXXFLAGS="$SLKCFLAGS" \
   --enable-libxvid \
   --enable-nvenc \
   --enable-shared \
+  --enable-gpl \
   --enable-version3 \
   --enable-nonfree \
-  --enable-libfdk-aac \
   --arch=$ARCH
   
   make || exit 1
   make install DESTDIR=$PKG
-  make install-man DESTDIR=$PKG
 }
 
 ###################################
