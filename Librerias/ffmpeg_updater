@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181209
+SCRIPT_VERSION=20181309
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -44,6 +44,7 @@ libiec61883
 libffado
 jack-audio-connection-kit
 opus
+libfdk-aac
 soxr
 libwebp
 x264
@@ -68,6 +69,23 @@ f_dependencias
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
+
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
+sleep 1
+
+echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Af/AU1dADNhsOBmbmH7qtVXqE2fj2aAwmEli7+vIL6J
+74CzIl8aN4cX0+1KMjHJahVBpZbdYxBg4Zeo8z0RQzzNck+J3UUbp1et62UiQ7nvOjTW9vYVDdvm
+GtIFV0ECkoasj8bYvfsCyAppN0z2ZLtn9EMJDj2/i4yl0v7OQ/N4CeUI551Q6Ii1hYwRwze80Pmz
+7fWvfhwCp7C9mZg25ZrkM3qbc/7vNAYKqL+z6XtFxg3qeYR1iT9JJAh627Zy6EzYAtISEzOVkvez
+yhCaI1nbjb7EnfNtT0ibTnFv59/k4Up88XltXBdtugU8Rttr1vCjyqxGAha6ut7O12r33XFqywuA
+vtZuDb1NmOngSBRUGby5zH3/GX1fRM5Im580NC0mD/5od+gwmJ2kDcdd4+gSKyU3Yiv6W9OYKlR7
+FlusCBhBoZ48Tvo3RYCtyxZUyEjigAAAAADagkvVMCpG0QAB6QKAEAAAvNihebHEZ/sCAAAAAARZ
+Wg=="|base64 -d > $TMP/patches.tar.xz
+
+tar xvf $TMP/patches.tar.xz &>/dev/null
+
+patch -p0 -i ./ffmpeg-3.2.4-libfdk_aac-2.0.0.patch||exit 1
 
 # Fix linking with flite
 sed -i "s| -lflite\"| -lflite -lm -lasound\"|" \
@@ -120,6 +138,7 @@ CXXFLAGS="$SLKCFLAGS" \
   --enable-libxcb \
   --enable-libxml2 \
   --enable-libxvid \
+  --enable-libfdk-aac \
   --enable-nvenc \
   --enable-shared \
   --enable-gpl \
