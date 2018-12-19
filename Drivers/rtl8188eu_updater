@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181220
+SCRIPT_VERSION=20181215
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -16,21 +16,14 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=hashcat
-	EXTENSION=tar.gz
-	GESTOR=wget
+	PRGNAM=rtl8188eu
+	GESTOR=git
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/$PRGNAM/$PRGNAM
-	VERSION=$(curl -s $WEB/releases|grep $EXTENSION|head -1|cut -d / -f5|cut -d t -f-1|sed 's/.$//g'|cut -d v -f2)
-	SOURCES=v$VERSION.$EXTENSION
-	CD=$PRGNAM-$VERSION
-	DOWNLOAD=$WEB/archive/$SOURCES
-}
-
-# Comprobar dependencias
-F_dependencias(){
-DEPENDENCIAS="opencl-headers ocl-icd xxHash"
-f_dependencias
+	WEB=https://github.com/lwfinger/rtl8188eu
+	VERSION="1.0_$(curl -s $WEB|grep commit/|head -1|cut -d / -f5|cut -c 1-7)"
+	SOURCES=$PRGNAM
+	CD=$PRGNAM
+	DOWNLOAD=$WEB
 }
 
 # Descomprimimos el fichero descargado y compilamos
@@ -38,11 +31,10 @@ F_compilar(){
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
-
-# Forzamos compilar con las liberias de sistema
-rm -rf deps/{OpenCL-Headers,xxHash}
-make PREFIX=/usr SHARED=1 USE_SYSTEM_OPENCL=1 USE_SYSTEM_OPENCL=1 LIBRARY_FOLDER=/usr/lib${LIBDIRSUFFIX}||exit 1
-make PREFIX=/usr SHARED=1 USE_SYSTEM_OPENCL=1 USE_SYSTEM_OPENCL=1 LIBRARY_FOLDER=/usr/lib${LIBDIRSUFFIX} DESTDIR=$PKG install||exit 1
+make
+install -D -m 0644 rtl8188eufw.bin $PKG/lib/firmware/rtlwifi/rtl8188eufw.bin
+install -D -m 0644 rtl8188eufw.bin $PKG/lib/firmware/rtl8188eufw.bin
+install -D -m 0644 8188eu.ko $PKG/lib/modules/$(uname -r)/kernel/drivers/net/wireless/8188eu.ko
 }
 
 ###################################
@@ -67,12 +59,8 @@ f_presentacion
 f_comprobarUpdates
 #Comprobamos version instalada del paquete
 f_versionInstalada
-#Compronar dependencias
-F_dependencias
 #Si no existe el fichero se descargara
 f_download
-#Descomprimir sources
-f_descomprimir
 #Cd a ruta
 f_cd
 #Descomprimir fichero descargado y compilamos
