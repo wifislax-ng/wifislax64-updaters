@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20181230
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -165,7 +165,8 @@ make mrproper
 ###################################
 ### Generamos parche wireless  ####
 ###################################
-cat > Negative-channel-multi.patch << "EOF"
+PARCHE=Negative-channel-multi.patch
+cat > $PARCHE << "EOF"
 --- a/net/wireless/chan.c	2013-08-29 18:47:51.000000000 +0200
 +++ b/net/wireless/chan.c	2013-08-31 22:20:45.014734447 +0200
 @@ -441,4 +441,2 @@
@@ -204,7 +205,18 @@ EOF
 echo ""
 echo ""$VERDE"Aplicando parche wireless para channel -1 "$BLANCO"..."$CIERRE""
 sleep 1
-#patch -f -p1 < Negative-channel-multi.patch || exit 1
+patch -f -p1 < $PARCHE||exit 1
+
+# Ponemos nuestro logo
+LOGO=/usr/share/pixmaps/wifislax_logo.png
+LOGONEW=/usr/src/$PRGNAM-$KERNEL_ELEGIDO/drivers/video/logo/logo_linux_clut224.ppm
+if [ -f $LOGO ]; then
+echo ""
+echo ""$VERDE"Convirtiendo logo ..."$BLANCO"..."$CIERRE""
+sleep 1
+pngtopnm $LOGO|ppmquant 224|pnmtoplainpnm > $LOGONEW||exit 1
+echo ""
+fi
 
 # Parte1 avisamos por si quieres poner un config
 if [ ! -f /usr/src/$PRGNAM-$KERNEL_ELEGIDO/.config ]; then
