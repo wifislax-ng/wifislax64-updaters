@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181309
+SCRIPT_VERSION=20190107
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -30,7 +30,10 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="nv-codec-headers
+DEPENDENCIAS="gavl
+frei0r
+libilbc
+nv-codec-headers
 lame
 speex
 libmodplug
@@ -57,7 +60,6 @@ perl-Unicode-String
 perl-Unicode-Map8
 enca
 libass
-libaacs
 libaacs
 libbluray
 gsm
@@ -107,16 +109,20 @@ CXXFLAGS="$SLKCFLAGS" \
   --disable-stripping \
   --enable-avresample \
   --enable-fontconfig \
+  --enable-frei0r \
   --enable-gmp \
   --enable-gnutls \
   --enable-ladspa \
   --enable-libass \
   --enable-libbluray \
+  --enable-libcaca \
   --enable-libdrm \
+  --enable-libfdk-aac \
   --enable-libfreetype \
   --enable-libfribidi \
   --enable-libgsm \
   --enable-libiec61883 \
+  --enable-libilbc \
   --enable-libmodplug \
   --enable-libmp3lame \
   --enable-libopencore_amrnb \
@@ -132,13 +138,15 @@ CXXFLAGS="$SLKCFLAGS" \
   --enable-libvidstab \
   --enable-libvorbis \
   --enable-libvpx \
+  --enable-libwavpack \
   --enable-libwebp \
   --enable-libx264 \
   --enable-libx265 \
   --enable-libxcb \
   --enable-libxml2 \
   --enable-libxvid \
-  --enable-libfdk-aac \
+  --enable-libsmbclient \
+  --enable-opengl \
   --enable-nvenc \
   --enable-shared \
   --enable-gpl \
