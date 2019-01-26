@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20190108
+SCRIPT_VERSION=20190126
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -100,9 +100,9 @@ CXXFLAGS="$SLKCFLAGS" \
   --prefix=/usr \
   --libdir=/usr/lib${LIBDIRSUFFIX} \
   --shlibdir=/usr/lib${LIBDIRSUFFIX} \
-  --mandir=/usr/man \
   --disable-doc \
   --disable-htmlpages \
+  --disable-manpages \
   --disable-podpages \
   --disable-txtpages \
   --disable-debug \
