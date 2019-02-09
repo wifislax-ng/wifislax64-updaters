@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20190109
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -23,8 +23,10 @@ F_variables() {
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/xbmc/xbmc
-	RAMA=$(curl -s $WEB/releases/latest|cut -d "/" -f8|cut -d '"' -f1|cut -d- -f2)
-	VERSION=$(curl -s $WEB/releases/latest|cut -d "/" -f8|cut -d '"' -f1|cut -d- -f-1)
+	#RAMA=$(curl -s $WEB/releases/latest|cut -d "/" -f8|cut -d '"' -f1|cut -d- -f2)
+	#VERSION=$(curl -s $WEB/releases/latest|cut -d "/" -f8|cut -d '"' -f1|cut -d- -f-1)
+	RAMA=Krypton
+	VERSION=17.6
 	SOURCES=$SRCNAM-$VERSION-$RAMA.$EXTENSION
 	CD=$SRCNAM-$VERSION-$RAMA
 	DOWNLOAD=$WEB/archive/$VERSION-$RAMA/$SOURCES
