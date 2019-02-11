@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-FUNCIONES_VERSION=20181222
+FUNCIONES_VERSION=20190211
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -278,7 +278,9 @@ fi
 
 #Preparamos entorno
 f_descomprimir(){
+	echo
 	echo "$VERDE"Descomprimiendo ..."$CIERRE"
+	echo
 	sleep 1
 	rm -rf $PRGNAM-$VERSION
 	if [ $EXTENSION = zip ]; then
@@ -290,7 +292,9 @@ f_descomprimir(){
 
 f_cd(){
 	if [ -z $CD ]; then
+	echo
 	echo "${ROJO}La funcion CD no existe o esta vacia.${CIERRE}"
+	echo
 	fi
 	cd $TMP/$CD||echo "${ROJO}Error en funcion CD.${CIERRE}"
 	chown -R root:root .
