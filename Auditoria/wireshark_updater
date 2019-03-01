@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20190301
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -30,6 +30,7 @@ F_variables() {
 # Comprobar dependencias
 F_dependencias(){
 DEPENDENCIAS="
+cmake
 libmaxminddb
 c-ares
 libdbus-c++
@@ -69,42 +70,29 @@ f_dependencias
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-
 # Configuramos
 echo ""
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
-
-# Esto evita problemas en sistemas multilib
-sed -i "s|/lib)|/lib$LIBDIRSUFFIX)|g" configure.ac
-
-CFLAGS="$SLKCFLAGS" \
-CXXFLAGS="$SLKCFLAGS" \
-  ./autogen.sh
-  ./configure \
-      --prefix=/usr \
-      --libdir=/usr/lib${LIBDIRSUFFIX} \
-      --without-lua \
-      --with-qt=no \
-      --with-gtk=2 \
-      --with-pcap \
-      --with-zlib \
-      --with-portaudio \
-      --with-krb5 \
-      --with-c-ares \
-      --with-maxminddb \
-      --build=$ARCH-slackware-linux
+mkdir -p build
+cd build
+  cmake \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -D INSTALL_PREFIX=/usr \
+    -DLIB_SUFFIX=${LIBDIRSUFFIX} \
+    -DCMAKE_BUILD_TYPE=Release ..
 
 # Compilamos
 echo ""
-echo "$VERDE"Configurando ..."$CIERRE"
-sleep 1  
+echo "$VERDE"Compilando ..."$CIERRE"
+sleep 1
 make all || exit 1
 make install DESTDIR=$PKG || exit 1
 
 # headers
+cd ..
 install -Dm 644 *.h -t "${PKG}/usr/include/wireshark"
-for d in epan epan/crypt epan/dfilter epan/dissectors epan/ftypes epan/wmem wiretap wsutil; do
+for d in epan epan/crypt epan/dfilter epan/dissectors epan/ftypes epan/wmem epan/wslua wiretap wsutil; do
 install -Dm 644 ${d}/*.h -t "${PKG}/usr/include/wireshark/${d}"
 done
 
