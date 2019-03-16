@@ -89,6 +89,7 @@ echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 make || exit 1
 make install DESTDIR=$PKG || exit 1
+cd ..
 
 mkdir -p $PKG/usr/include/$PRGNAM/{epan/{crypt,dfilter,dissectors,ftypes,wmem},wiretap,wsutil}
 install -m644 ws_diag_control.h ws_symbol_export.h $PKG/usr/include/$PRGNAM
