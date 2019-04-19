@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-FUNCIONES_VERSION=20190211
+FUNCIONES_VERSION=20190420
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -259,8 +259,8 @@ ARGS="-N -L -c -q --show-progress --no-passive-ftp --no-check-certificate"
 fi
 if
 [ $PRGNAM = jdk ]; then
-echo ".oracle.com	TRUE	/	FALSE	1906724535	oraclelicense	accept-securebackup-cookie">cookie
-ARGS="-N -L -c -q --show-progress --no-passive-ftp --load-cookies=cookie"
+echo ".oracle.com	TRUE	/	FALSE	1906724535	oraclelicense	accept-securebackup-cookie	oraclelicense=a">cookie
+ARGS="-N -L -c -q --user=wifislaxdevelopers@hotmail.com --password=Wifislax-ng0 --show-progress --no-passive-ftp --load-cookies=cookie"
 fi
 
 if [ $GESTOR = git ]; then
