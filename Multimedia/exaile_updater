@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20190720
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -30,19 +30,46 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="opencore-amr
+DEPENDENCIAS="
+json-glib
+geoclue2
+ninja
+brotli
+woff2
+hyphen
+libwebp
+webkit2gtk
+bsddb3
+mutagen
+feedparser
+opencore-amr
 lame
+libdvdcss
 libmpeg2
 twolame
 x264
-gst0-plugins-ugly
+gst-plugins-ugly
+musicbrainzngs
 cddb-py
-libwebp
-webkitgtk
-pywebkitgtk
-mutagen
-gst0-python
-streamripper" 
+six
+pylast
+python-keybinder
+streamripper
+decorator
+parso
+jedi
+ptyprocess
+pexpect
+pathlib
+pickleshare
+wcwidth
+prompt_toolkit1
+shutil_get_terminal_size
+simplegeneric
+ipython_genutils 
+traitlets
+ipython
+" 
 f_dependencias
 }
 
@@ -55,9 +82,6 @@ make
 PREFIX=/usr \
 LIBINSTALLDIR=/lib${LIBDIRSUFFIX} \
 make install DESTDIR=$PKG PREFIX=/usr LIBINSTALLDIR=/lib${LIBDIRSUFFIX}
-
-# Eliminamos la restriccion root
-sed -i '21,29d' $PKG/usr/lib${LIBDIRSUFFIX}/exaile/exaile.py
 }
 
 ###################################
