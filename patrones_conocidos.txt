@@ -1,4 +1,4 @@
-# VERSION 20190728
+# VERSION 20191207
 
 BSSID		CIFRADO		KEYGEN			ESSID			PIN GENERICO
 ---------------------------------------------------------------------------------------------
@@ -243,6 +243,7 @@ BC:76:70	WPS		FTE_Keygen		FTE-????
 CC:96:A0	WPS		FTE_Keygen		FTE-????
 F8:3D:FF	WPS		FTE_Keygen		FTE-????
 5C:7D:5E	WPS		FTE_Keygen		FTE-????
+C8:D1:2A	WPS		FTE_Keygen		FTE-????
 
 D8:EB:97	WPS		TRENDnetWPS		????????????
 00:14:D1	WPS		TRENDnetWPS		????????????
