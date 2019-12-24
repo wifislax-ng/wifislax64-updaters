@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20190316
+SCRIPT_VERSION=20191224
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -64,13 +64,22 @@ libwebp
 opus
 postgresql
 qt5
+libminizip
+zstd
+rubygem-asciidoctor
 "
 f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-# Configuramos
+echo "LS0tIHdpcmVzaGFyay0zLjIuMC9zaGFya2Rfc2Vzc2lvbi5jLm9yaWcJMjAxOS0xMi0yNCAwNzox
+ODozMy4yODg5NzYxNjMgKzA3MDAKKysrIHdpcmVzaGFyay0zLjIuMC9zaGFya2Rfc2Vzc2lvbi5j
+CTIwMTktMTItMjQgMDc6MTg6NTIuNDQ4MTY4ODA4ICswNzAwCkBAIC0xNiw2ICsxNiw3IEBACiAj
+aW5jbHVkZSA8c3RkYXJnLmg+CiAjaW5jbHVkZSA8c3RyaW5nLmg+CiAjaW5jbHVkZSA8ZXJybm8u
+aD4KKyNpbmNsdWRlIDxzdGRpbnQuaD4KIAogI2luY2x1ZGUgPGdsaWIuaD4KIAo=
+"|base64 -d > $TMP/wireshark.patch
+patch -p1 -i $TMP/wireshark.patch||exit 1
 echo ""
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
