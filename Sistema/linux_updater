@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20181230
+SCRIPT_VERSION=20200107
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -258,12 +258,13 @@ make modules || exit 1
 # Cuando es un kernel rc suele aparecer solo la rama
 # Grepeamos aqui la version completa del kernel en el fichero .config
 KERNEL_VERSION=$(grep $(echo $KERNEL_ELEGIDO|cut -d- -f-1) .config|head -1|cut -d ' ' -f3)
-mkdir -p $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG
-make modules_install INSTALL_MOD_PATH=$HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG || exit 1
+CONTAINER=$HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG
+mkdir -p $CONTAINER
+make modules_install INSTALL_MOD_PATH=$CONTAINER || exit 1
 
 # Instalamos las cabeceras kernel-headers
-make INSTALL_HDR_PATH=$HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/usr headers_install|| exit 1
-rm -r $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/usr/include/*/{.install,..install.cmd}
+make INSTALL_HDR_PATH=$CONTAINER/usr headers_install|| exit 1
+rm -r $CONTAINER/usr/include/*/{.install,..install.cmd}
 
 # Copiamos el vmlinuz (este con nombre generico para el modo live)
 cp /usr/src/$PRGNAM-$KERNEL_ELEGIDO/arch/$KARCH/boot/bzImage $HOME/Desktop/$VMLINUZ &>/dev/null
@@ -281,25 +282,25 @@ cp include/generated/* include/linux &>/dev/null
 
 # Preparamos creacion de xzm
 VMLINUZNAME=$(grep  "CONFIG_LOCALVERSION=" .config|cut -d = -f2|sed 's/"//g')
-mkdir -p $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/usr/src
-cp -r /usr/src/$PRGNAM-$KERNEL_ELEGIDO $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/usr/src
+mkdir -p $CONTAINER/usr/src
+cp -r /usr/src/$PRGNAM-$KERNEL_ELEGIDO $CONTAINER/usr/src
 
 # Realizamos limpieza
-RUTA_LIMPIEZA=$HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/usr/src/$PRGNAM-$KERNEL_ELEGIDO
+RUTA_LIMPIEZA=$CONTAINER/usr/src/$PRGNAM-$KERNEL_ELEGIDO
 FILES_BORRAR="kernel.txt Negative-channel-multi.patch ralink.patch .config.old"
 for X in $FILES_BORRAR; do
 rm $RUTA_LIMPIEZA/$X &>/dev/null
 done
 
 # Por que usa una script que baja todos los firmwares desde el git
-rm -Rf $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG/lib/firmware
+rm -Rf $CONTAINER/lib/firmware
 
 # Creamos xzm de kernel + sources
-mksquashfs $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm -comp xz -b 64K
-mv $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm $HOME/Desktop/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm
+mksquashfs $CONTAINER $CONTAINER.xzm -noappend -comp xz -b 256K
+mv $CONTAINER.xzm $HOME/Desktop/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm
 
 # Finalizamos
-rm -Rf $HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG
+rm -Rf $CONTAINER
 AHORA=$(($(date +%s)-3600));
 TIEMPO="$(date --date=@$(($AHORA-$COMIENZO)) +%X)"
 echo ""
