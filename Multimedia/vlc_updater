@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20201001
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -149,6 +149,7 @@ LDFLAGS="$SLKLDFLAGS" \
   --enable-run-as-root \
   --enable-qt=5 \
   --enable-merge-ffmpeg \
+  --disable-aom \
   --with-kde-solid=no \
   $LIBVA \
   --build=$ARCH-slackware-linux
