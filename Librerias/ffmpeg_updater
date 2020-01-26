@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20191204
+SCRIPT_VERSION=20200126
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -65,7 +65,7 @@ libdbus-c++
 libconfig
 libxml++
 libffado
-jack-audio-connection-kit
+jack
 nv-codec-headers
 "
 f_dependencias
