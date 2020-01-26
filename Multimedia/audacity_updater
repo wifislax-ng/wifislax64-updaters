@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20191012
+SCRIPT_VERSION=20200126
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -37,7 +37,7 @@ libconfig
 libffado
 celt
 wxGTK3
-jack-audio-connection-kit
+jack
 ffmpeg
 ladspa_sdk
 lame
