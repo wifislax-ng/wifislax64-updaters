@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20200126
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -30,7 +30,31 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libffado celt jack-audio-connection-kit ffmpeg aubio liblo liblrdf vamp-plugin-sdk rubberband lv2 serd sord sratom lilv gts graphviz ladspa_sdk dssi set_rlimits qt5 qjackctl whysynth"
+DEPENDENCIAS="python3
+libffado
+celt
+opus
+aubio
+jack
+liblo
+liblrdf
+vamp-plugin-sdk
+rubberband
+lv2
+serd
+sord
+sratom
+lilv
+gts
+graphviz
+cppunit
+ladspa_sdk
+dssi
+set_rlimits
+qt5
+qjackctl
+whysynth
+ffmpeg"
 f_dependencias
 }
 
@@ -39,20 +63,24 @@ F_compilar(){
 COMMIT=$(curl -s $WEB/releases/tag/$VERSION|grep -m1 commit/|cut -d/ -f5|cut -d '"' -f-1)
 git reset --hard $COMMIT
 git submodule update --init
-
-python2 waf configure \
+ 
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./waf configure \
   --prefix=/usr \
   --libdir=/usr/lib${LIBDIRSUFFIX} \
   --configdir=/etc \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
   --with-backends="jack,alsa" \
   --libjack=weak \
   --optimize \
-  --docs \
-  --cxx11 \
-  --no-phone-home
+  --freedesktop \
+  --no-phone-home \
+  --cxx11
 
-python2 waf build
-python2 waf install --destdir=$PKG
+./waf build
+./waf install --destdir=$PKG
   
 # Entrada a menu
 mkdir -p $PKG/usr/share/applications
