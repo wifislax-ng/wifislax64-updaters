@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20191224
+SCRIPT_VERSION=20200128
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -30,6 +30,7 @@ F_variables() {
 # Comprobar dependencias
 F_dependencias(){
 DEPENDENCIAS="
+python3
 cmake
 libmaxminddb
 c-ares
@@ -39,7 +40,7 @@ libxml++
 libconfig
 libffado
 celt
-jack-audio-connection-kit
+jack
 portaudio
 libsmi
 krb5
@@ -51,7 +52,6 @@ snappy
 libxkbcommon
 gts
 graphviz
-python3
 ninja
 meson
 pyudev
