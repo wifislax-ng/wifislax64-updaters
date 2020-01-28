@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20200128
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -30,7 +30,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libffado celt jack-audio-connection-kit ladspa_sdk liblo lash dssi"
+DEPENDENCIAS="python3 libffado celt jack ladspa_sdk liblo lash dssi"
 f_dependencias
 }
 
@@ -44,8 +44,6 @@ cd build
 
   cmake -DCMAKE_INSTALL_PREFIX=/usr \
         -DCMAKE_BUILD_TYPE=release \
-        -DPYTHON_INCLUDE_DIR=/usr/include/python2.7 \
-        -DPYTHON_LIBRARY=/usr/lib${LIBDIRSUFFIX}/libpython2.7.so \
         -DLIB_SUFFIX=${LIBDIRSUFFIX} \
         -DCMAKE_ENABLE_VST_VESTIGE=1 \
         -DCMAKE_ENABLE_VST_NATIVE=1 \

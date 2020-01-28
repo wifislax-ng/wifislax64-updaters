@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20201001
+SCRIPT_VERSION=20200128
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -30,7 +30,8 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libiec61883
+DEPENDENCIAS="python3
+libiec61883
 libxml++
 libconfig
 libffado
@@ -48,7 +49,6 @@ ffmpeg
 freerdp
 libwebp
 gsm
-python3
 numpy3
 opencv
 libtar
@@ -59,7 +59,7 @@ libebml
 libmatroska
 libshout
 speex
-jack-audio-connection-kit
+jack
 libsidplay2
 zvbi
 faad2
