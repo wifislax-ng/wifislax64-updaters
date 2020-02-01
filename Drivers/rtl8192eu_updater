@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181220
+SCRIPT_VERSION=20200203
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -32,17 +32,8 @@ F_compilar(){
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 make||exit 1
-
 mkdir -p $PKG/lib/modules/$(uname -r)/kernel/drivers/net/wireless/
-cp -rf 8192eu.ko $PKG/lib/modules/$(uname -r)/kernel/drivers/net/wireless/
-
-echo 
-echo "$VERDE"Instalando en sistema ..."$CIERRE"
-sleep 1
-make install|| exit 1
-depmod -a
-modprobe -r 8192eu
-modprobe 8192eu
+make install MODDESTDIR=$PKG/lib/modules/$(uname -r)/kernel/drivers/net/wireless/
 }
 
 ###################################
