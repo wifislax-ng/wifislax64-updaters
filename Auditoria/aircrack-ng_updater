@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20190718
+SCRIPT_VERSION=20200202
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -39,25 +39,18 @@ echo
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
-NOCONFIGURE=1 ./autogen.sh
-
 LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}" \
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
-./configure \
+./autogen.sh \
   --prefix=/usr \
-  --libdir=/usr/lib$LIBDIRSUFFIX \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
   --sysconfdir=/etc \
   --localstatedir=/var \
   --mandir=/usr/man \
-  --infodir=/usr/info \
-  --docdir=/usr/doc/$PKGNAM-$VERSION \
-  --enable-static=no \
-  --enable-shared=yes \
-  --with-experimental=yes \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --with-experimental \
   --with-ext-scripts \
-  --with-gcrypt \
-  --host=$ARCH-slackware-linux \
   --build=$ARCH-slackware-linux
 
 echo 
@@ -66,9 +59,6 @@ sleep 1
 
 make
 make docdir="/usr/doc/$PKGNAM-$VERSION" DESTDIR=$PKG install
-
-# Don't ship .la files:
-rm -f $PKG/usr/lib${LIBDIRSUFFIX}/*.la
 
 # Creamos el fichero oui
 echo $VERDE
