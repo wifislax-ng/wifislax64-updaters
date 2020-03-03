@@ -2,7 +2,7 @@
 
 # Script for www.seguridadwireless.net by vk496
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20200304
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -28,7 +28,8 @@ fi
 # Definicion de variables
 F_variables() {
    PRGNAM=wifislax-updaters
-   WEB="https://github.com/wifislax-ng/wifislax64-updaters"
+   WIFISLAX=$(cat /etc/wifislax-version|cut -d ' ' -f2)
+   WEB="https://github.com/wifislax-ng/wifislax64-updaters/tree/master/$WIFISLAX"
    echo -ne "\033]2;${PRGNAM}_updater\007"
    VERSION=`echo $(date +"%Y%m%d")`
    CREAR_MODULO=NO
