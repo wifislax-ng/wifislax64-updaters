@@ -1,0 +1,85 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20181122
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=mitmf
+	SRCNAM=MITMf
+	EXTENSION=gz
+	GESTOR=git
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://github.com/byt3bl33d3r/MITMf
+	RAMA=$(curl -s $WEB/releases|grep .$EXTENSION|head -1|cut -d / -f5|cut -d t -f-1|sed 's/v//g'|sed 's/.$//g'|sed 's/<m_//g')
+	VERSION=$(echo ${RAMA}_"$(curl -s $WEB|grep commit/|head -1|cut -d / -f5|cut -c1-7)")
+	SOURCES=$SRCNAM
+	CD=$SRCNAM
+	DOWNLOAD=$WEB
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="Flask pypcap dnslib IPy user-agents NetfilterQueue python-capstone pip pyinotify pycrypto pyasn1 pyasn1-modules enum34 ipaddress six pycparser cffi idna cryptography python-pillow MarkupSafe docutils Jinja2 Pygments Sphinx python-netaddr scapy zope.interface python-twisted BeautifulSoup4 html5lib lxml python-future pefile pyOpenSSL characteristic attrs service_identity configobj click itsdangerous werkzeug Jinja2 dnspython BeautifulSoup4 python-magic msgpack-python python-requests python-chardet"
+f_dependencias
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+git submodule init && git submodule update --recursive
+cd ..
+
+mkdir -p $PKG/opt $PKG/usr/bin
+mv -f MITMf $PKG/opt/
+rm -rf $PKG/opt/$SRCNAM/.git
+rm -rf $PKG/opt/$SRCNAM/{LICENSE,*.md}
+
+echo '#!/bin/bash
+cd /opt/MITMf/
+python mitmf.py "$@"' > $PKG/usr/bin/mitmf.py
+chmod +x $PKG/opt/$SRCNAM/mitmf.py $PKG/usr/bin/mitmf.py
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos version instalada del paquete
+f_versionInstalada
+# Comprobar dependencias
+F_dependencias
+#Si no existe el fichero se descargara
+f_download
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Creamos xzm , instalamos y salimos
+f_tareasFinales
