@@ -1,0 +1,131 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20200126
+CATEGORIA="Editores de audio"
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=ardour
+	EXTENSION=tar.gz
+	GESTOR=git
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://github.com/Ardour/${PRGNAM}
+	VERSION=$(curl -s $WEB/releases|grep [0-9].$EXTENSION|grep -v pre|grep -v beta|head -1|cut -d / -f5|cut -dt -f-1|sed 's/.$//g')
+	SOURCES=$PRGNAM
+	CD=$PRGNAM
+	DOWNLOAD=$WEB
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="python3
+libffado
+celt
+opus
+aubio
+jack
+liblo
+liblrdf
+vamp-plugin-sdk
+rubberband
+lv2
+serd
+sord
+sratom
+lilv
+gts
+graphviz
+cppunit
+ladspa_sdk
+dssi
+set_rlimits
+qt5
+qjackctl
+whysynth
+ffmpeg"
+f_dependencias
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+COMMIT=$(curl -s $WEB/releases/tag/$VERSION|grep -m1 commit/|cut -d/ -f5|cut -d '"' -f-1)
+git reset --hard $COMMIT
+git submodule update --init
+ 
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./waf configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --configdir=/etc \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --with-backends="jack,alsa" \
+  --libjack=weak \
+  --optimize \
+  --freedesktop \
+  --no-phone-home \
+  --cxx11
+
+./waf build
+./waf install --destdir=$PKG
+  
+# Entrada a menu
+mkdir -p $PKG/usr/share/applications
+echo "[Desktop Entry]
+Name=Ardour $(echo $VERSION|cut -d . -f1)
+Comment=Multitrack hard disk recorder
+Exec=ardour$(echo $VERSION|cut -d . -f1)
+Icon=/usr/share/ardour$(echo $VERSION|cut -d . -f1)/icons/ardour-app-icon_osx.png
+Terminal=false
+Type=Application
+X-MultipleArgs=false
+Categories=Audio;AudioVideoEditing;AudioVideo;Video;" > $PKG/usr/share/applications/$PRGNAM.desktop
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Comprobamos version instalada del paquete
+f_versionInstalada
+#Compronar dependencias
+F_dependencias
+# Git clone
+f_download
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales

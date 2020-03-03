@@ -1,0 +1,202 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20200128
+CATEGORIA="Reproductores multimedia"
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=vlc
+	EXTENSION=tar.xz
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=http://download.videolan.org
+	VERSION=$(curl -s $WEB/$PRGNAM/|grep -Po 'href="\K.*(?=")'|sed 's/\///g'|sort -g|tail -1)
+	CD=$PRGNAM-$VERSION
+	SOURCES=$PRGNAM-$VERSION.$EXTENSION
+	DOWNLOAD=$WEB/$PRGNAM/$VERSION/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="python3
+libiec61883
+libxml++
+libconfig
+libffado
+celt
+libass
+libdc1394
+libdvbpsi
+libmpeg2
+libupnp
+lua
+portaudio
+twolame
+opus 
+ffmpeg
+freerdp
+libwebp
+gsm
+numpy3
+opencv
+libtar
+libkate
+faac
+libdca
+libebml
+libmatroska
+libshout
+speex
+jack
+libsidplay2
+zvbi
+faad2
+libavc1394
+libmodplug
+libcuefile
+libreplaygain
+musepack-tools
+vcdimager
+dirac
+gnome-vfs
+live555
+rtmpdump
+libdvdcss
+fluidsynth
+schroedinger
+libminizip
+chromaprint
+x264
+x265
+bluray-keys
+libaacs
+libbdplus
+libbluray
+ftgl
+qt5
+"
+f_dependencias
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
+sleep 1
+
+echo "LS0tIG1vZHVsZXMvdmlzdWFsaXphdGlvbi9wcm9qZWN0bS5jcHAub3JpZwkyMDEzLTA5LTEzIDAx
+OjE4OjM0LjAwMDAwMDAwMCArMTAwMAorKysgbW9kdWxlcy92aXN1YWxpemF0aW9uL3Byb2plY3Rt
+LmNwcAkyMDE0LTA5LTA0IDE0OjUzOjIxLjUxMDI0MjAzNiArMTAwMApAQCAtNzksOCArNzksOCBA
+QAogIyBkZWZpbmUgRk9OVF9QQVRIX01FTlUgIkM6XFxXSU5ET1dTXFxGb250c1xcYXJpYWwudHRm
+IgogIyBkZWZpbmUgUFJFU0VUX1BBVEggICAgTlVMTAogI2Vsc2UKLSMgZGVmaW5lIEZPTlRfUEFU
+SCAgICAgICIvdXNyL3NoYXJlL2ZvbnRzL3RydWV0eXBlL3R0Zi1kZWphdnUvRGVqYVZ1U2Fucy50
+dGYiCi0jIGRlZmluZSBGT05UX1BBVEhfTUVOVSAiL3Vzci9zaGFyZS9mb250cy90cnVldHlwZS90
+dGYtZGVqYXZ1L0RlamFWdVNhbnNNb25vLnR0ZiIKKyMgZGVmaW5lIEZPTlRfUEFUSCAgICAgICIv
+dXNyL3NoYXJlL2ZvbnRzL1RURi9EZWphVnVTYW5zLnR0ZiIKKyMgZGVmaW5lIEZPTlRfUEFUSF9N
+RU5VICIvdXNyL3NoYXJlL2ZvbnRzL1RURi9EZWphVnVTYW5zTW9uby50dGYiCiAjIGRlZmluZSBQ
+UkVTRVRfUEFUSCAgICAiL3Vzci9zaGFyZS9wcm9qZWN0TS9wcmVzZXRzIgogI2VuZGlmCiAK
+" | base64 -d > $TMP/patch-projectM-fontpath.diff
+
+patch -p0 < $TMP/patch-projectM-fontpath.diff || exit 1
+
+echo "LS0tIGJpbi9NYWtlZmlsZS5hbS5vcmlnCTIwMTUtMDYtMDMgMTA6NDk6NTEuMjY2MjgyNzM2ICsx
+MDAwCisrKyBiaW4vTWFrZWZpbGUuYW0JMjAxNS0wNi0wMyAxMDo1MDoyMC40NjkyODIzMTAgKzEw
+MDAKQEAgLTcyLDYgKzcyLDEwIEBACiB2bGNfY2FjaGVfZ2VuX0RFUEVOREVOQ0lFUyA9IHZsY193
+aW4zMl9yYy4kKE9CSkVYVCkKIGVuZGlmCiAKK2lmIEhBVkVfR09CSkVDVAordmxjX2NhY2hlX2dl
+bl9MREFERCArPSAkKEdPQkpFQ1RfTElCUykKK2VuZGlmCisKICMKICMgUGx1Zy1pbnMgY2FjaGUK
+ICMKLS0tIGNvbmZpZ3VyZS5hYy5vcmlnCTIwMTUtMDYtMDMgMTA6NTM6MjIuMjk5Mjc5NjU3ICsx
+MDAwCisrKyBjb25maWd1cmUuYWMJMjAxNS0wNi0wMyAwOTo0NDozMy4zMzgzMzk4ODkgKzEwMDAK
+QEAgLTc2Miw2ICs3NjIsMTIgQEAKICAgICBdKQogXSkKIAorZG5sCitkbmwgQ2hlY2sgZm9yIGdv
+YmplY3QKK2RubAoraGF2ZV9nb2JqZWN0PSJubyIKK1BLR19DSEVDS19NT0RVTEVTKFtHT0JKRUNU
+XSwgW2dvYmplY3QtMi4wXSwgWyBoYXZlX2dvYmplY3Q9InllcyIgXSkKK0FNX0NPTkRJVElPTkFM
+KEhBVkVfR09CSkVDVCwgWyB0ZXN0ICIke2hhdmVfZ29iamVjdH0iID0gInllcyIgXSkKIAogZG5s
+CiBkbmwgQ2hlY2sgZm9yIHpsaWIuaCBhbmQgLWx6IGFsb25nIHdpdGggc3lzdGVtIC1sbWluaXpp
+cCBpZiBhdmFpbGFibGUK" | base64 -d > $TMP/patch_vlc_cache_gen.diff
+
+patch -p0 < $TMP/patch_vlc_cache_gen.diff || exit 1
+
+FIND=$(ls /var/log/packages|grep -m1 libva-intel-driver|cut -d- -f4)
+if [ $FIND = 1.6.2 ]; then
+LIBVA="--enable-libva=no"
+else
+LIBVA="--enable-libva"
+fi
+
+autoreconf -fiv
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+LDFLAGS="$SLKLDFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --sysconfdir=/etc \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/vlc-$VERSION \
+  --localstatedir=/var \
+  --enable-run-as-root \
+  --enable-qt=5 \
+  --enable-merge-ffmpeg \
+  --disable-aom \
+  --with-kde-solid=no \
+  $LIBVA \
+  --build=$ARCH-slackware-linux
+  
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
+sleep 1
+make  || exit 1
+make install DESTDIR=$PKG || exit 1
+
+mkdir -p $PKG/$(cd /usr/share/vim/vim*/syntax ; pwd)
+cp extras/analyser/vlc.vim $PKG/$(cd /usr/share/vim/vim*/syntax ; pwd)/
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Comprobamos version instalada del script
+f_versionInstalada
+# Comprobar dependencias
+F_dependencias
+#Si no existe el fichero se descargara
+f_download
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales
