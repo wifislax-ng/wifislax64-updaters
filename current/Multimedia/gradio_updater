@@ -31,7 +31,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="gst-plugins-ugly yelp-xsl yelp-tools"
+DEPENDENCIAS="gcab appstream-glib gst-plugins-bad gst-plugins-ugly yelp-xsl yelp-tools"
 f_dependencias
 }
 
@@ -41,21 +41,14 @@ echo
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
-./autogen.sh
-
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
-./configure \
-  --prefix=/usr \
-  --libdir=/usr/lib${LIBDIRSUFFIX} \
-  --mandir=/usr/man \
-  --build=$ARCH-slackware-linux
+meson builddir --prefix=/usr
 
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
-make || exit 1
-make install DESTDIR=$PKG
+DESTDIR=$PKG ninja -C builddir install
 
 # Cambio en la categoria
 FICHERO=$PKG/usr/share/applications/gradio.desktop
