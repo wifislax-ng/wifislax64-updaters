@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200203
+SCRIPT_VERSION=20200314
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -22,7 +22,7 @@ F_variables() {
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/aircrack-ng/$SRCNAM
 	RAMA=5.6.4.2
-	VERSION="${RAMA}_$(curl -s $WEB/tree/v$RAMA|grep commit/|head -1|cut -d / -f5|cut -c 1-7)"
+	VERSION="${RAMA}_$(curl -s $WEB/tree/v$RAMA|grep commit/|grep src=|cut -d/ -f6|cut -c 1-7)"
 	SOURCES=$SRCNAM
 	CD=$SRCNAM
 	DOWNLOAD="-b v$RAMA $WEB"
