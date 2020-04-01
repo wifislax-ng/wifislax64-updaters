@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20201202
+SCRIPT_VERSION=20200401
 
 #################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -23,7 +23,7 @@ F_variables(){
 	WEB=https://sourceforge.net/projects/wine/files/Slackware%20Packages
 	RAMA=$(curl -s $WEB/|grep -v rc|grep -m1 Packages/[0-9]|cut -d / -f 6)
 	VERSION=$(echo $RAMA|sed 's/-/./g')
-	SOURCES=$(curl -s $WEB/$RAMA/$ARCH/|grep -v md5|grep -m1 .$EXTENSION|cut -d '"' -f2)
+	SOURCES=$(curl -s $WEB/$RAMA/$ARCH/|grep -v md5|grep -v SHA512|grep -m1 .$EXTENSION|cut -d '"' -f2)
 	DOWNLOAD=$WEB/$VERSION/$ARCH/$SOURCES
 }
 
