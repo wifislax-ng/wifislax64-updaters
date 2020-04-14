@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200128
+SCRIPT_VERSION=20200413
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -31,42 +31,17 @@ F_variables() {
 F_dependencias(){
 DEPENDENCIAS="
 python3
-cmake
-libmaxminddb
-c-ares
-libdbus-c++
-libiec61883
-libxml++
-libconfig
-libffado
-celt
-jack
-portaudio
-libsmi
-krb5
-jansson
-nghttp2
-spandsp
-lz4
-snappy
-libxkbcommon
-gts
-graphviz
 ninja
 meson
-pyudev
-libwacom
-python-evdev
-libinput
-freetds
-OpenAL
-libwebp
-opus
-postgresql
+libxkbcommon
 qt5
-libminizip
-zstd
-rubygem-asciidoctor
+c-ares
+krb5
+libmaxminddb
+jansson
+nghttp2
+lz4
+spandsp
 "
 f_dependencias
 }
