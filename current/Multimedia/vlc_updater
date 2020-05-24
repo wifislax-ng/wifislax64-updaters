@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200128
+SCRIPT_VERSION=20200524
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -21,16 +21,17 @@ F_variables() {
 	EXTENSION=tar.xz
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=http://download.videolan.org
-	VERSION=$(curl -s $WEB/$PRGNAM/|grep -Po 'href="\K.*(?=")'|sed 's/\///g'|sort -g|tail -1)
+	WEB=http://get.videolan.org/vlc/last
+	VERSION=$(curl -s $WEB/|grep -m 1 .tar.xz|cut -d- -f2|cut -dt -f1|sed 's/.$//g')
 	CD=$PRGNAM-$VERSION
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	DOWNLOAD=$WEB/$PRGNAM/$VERSION/$SOURCES
+	DOWNLOAD=$WEB/$SOURCES
 }
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="python3
+DEPENDENCIAS="
+python3
 libiec61883
 libxml++
 libconfig
@@ -85,6 +86,7 @@ libaacs
 libbdplus
 libbluray
 ftgl
+aom
 qt5
 "
 f_dependencias
@@ -96,36 +98,45 @@ echo
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
-echo "LS0tIG1vZHVsZXMvdmlzdWFsaXphdGlvbi9wcm9qZWN0bS5jcHAub3JpZwkyMDEzLTA5LTEzIDAx
-OjE4OjM0LjAwMDAwMDAwMCArMTAwMAorKysgbW9kdWxlcy92aXN1YWxpemF0aW9uL3Byb2plY3Rt
-LmNwcAkyMDE0LTA5LTA0IDE0OjUzOjIxLjUxMDI0MjAzNiArMTAwMApAQCAtNzksOCArNzksOCBA
-QAogIyBkZWZpbmUgRk9OVF9QQVRIX01FTlUgIkM6XFxXSU5ET1dTXFxGb250c1xcYXJpYWwudHRm
-IgogIyBkZWZpbmUgUFJFU0VUX1BBVEggICAgTlVMTAogI2Vsc2UKLSMgZGVmaW5lIEZPTlRfUEFU
-SCAgICAgICIvdXNyL3NoYXJlL2ZvbnRzL3RydWV0eXBlL3R0Zi1kZWphdnUvRGVqYVZ1U2Fucy50
-dGYiCi0jIGRlZmluZSBGT05UX1BBVEhfTUVOVSAiL3Vzci9zaGFyZS9mb250cy90cnVldHlwZS90
-dGYtZGVqYXZ1L0RlamFWdVNhbnNNb25vLnR0ZiIKKyMgZGVmaW5lIEZPTlRfUEFUSCAgICAgICIv
-dXNyL3NoYXJlL2ZvbnRzL1RURi9EZWphVnVTYW5zLnR0ZiIKKyMgZGVmaW5lIEZPTlRfUEFUSF9N
-RU5VICIvdXNyL3NoYXJlL2ZvbnRzL1RURi9EZWphVnVTYW5zTW9uby50dGYiCiAjIGRlZmluZSBQ
-UkVTRVRfUEFUSCAgICAiL3Vzci9zaGFyZS9wcm9qZWN0TS9wcmVzZXRzIgogI2VuZGlmCiAK
-" | base64 -d > $TMP/patch-projectM-fontpath.diff
+echo "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
+scRn+wIAAAAABFla" | base64 -d > $TMP/patches.tar.xz
 
-patch -p0 < $TMP/patch-projectM-fontpath.diff || exit 1
+tar xvf $TMP/patches.tar.xz &>/dev/null
 
-echo "LS0tIGJpbi9NYWtlZmlsZS5hbS5vcmlnCTIwMTUtMDYtMDMgMTA6NDk6NTEuMjY2MjgyNzM2ICsx
-MDAwCisrKyBiaW4vTWFrZWZpbGUuYW0JMjAxNS0wNi0wMyAxMDo1MDoyMC40NjkyODIzMTAgKzEw
-MDAKQEAgLTcyLDYgKzcyLDEwIEBACiB2bGNfY2FjaGVfZ2VuX0RFUEVOREVOQ0lFUyA9IHZsY193
-aW4zMl9yYy4kKE9CSkVYVCkKIGVuZGlmCiAKK2lmIEhBVkVfR09CSkVDVAordmxjX2NhY2hlX2dl
-bl9MREFERCArPSAkKEdPQkpFQ1RfTElCUykKK2VuZGlmCisKICMKICMgUGx1Zy1pbnMgY2FjaGUK
-ICMKLS0tIGNvbmZpZ3VyZS5hYy5vcmlnCTIwMTUtMDYtMDMgMTA6NTM6MjIuMjk5Mjc5NjU3ICsx
-MDAwCisrKyBjb25maWd1cmUuYWMJMjAxNS0wNi0wMyAwOTo0NDozMy4zMzgzMzk4ODkgKzEwMDAK
-QEAgLTc2Miw2ICs3NjIsMTIgQEAKICAgICBdKQogXSkKIAorZG5sCitkbmwgQ2hlY2sgZm9yIGdv
-YmplY3QKK2RubAoraGF2ZV9nb2JqZWN0PSJubyIKK1BLR19DSEVDS19NT0RVTEVTKFtHT0JKRUNU
-XSwgW2dvYmplY3QtMi4wXSwgWyBoYXZlX2dvYmplY3Q9InllcyIgXSkKK0FNX0NPTkRJVElPTkFM
-KEhBVkVfR09CSkVDVCwgWyB0ZXN0ICIke2hhdmVfZ29iamVjdH0iID0gInllcyIgXSkKIAogZG5s
-CiBkbmwgQ2hlY2sgZm9yIHpsaWIuaCBhbmQgLWx6IGFsb25nIHdpdGggc3lzdGVtIC1sbWluaXpp
-cCBpZiBhdmFpbGFibGUK" | base64 -d > $TMP/patch_vlc_cache_gen.diff
+patch -p0 < $TMP/patches/patch-dvdread-503.diff || exit 1
+patch -p0 < $TMP/patches/patch-dvdnav-503.diff || exit 1
+patch -p0 < $TMP/patches/patch-projectM-fontpath.diff || exit 1
+patch -p0 < $TMP/patches/patch_vlc_cache_gen.diff || exit 1
+patch -p0 < $TMP/patches/patch-opencv4.diff || exit 1
 
-patch -p0 < $TMP/patch_vlc_cache_gen.diff || exit 1
+mv modules/video_filter/opencv_wrapper.c modules/video_filter/opencv_wrapper.cpp
 
 FIND=$(ls /var/log/packages|grep -m1 libva-intel-driver|cut -d- -f4)
 if [ $FIND = 1.6.2 ]; then
@@ -149,7 +160,7 @@ LDFLAGS="$SLKLDFLAGS" \
   --enable-run-as-root \
   --enable-qt=5 \
   --enable-merge-ffmpeg \
-  --disable-aom \
+  --enable-aom \
   --with-kde-solid=no \
   $LIBVA \
   --build=$ARCH-slackware-linux
