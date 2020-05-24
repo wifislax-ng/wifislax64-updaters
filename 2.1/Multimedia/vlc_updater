@@ -32,6 +32,10 @@ F_variables() {
 F_dependencias(){
 DEPENDENCIAS="
 python3
+ninja
+meson
+dav1d
+libgme
 libiec61883
 libxml++
 libconfig
@@ -51,7 +55,6 @@ freerdp
 libwebp
 gsm
 numpy3
-opencv
 libtar
 libkate
 faac
@@ -87,6 +90,8 @@ libbdplus
 libbluray
 ftgl
 aom
+vulkan-sdk
+libplacebo
 qt5
 "
 f_dependencias
@@ -98,45 +103,35 @@ echo
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
-echo "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
-scRn+wIAAAAABFla" | base64 -d > $TMP/patches.tar.xz
+echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Bv/BIxdADgYSu7FL5n6pvg745dpgzgztyjlznaup/JO
+4eXHDmkgIwrAIMPh6iR1pV+e3zRZ4ilVbfbipkKS7gp15/cY/T7XjzvwnOx575jnAPcbYgioZr7c
+vWn1bj9Pv8AVso1KP8ytyNXbFBXE7ngeMfn/n7/UeUKMV/qbXAYi3MMRHs1erUQR/6wKcbaCJ3jb
+d5i9XumTQ7QjnmjVavxlQYTwgRZQ2XA+uEPW44SCGyv3Z1MDezpJ+Zr8HpDyQNgjJfKO/WIuWwZy
+OGnk+KgRbYZjIOiVTR2Ye7gj36GWj0KCIHhUKgmq3iDiPg4RtLLe0hRG/Tn3af+6LDE/uBSvEs1U
+Pf5jU7J+revgg8gCnPaKwb61C6OTBCNvXHCq4qrnG5b0odqH/Sv45ETGm8qXYcPEaCj5SJeLN4nC
+9ehU1opJP5DTFrKK0x/SFZCJe/kxKDVPpnxEeafChxa9D/fxhnRR7+ObOlWb20mYqf7gPAwYPh1B
+zb+EBGp+EZv3mQVGmeFyV9IF7xONxEk0AWXlQwsKwS2ZZWeG7jT6cUFUEN4LjSXHY1uBi9XFqtsn
+A6mCAqkTLDEL/5OB4j6ofqFHLHl0HLWiOK22+ns7TjNurzJ1y5oK35zMXe6XJY8moVWxTCrTnDiy
+COZ/lPJb2UwyTHhCvG85799r1dMxBGo2b+EUTkiJt97ksB5m4xmQnp/6zw0T4gRI6+G0OEziQtoa
+F6xcuHmq94vaTxWai9AyDn3+aYwGDHxYKF2oqfbMTeHQISEQWSTPznWHBPn28UG71kckwED+5kqy
+ppNUr27olqN5mscZ5Kj+hAr34IGtI6X0L0GC0vzyTo2cPY5zw7X0XVaDBeX4OLBicMVTB4HrNLnp
+mNQZ2w7Vje3WmLZrQQSXQylWVmYqqVELwo70m+9A2jwriWLmqAo4Bs/lAN+lIfYmkOFimVRoOVbe
+CcJZa7HPkjOoZviGGV/CnPB3p9XLzo5CaPYNlck+ofg2n4TpzRCbbzTlhQOJALeklLMMWc54u4TM
+k3JXpa1L+bO6ChDDVB628e9HMgUqi+ifyjZULEKJTusvS38y4clBKcxgWc7TNW1g18sIp06aEaZf
+fMPD/L05xP3a7/VlcTBtjadRBzp876W0llddV1SPWrXWSIqtFeaF36m8hv9vE9Z0sk/GJPFuacRJ
+yrZ04teX9WCcqABMqhYt62by3rsi/GdMShLykWE0qNW2fGVeSB0EIeAWn0It71TaOlOOtJd28wTb
+GOr9lWwWWaS2NbirbcQyho9t/Zy54KIR+SrjL6HvY4LEc4y+bx+id8mBtEjTKCyHg59sczcJOobs
+8f3qdOU8/zaemjRh5DH/acc4yC6RXI+UTnK2yl2L/tQ75hKnVwYCjCDlVcy9rEOWTwD19NPLZrqE
+a5CGya8d5hHsw2sbBzwWKOtMUXZs30URXhpAjHLqBBGLtvkpqGRs7Wl1Rh96kjefzPYUocFtswca
+M/vhbIew8BZztvTP8k5iTxuIjs/aJEsu7OedA1CanyGCMgvuOLOj+MZn5LI4Ss/9lnoqKMctAAA/
+66gW6O9E6QABqAmAOAAAPCcr/LHEZ/sCAAAAAARZWg=="|base64 -d > $TMP/patches.tar.xz
 
 tar xvf $TMP/patches.tar.xz &>/dev/null
 
-patch -p0 < $TMP/patches/patch-dvdread-503.diff || exit 1
-patch -p0 < $TMP/patches/patch-dvdnav-503.diff || exit 1
-patch -p0 < $TMP/patches/patch-projectM-fontpath.diff || exit 1
-patch -p0 < $TMP/patches/patch_vlc_cache_gen.diff || exit 1
-patch -p0 < $TMP/patches/patch-opencv4.diff || exit 1
-
-mv modules/video_filter/opencv_wrapper.c modules/video_filter/opencv_wrapper.cpp
+patch -p0 < ./patches/patch-dvdread-503.diff || exit 1
+patch -p0 < ./patches/patch-dvdnav-503.diff || exit 1
+patch -p0 < ./patches/patch-projectM-fontpath.diff || exit 1
+patch -p0 < ./patches/patch_vlc_cache_gen.diff || exit 1
 
 FIND=$(ls /var/log/packages|grep -m1 libva-intel-driver|cut -d- -f4)
 if [ $FIND = 1.6.2 ]; then
@@ -158,11 +153,92 @@ LDFLAGS="$SLKLDFLAGS" \
   --docdir=/usr/doc/vlc-$VERSION \
   --localstatedir=/var \
   --enable-run-as-root \
+  --disable-opencv \
+  --disable-fdkaac \
+  --disable-schroedinger \
+  --disable-libgcrypt \
+  --disable-update-check \
   --enable-qt=5 \
   --enable-merge-ffmpeg \
+  --enable-archive \
+  --enable-live555 \
+  --enable-dc1394 \
+  --enable-dv1394 \
+  --enable-dvdread \
+  --enable-dvdnav \
+  --enable-bluray \
+  --enable-smbclient \
+  --enable-sftp \
+  --enable-nfs \
+  --enable-realrtsp \
+  --enable-dvbpsi \
+  --enable-gme \
+  --enable-ogg \
+  --enable-shout \
+  --enable-matroska \
+  --enable-mod \
+  --enable-mpc \
+  --enable-mad \
+  --enable-mpg123 \
+  --enable-gst-decode \
+  --enable-avcodec \
+    $LIBVA \
+  --enable-avformat \
+  --enable-postproc \
+  --enable-faad \
+  --enable-vpx \
+  --enable-twolame \
+  --enable-a52 \
+  --enable-dca \
+  --enable-flac \
+  --enable-libmpeg2 \
+  --enable-vorbis \
+  --enable-speex \
+  --enable-opus \
+  --enable-oggspots \
+  --enable-png \
+  --enable-jpeg \
+  --enable-x264 \
+  --enable-x265 \
+  --enable-zvbi \
+  --enable-libass \
+  --enable-kate \
+  --enable-vdpau \
+  --enable-sdl-image \
+  --enable-freetype \
+  --enable-fribidi \
+  --enable-harfbuzz \
+  --enable-fontconfig \
+  --enable-svg \
+  --enable-svgdec \
+  --enable-aa \
+  --enable-caca \
+  --enable-pulse \
+  --enable-alsa \
+  --enable-jack \
+  --enable-samplerate \
+  --enable-soxr \
+  --enable-chromaprint \
+  --enable-chromecast \
+  --enable-skins2 \
+  --enable-libtar \
+  --enable-ncurses \
+  --enable-lirc \
+  --enable-projectm \
+  --enable-avahi \
+  --enable-mtp \
+  --enable-upnp \
+  --enable-libxml2 \
+  --enable-gnutls \
+  --enable-taglib \
+  --enable-secret \
+  --enable-notify \
+  --enable-libplacebo \
+  --enable-vlc \
+  --enable-aribsub \
   --enable-aom \
+  --enable-dav1d \
   --with-kde-solid=no \
-  $LIBVA \
   --build=$ARCH-slackware-linux
   
 echo 
