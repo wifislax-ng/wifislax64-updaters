@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200524
+SCRIPT_VERSION=20200615
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -19,11 +19,11 @@ f_variables(){
 F_variables() {
 	PRGNAM=ardour
 	SRCNAM=Ardour
-	EXTENSION=tar.bz2
+	EXTENSION=tar.xz
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/Ardour/${PRGNAM}
-	VERSION=5.12.0
+	VERSION=6.0
 	SOURCES=$SRCNAM-$VERSION.$EXTENSION
 	CD=$SRCNAM-$VERSION
 	DOWNLOAD=http://ponce.cc/slackware/sources/repo/$SOURCES
@@ -60,30 +60,33 @@ f_dependencias
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 CFLAGS="$SLKCFLAGS" \
-CXXFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS -std=c++11" \
 ./waf configure \
   --prefix=/usr \
   --libdir=/usr/lib${LIBDIRSUFFIX} \
   --configdir=/etc \
   --mandir=/usr/man \
   --docdir=/usr/doc/$PRGNAM-$VERSION \
-  --with-backends="jack,alsa,dummy" \
+  --with-backends="dummy,alsa,jack,pulseaudio" \
   --libjack=weak \
   --optimize \
   --freedesktop \
   --no-phone-home \
+  --nls \
+  --ptformat \
+  --lxvst \
   --cxx11
 
 ./waf build
 ./waf install --destdir=$PKG
 
 mkdir -p $PKG/usr/share/{appdata,applications,icons}
-cp build/gtk2_ardour/ardour5.appdata.xml $PKG/usr/share/appdata/
-cp build/gtk2_ardour/ardour5.desktop $PKG/usr/share/applications/
+cp build/gtk2_ardour/ardour6.appdata.xml $PKG/usr/share/appdata/
+cp build/gtk2_ardour/ardour6.desktop $PKG/usr/share/applications/
 for isize in 16 22 32 48 ; do
   mkdir -p $PKG/usr/share/icons/hicolor/${isize}x${isize}/apps
   cp gtk2_ardour/icons/application-x-ardour_${isize}px.png \
-    $PKG/usr/share/icons/hicolor/${isize}x${isize}/apps/ardour5.png
+    $PKG/usr/share/icons/hicolor/${isize}x${isize}/apps/ardour6.png
 done
 }
 
