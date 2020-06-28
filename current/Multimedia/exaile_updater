@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20190720
+SCRIPT_VERSION=20200628
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -31,19 +31,12 @@ F_variables() {
 # Comprobar dependencias
 F_dependencias(){
 DEPENDENCIAS="
-json-glib
 geoclue2
-ninja
-brotli
-woff2
-hyphen
-libwebp
 webkit2gtk
 bsddb3
 mutagen
 feedparser
 opencore-amr
-lame
 libdvdcss
 libmpeg2
 twolame
@@ -51,7 +44,6 @@ x264
 gst-plugins-ugly
 musicbrainzngs
 cddb-py
-six
 pylast
 python-keybinder
 streamripper

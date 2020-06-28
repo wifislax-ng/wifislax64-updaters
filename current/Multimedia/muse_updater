@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200128
+SCRIPT_VERSION=20200628
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -30,7 +30,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="python3 libffado celt jack ladspa_sdk liblo lash dssi"
+DEPENDENCIAS="libffado celt jack ladspa_sdk liblo lash dssi"
 f_dependencias
 }
 
