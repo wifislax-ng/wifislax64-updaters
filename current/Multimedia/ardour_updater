@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200615
+SCRIPT_VERSION=20200628
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -31,8 +31,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="python3
-libffado
+DEPENDENCIAS="libffado
 celt
 opus
 aubio
@@ -50,7 +49,6 @@ cppunit
 ladspa_sdk
 dssi
 set_rlimits
-qt5
 qjackctl
 whysynth
 ffmpeg"

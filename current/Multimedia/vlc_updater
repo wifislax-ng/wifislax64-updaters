@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200525
+SCRIPT_VERSION=20200628
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -31,9 +31,6 @@ F_variables() {
 # Comprobar dependencias
 F_dependencias(){
 DEPENDENCIAS="
-python3
-ninja
-meson
 dav1d
 libgme
 libiec61883
@@ -48,11 +45,9 @@ libmpeg2
 libupnp
 lua
 portaudio
-twolame
-opus 
+twolame 
 ffmpeg
 freerdp
-libwebp
 gsm
 numpy3
 libtar
@@ -62,7 +57,6 @@ libdca
 libebml
 libmatroska
 libshout
-speex
 jack
 libsidplay2
 zvbi
@@ -78,7 +72,6 @@ gnome-vfs
 live555
 rtmpdump
 libdvdcss
-fluidsynth
 schroedinger
 libminizip
 chromaprint
@@ -87,12 +80,9 @@ x265
 bluray-keys
 libaacs
 libbdplus
-libbluray
 ftgl
 aom
-vulkan-sdk
 libplacebo
-qt5
 "
 f_dependencias
 }
