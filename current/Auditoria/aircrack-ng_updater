@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200202
+SCRIPT_VERSION=20200704
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -29,7 +29,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="numactl cmocka"
+DEPENDENCIAS="numactl cmocka hwloc"
 f_dependencias
 }
 
