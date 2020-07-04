@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200701
+SCRIPT_VERSION=20200704
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -35,6 +35,8 @@ libmaxminddb
 spandsp
 rubygem-asciidoctor
 libsmi
+snappy
+libminizip
 "
 f_dependencias
 }
