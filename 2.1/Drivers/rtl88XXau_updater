@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200314
+SCRIPT_VERSION=20200730
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -33,6 +33,7 @@ F_compilar(){
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
+sed 's/EXTRA_CFLAGS += -Wimplicit-fallthrough=0/#EXTRA_CFLAGS += -Wimplicit-fallthrough=0/g' -i Makefile
 make || exit 1
 mkdir -p $PKG/lib/modules/$(uname -r)/kernel/drivers/net/wireless/
 make install MODDESTDIR=$PKG/lib/modules/$(uname -r)/kernel/drivers/net/wireless/|| exit 1
