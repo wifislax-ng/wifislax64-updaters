@@ -30,7 +30,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="afpfs-ng postgresql memcached libmemcached"
+DEPENDENCIAS="afpfs-ng postgresql memcached libmemcached mongo-c-driver"
 f_dependencias
 }
 
