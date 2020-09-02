@@ -94,6 +94,10 @@ vulkan-sdk
 Mako
 libplacebo
 libnfs
+pytz
+python-gflags
+google-apputils
+protobuf
 qt5
 "
 f_dependencias

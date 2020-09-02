@@ -84,6 +84,10 @@ ftgl
 aom
 libplacebo
 libnfs
+pytz
+python-gflags
+google-apputils
+protobuf
 "
 f_dependencias
 }
