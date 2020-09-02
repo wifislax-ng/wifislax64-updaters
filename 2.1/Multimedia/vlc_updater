@@ -93,6 +93,7 @@ aom
 vulkan-sdk
 Mako
 libplacebo
+libnfs
 qt5
 "
 f_dependencias

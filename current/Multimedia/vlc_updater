@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200628
+SCRIPT_VERSION=20200903
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -83,6 +83,7 @@ libbdplus
 ftgl
 aom
 libplacebo
+libnfs
 "
 f_dependencias
 }
