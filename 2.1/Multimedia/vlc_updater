@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200525
+SCRIPT_VERSION=20200903
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -91,6 +91,7 @@ libbluray
 ftgl
 aom
 vulkan-sdk
+Mako
 libplacebo
 qt5
 "
