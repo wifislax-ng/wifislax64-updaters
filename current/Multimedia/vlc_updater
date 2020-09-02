@@ -88,6 +88,8 @@ pytz
 python-gflags
 google-apputils
 protobuf
+libdaemon
+avahi
 "
 f_dependencias
 }

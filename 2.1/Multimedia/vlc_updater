@@ -98,6 +98,8 @@ pytz
 python-gflags
 google-apputils
 protobuf
+libdaemon
+avahi
 qt5
 "
 f_dependencias
