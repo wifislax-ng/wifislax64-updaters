@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200628
+SCRIPT_VERSION=20200904
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -68,6 +68,7 @@ shutil_get_terminal_size
 simplegeneric
 ipython_genutils 
 traitlets
+Pygments
 ipython
 " 
 f_dependencias
