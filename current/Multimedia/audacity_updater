@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200407
+SCRIPT_VERSION=20200918
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -61,58 +61,72 @@ echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
 echo "
-/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4An/AaFdADCdSKuHgCFyvCmLAj9fPkndrrLdd492L47H
-Hxm5eP5iWn52CgdFQS1MN38lW9YvsFepf/8lsbShZn9vFu/m5inVxKWpheParnLLVongaqgAzE+b
-uiaHrxkn0jAEPo+BFKKwHKSAa6/k/ipfx8YFKsLZHhKGLizWFAsEu7NLoyvvev9E5bORtUPHotGk
-XlQZWn0nebAmPSSEgP8rVyVBrxsB/R9vl9GnXMSTcSMdrQlbGcv4dRDIFmzOSCdgkQF2UmaAQaN6
-rVRv3C7FeZRe6DlhljsNinMCspltBufTxWQ20U2dTZPVq4GHBiMsoZq1woCZw3kueqq8Abs1Ypma
-yach0OhRhcR2KRn5WofFCe5OQvUtLH0I7BgfBgAB83nsk3NisBiJGOGlufJzC7uJ7mB1nNF2G0E4
-rW0Srui/dcARMpSHtGrY0Mh2zHqy6neqvygnB+nav6y0NNBiZepuEAVg1YZmKk65e5bIMQuY3KTD
-w97HtbSIOxthC2PuDKZgoxBB5QmwX3L/p4xkRnGJvguCd1ud2uLXLB6MEMwdt1niAAAAAABDmkIs
-SIPnpwABvQOAFAAAMRPX1LHEZ/sCAAAAAARZWg==" | base64 -d > $TMP/audacity-ffmpeg.txz
-tar xvf $TMP/audacity-ffmpeg.txz &>/dev/null
-patch -p1 < audacity-ffmpeg.patch
+/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Av/AshdADCdSKuHgCFyvCk7s6Sv3e4GlgbyiyENDsRD
+csziW/EPPsO8Iz1joTBFMfueeoeyEjdZa5KLdjpz180RdCnrq+PxAkZHj2ibOq39aKu2mOOQc12U
+GNfpcsx4Z01FYeTRyra5z+rq/A4KmMEYjuw6wU4oY4FSt06v0hKUP0WUuV8z2EO+1J6c+KJ9hPjj
+8D2xq0AAfKGbO7nBdnoEXNConV0CBFAjzgAmcRg19kQVPrO5pmUMkmY0gJeuxqzNrTIFSyYFqKgA
+fdINZ8XVjuUFsBQOiynqRwPRR2xEn1+rER4XRg4VBolgqgDGXU7NnJmHHayYOto/UYUU6cHAe1Kl
+McZiY3rEA9013cryq4VsQ6T2D6QmBorH1XhtR5i32xZA9zDDX187fhIrRA339PR7dNFIGuRKDfjP
+GsIkZr18GH5DCzZoBZ1QW71AkYVnqtGilmQmrkcUcQspOZVJNcVHggjsrwl1dbYj7rVfsk+CZCEK
+7lfV9M1iYJxw63M9FrR0M+i/6SGYL7EVPaZHlhBZYueLmrYDh90oFWKDSoNWUp4bkp0pVsdCxvV3
+XQds1v/TougLzPEvi98QrDYd3CUbXRlgWjRh79CMRZoTY3vo2shIoWtx1oLTRc/zb/qwT2m1gBM+
+9eg3omOCpQ7PEh1SINwnQIaoGLOSd4YZrUIRaGLc7M38Gb7N3hG7V20rkXEN7fDe6wAJc9fIN0td
+n47zVm8zYsmdqTL8KW/4+2laheoydLsblMm1iYVvdbJm4OoXiGTPacwW0zRBeEN46XdxLvRGWxgK
+KeZdcbKPLn7+3QAcnCCb+sYnXn23v5s9mUDjpnPCFu/h8DhbvOG62BN1wnejVdcKlt8h2mLHFdew
+eEwbtJkXCx+Auhr1fz0TBjN3F8+MyteB2qni6XzNrDZUZK57T8WK5wWpf1bgbGRayj95lEWeZmuV
+LQAAhH0ki8FAXCUAAeQFgBgAAMpGDHmxxGf7AgAAAAAEWVo=" | base64 -d > $TMP/audacity-patch.txz
+tar xvf $TMP/audacity-patch.txz &>/dev/null
+patch -p1 < audacity-2.4.1_resize_crash.patch
 
-sed -i "s,lib/vamp,lib$LIBDIRSUFFIX/vamp,g" \
-  lib-src/libvamp/src/vamp-hostsdk/PluginHostAdapter.cpp || true
+sed -e "s,lib/vamp,lib${LIBDIRSUFFIX}/vamp,g" \
+  -i lib-src/libvamp/src/vamp-hostsdk/PluginHostAdapter.cpp
 
-autoreconf -fi
-
-LDFLAGS="-L/usr/lib$LIBDIRSUFFIX" \
-CFLAGS="$SLKCFLAGS" \
+LDFLAGS="$SLKLDFLAGS -Wl,-rpath,/usr/lib${LIBDIRSUFFIX}/${PRGNAM}" \
 CXXFLAGS="$SLKCFLAGS" \
-./configure \
-  --prefix=/usr \
-  --libdir=/usr/lib${LIBDIRSUFFIX} \
-  --enable-unicode \
-  --enable-nyquist \
-  --with-expat=system \
-  --with-lame=system \
-  --with-libvorbis=system \
-  --with-libmad=system \
-  --with-libflac=system \
-  --with-libsndfile=system \
-  --with-libid3tag=system \
-  --with-libsoxr \
-  --with-portaudio \
-  --with-ladspa \
-  --with-ffmpeg=system \
-  --with-lv2=system \
-  --with-soundtouch=system \
-  --with-libtwolame=system \
-  --with-libvamp=system \
-  --without-libresample \
-  --without-libsamplerate
-
-for i in ffmpeg expat lame libid3tag libflac libmad libresample libsndfile libvamp lv2 soundtouch twolame; do
-  rm -rf lib-src/$i
-done
+CFLAGS="$SLKCFLAGS" \
+  mkdir -p build
+  cd build
+  cmake .. \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_C_FLAGS_RELEASE:STRING="$SLKCFLAGS" \
+    -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS -DHAVE_VISIBILITY=1" \
+    -DCMAKE_CXX_FLAGS_RELEASE:STRING="$SLKCFLAGS -DHAVE_VISIBILITY=1" \
+    -DCMAKE_CXX_STANDARD=11 \
+    -DCMAKE_INSTALL_DOCDIR=/usr/doc/$PRGNAM-$VERSION \
+    -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
+    -DCMAKE_INSTALL_MANDIR=/usr/man \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_VERBOSE_MAKEFILE:BOOL="ON" \
+    -Daudacity_lib_preference="system" \
+    -Daudacity_use_expat=system \
+    -Daudacity_use_ffmpeg=linked \
+    -Daudacity_use_flac=system \
+    -Daudacity_use_id3tag=system \
+    -Daudacity_use_ladspa:BOOL="ON" \
+    -Daudacity_use_lame=system \
+    -Daudacity_use_lv2=system \
+    -Daudacity_use_mad=system \
+    -Daudacity_use_ogg=system \
+    -Daudacity_use_pa_alsa:BOOL="ON" \
+    -Daudacity_use_pa_jack=linked \
+    -Daudacity_use_portaudio=local \
+    -Daudacity_use_sndfile=system \
+    -Daudacity_use_soxr=system \
+    -Daudacity_use_soundtouch=local \
+    -Daudacity_use_twolame=system \
+    -Daudacity_use_vamp=system \
+    -Daudacity_use_vorbis=system
   
 echo ""
 echo "$VERDE"Compilamos ..."$CIERRE"
 sleep 1
 make || exit 1
 make install DESTDIR=$PKG
+
+cd ..
+install -vDm 644 plug-ins/*.ny -t $PKG/usr/share/$PRGNAM/plug-ins
+install -vDm 644 nyquist/*.lsp -t $PKG/usr/share/$PRGNAM/nyquist
 
 install -D -m 0644 images/AudacityLogo48x48.xpm \
   $PKG/usr/share/pixmaps/$PRGNAM.xpm
