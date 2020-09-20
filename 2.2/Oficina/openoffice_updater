@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200920
+SCRIPT_VERSION=20181122
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -16,23 +16,51 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=libreoffice-helppack
-	SRCNAM=LibreOffice
+	PRGNAM=openoffice
 	EXTENSION=tar.gz
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://es.libreoffice.org/descarga/libreoffice
-	VERSION=$(curl -s $WEB/|grep ${SRCNAM}_|head -1|cut -d "/" -f 9|cut -d "_" -f2)
-	SOURCES=${SRCNAM}_${VERSION}_Linux_x86-64_rpm_helppack_$IDIOMA.$EXTENSION
-	CD=${SRCNAM}_${VERSION}*_rpm_helppack_$IDIOMA/RPMS/
-	DOWNLOAD=http://download.documentfoundation.org/libreoffice/stable/$VERSION/rpm/$ARCH/$SOURCES
+	WEB=https://sourceforge.net/projects/openofficeorg.mirror/files
+	VERSION=$(curl -s $WEB/|grep -m 1 "<tr title="|cut -d '"' -f2|sed "s/ //g")
+	RAMA=$(echo $VERSION|cut -f1 -d.)
+	SOURCES=Apache_OpenOffice_${VERSION}_Linux_x86-64_install-rpm_$IDIOMA.$EXTENSION
+	CD=$IDIOMA/RPMS/desktop-integration
+	DOWNLOAD=$WEB/$VERSION/binaries/$IDIOMA/$SOURCES
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-	rm -f *onlineupdate*.rpm
-	for FILE in *.rpm ; do rpm2cpio < $FILE | cpio -imdv ; done
-	cp -Rf opt $PKG
+mkdir -p $PKG/usr/bin/
+mkdir -p $PKG/usr/share/applications/
+mkdir -p $PKG/usr/share/icons/
+rm -f *onlineupdate*.rpm
+for FILE in *.rpm ; do rpm2cpio < $FILE | cpio -imdv ; done
+mv $TMP/$IDIOMA/RPMS/desktop-integration/usr/share/icons/* $PKG/usr/share/icons/
+rm -rf $TMP/$IDIOMA/RPMS/desktop-integration
+cd $TMP/$IDIOMA/RPMS/
+for FILE in *.rpm ; do rpm2cpio < $FILE | cpio -imdv ; done
+rm -rf $TMP/$IDIOMA/RPMS/*.rpm
+mv opt $PKG
+cd $PKG
+
+## fix desktop files, so they can launch
+cat <<EOT > $PKG/usr/bin/${PRGNAM}$RAMA
+#!/bin/sh
+/opt/${PRGNAM}${RAMA}/program/soffice "\$@"
+EOT
+chmod 755 $PKG/usr/bin/${PRGNAM}$RAMA
+
+## desktop files!
+for APP in base calc draw impress math writer; do
+  cp -av $PKG/opt/${PRGNAM}${RAMA}/share/xdg/$APP.desktop $PKG/usr/share/applications/open-$APP.desktop ;
+done
+
+mv $TMP/$IDIOMA $PKG/opt/${PRGNAM}${RAMA}/lang/
+
+# Fix ownership and permissions and make the package
+chown -R root:root .
+find . -type d -exec chmod 755 {} \;
+chmod -R u+rw,go+r-w,a-s .
 }
 
 ###################################
@@ -57,8 +85,6 @@ f_presentacion
 f_comprobarUpdates
 #Comprobamos version instalada del paquete
 f_versionInstalada
-#Compronar dependencias
-#F_dependencias
 #Si no existe el fichero se descargara
 f_download
 #Descomprimir sources
