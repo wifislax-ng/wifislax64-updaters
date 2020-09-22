@@ -1,0 +1,128 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20200615
+CATEGORIA="Editores de audio"
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=ardour
+	SRCNAM=Ardour
+	EXTENSION=tar.xz
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://github.com/Ardour/${PRGNAM}
+	VERSION=6.0
+	SOURCES=$SRCNAM-$VERSION.$EXTENSION
+	CD=$SRCNAM-$VERSION
+	DOWNLOAD=http://ponce.cc/slackware/sources/repo/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="python3
+libffado
+celt
+opus
+aubio
+jack
+liblo
+liblrdf
+vamp-plugin-sdk
+rubberband
+serd
+sord
+sratom
+gts
+graphviz
+cppunit
+ladspa_sdk
+dssi
+set_rlimits
+qt5
+qjackctl
+whysynth
+ffmpeg"
+f_dependencias
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS -std=c++11" \
+./waf configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --configdir=/etc \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --with-backends="dummy,alsa,jack,pulseaudio" \
+  --libjack=weak \
+  --optimize \
+  --freedesktop \
+  --no-phone-home \
+  --nls \
+  --ptformat \
+  --lxvst \
+  --cxx11
+
+./waf build
+./waf install --destdir=$PKG
+
+mkdir -p $PKG/usr/share/{appdata,applications,icons}
+cp build/gtk2_ardour/ardour6.appdata.xml $PKG/usr/share/appdata/
+cp build/gtk2_ardour/ardour6.desktop $PKG/usr/share/applications/
+for isize in 16 22 32 48 ; do
+  mkdir -p $PKG/usr/share/icons/hicolor/${isize}x${isize}/apps
+  cp gtk2_ardour/icons/application-x-ardour_${isize}px.png \
+    $PKG/usr/share/icons/hicolor/${isize}x${isize}/apps/ardour6.png
+done
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Comprobamos version instalada del paquete
+f_versionInstalada
+#Compronar dependencias
+F_dependencias
+# Git clone
+f_download
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales
