@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200628
+SCRIPT_VERSION=20200926
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -23,7 +23,7 @@ F_variables() {
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/Ardour/${PRGNAM}
-	VERSION=6.0
+	VERSION=6.3
 	SOURCES=$SRCNAM-$VERSION.$EXTENSION
 	CD=$SRCNAM-$VERSION
 	DOWNLOAD=http://ponce.cc/slackware/sources/repo/$SOURCES
@@ -31,7 +31,8 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libffado
+DEPENDENCIAS="python3
+libffado
 celt
 opus
 aubio
@@ -42,6 +43,8 @@ vamp-plugin-sdk
 rubberband
 serd
 sord
+lv2
+suil
 sratom
 gts
 graphviz
@@ -49,6 +52,7 @@ cppunit
 ladspa_sdk
 dssi
 set_rlimits
+qt5
 qjackctl
 whysynth
 ffmpeg"
@@ -57,6 +61,21 @@ f_dependencias
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
+echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Av/AltdADsZSiDy301YcmyvSMKU9QdCJQ5x/8br9Z1G
+pXNJTIdjNEdQ3JcGSi9y3RjlcocxLmHInpLAZlBFaHtVOYjE32jUynQHZ8eBmxcq98tI9IG6809H
+2jRqwAn7sztbuoL7nINKHEuWAHAVhu1jRklAXooothF04b2tcP7ap5veFVJe0QwLgcS0QoJ1rzLP
+zw61c3bCnsReGlVeBmKjMTVggNBDIJWroiDBxN89wUo+Mfq/ElBXpAV18gnaI/oz/ARLcm9kFUdH
+HGOGGDparWo5olJbw5L4AOd2rSWaOHPK7i30tyVHeq3UcMFxLy7fyaQPa+99wCKxmskI34MDqgaI
+Kj2ZEtluJnFgfBrz4Xlnq39tVSWcpAWxqKJPDNjFk/TkuOw31B/c2ZmzdDId2vcvM1dvgw/SHqrr
+apvvBrsNPhMlaUazQmk7bO6TAzhnozq9jPxGFPysn2dhEpsvLDGk1HHCYEmKeFaUhHXYVezaBUx7
+RVwIw2+98SbeUkZnpmpEvdpcCZjah6UBp5ZN//pQidfmGGZKwIC91w7rVikDrb+b1QEQAW6xE6vI
+GeD/3gebw22N7SRxfYrf/DTRONK2aqPes157IGf7x4EgIlYhL6c5redy5ljernUz02axB2I5lS4V
+7HEwm9Wtwm7njXazCrSIcgAgreroH8MPaysiKsshFo0CFXsaS3An5LpH13M2P5/8Z07CJP4TtpXs
+8sOU1k7fJJbC8oU7meAu2SbkpeMrjyXQV/j/EYYPe/vcJJ7FotzKkdMIo6Y8KYVQ0XZpGV4CKVaW
+G+9I6e0pQAAAioSMhtSPXCMAAfcEgBgAAE8fLsGxxGf7AgAAAAAEWVo="|base64 -d > $TMP/vendor_qm-dsp.txz
+tar xvf $TMP/vendor_qm-dsp.txz &>/dev/null
+patch -p1 < vendor_qm-dsp.patch || exit 1
+
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS -std=c++11" \
 ./waf configure \
