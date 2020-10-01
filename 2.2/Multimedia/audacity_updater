@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200918
+SCRIPT_VERSION=20201001
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -31,7 +31,8 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libiec61883
+DEPENDENCIAS="cmake-202x
+libiec61883
 libxml++
 libconfig
 libffado
@@ -86,7 +87,7 @@ CXXFLAGS="$SLKCFLAGS" \
 CFLAGS="$SLKCFLAGS" \
   mkdir -p build
   cd build
-  cmake .. \
+    /opt/cmake-202x/bin/cmake ..\
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
     -DCMAKE_C_FLAGS_RELEASE:STRING="$SLKCFLAGS" \
