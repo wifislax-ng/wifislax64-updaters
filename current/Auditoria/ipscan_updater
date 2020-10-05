@@ -35,13 +35,8 @@ f_dependencias
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-mkdir -p $PKG/usr/share/{applications/wifislax/Redes,pixmaps} $PKG/usr/{bin,lib${LIBDIRSUFFIX}/ipscan/}
-
+mkdir -p $PKG/usr/lib${LIBDIRSUFFIX}/ipscan/
 mv -f $SOURCES $PKG/usr/lib${LIBDIRSUFFIX}/$PRGNAM/$PRGNAM.$EXTENSION
-
-echo "#!/bin/sh
-java -jar /usr/lib${LIBDIRSUFFIX}/$PRGNAM/$PRGNAM.$EXTENSION" > $PKG/usr/bin/$PRGNAM
-chmod 777 $PKG/usr/bin/$PRGNAM
 }
 
 ###################################
