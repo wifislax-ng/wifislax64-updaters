@@ -1,8 +1,9 @@
+
 #!/bin/sh
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20201029
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -29,7 +30,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libgtop ORBit2 libbonobo gnome-mime-data gnome-vfs libgnome"
+DEPENDENCIAS="libgtop ORBit2 libbonobo gnome-mime-data gnome-vfs recode libgnome"
 f_dependencias
 }
 
