@@ -2,7 +2,7 @@
 
 # Script for www.seguridadwireless.net by vk496
 
-SCRIPT_VERSION=20200305
+SCRIPT_VERSION=20201029
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -32,6 +32,7 @@ F_variables() {
    WEB="https://github.com/wifislax-ng/wifislax64-updaters"
    echo -ne "\033]2;${PRGNAM}_updater\007"
    VERSION=$(echo $(date +"%Y%m%d"))
+   GESTOR=git
    CREAR_MODULO=NO
 }
 
@@ -65,7 +66,7 @@ echo
 #Contador de todos los scripts
 contador=0
 
-carpetas="$(find /tmp/$PRGNAM/$WIFISLAX -type d | grep -v "\.git" | rev | cut -d/ -f1 | rev | grep -v "^$" | sort)"
+carpetas="$(find /tmp/$PRGNAM/$WIFISLAX -type d | grep -v "\.git" | rev | cut -d/ -f1 | rev | grep -v "^$" | sort |grep -v $WIFISLAX)"
 #Obtenemos la carpeta del server, y la usamos como carpeta local
 for carpeta in $carpetas; do
    archivos="$(find /tmp/$PRGNAM/$WIFISLAX/$carpeta -type f |rev | cut -d/ -f1 | rev| grep -v "^$"|sort)"
