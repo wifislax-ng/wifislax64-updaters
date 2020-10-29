@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20201029
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -31,7 +31,55 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="Flask pypcap dnslib IPy user-agents NetfilterQueue python-capstone pip pyinotify pycrypto pyasn1 pyasn1-modules enum34 ipaddress six pycparser cffi idna cryptography python-pillow MarkupSafe docutils Jinja2 Pygments Sphinx python-netaddr scapy zope.interface python-twisted BeautifulSoup4 html5lib lxml python-future pefile pyOpenSSL characteristic attrs service_identity configobj click itsdangerous werkzeug Jinja2 dnspython BeautifulSoup4 python-magic msgpack-python python-requests python-chardet"
+DEPENDENCIAS="
+click
+itsdangerous
+MarkupSafe
+Jinja2
+werkzeug
+Flask
+pypcap
+dnslib
+IPy
+user-agents
+NetfilterQueue
+python-capstone
+pyinotify
+pycrypto
+pyasn1
+pyasn1-modules
+enum34
+ipaddress
+six
+pycparser
+cffi
+idna
+cryptography
+python-pillow
+docutils
+Jinja2
+Pygments
+Sphinx
+python-netaddr
+scapy
+zope.interface
+python-twisted
+BeautifulSoup4
+html5lib
+lxml
+python-future
+pefile
+pyOpenSSL
+characteristic
+attrs
+service_identity
+configobj
+dnspython
+BeautifulSoup4
+python-magic
+msgpack-python
+python-requests
+python-chardet"
 f_dependencias
 }
 
