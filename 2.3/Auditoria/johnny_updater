@@ -1,0 +1,102 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20200928
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=johnny
+	EXTENSION=zip
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://github.com/openwall/johnny
+	RAMA=$(curl -s $WEB|grep commit/|head -1|cut -d / -f5|cut -c 1-7)
+	VERSION="$(curl -s $WEB/blob/master/johnny.pro|grep VERSION|grep -o [0-9].[0-9])"_"${RAMA}"
+	SOURCES=master.$EXTENSION
+	CD=$PRGNAM-master
+	DOWNLOAD=$WEB/archive/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="john" 
+f_dependencias
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
+sleep 1
+
+qmake
+make || exit 1
+
+install -D -m755 "${TMP}/${PRGNAM}-master/${PRGNAM}" "${PKG}/usr/bin/${PRGNAM}"
+install -D -m644 "${TMP}/${PRGNAM}-master/resources/icons/${PRGNAM}_128.png" "${PKG}/usr/share/pixmaps/${PRGNAM}.png"
+
+mkdir -p $PKG/usr/share/applications/wifislax/Diccionarios
+
+echo '[Desktop Entry]
+Categories=Diccionarios;
+Exec=johnny
+GenericName=John the ripper GUI
+GenericName[es]=Gui para john the ripper
+Icon=johnny
+MimeType=
+Name[es]=Johnny
+Name=Johnny
+Path=
+StartupNotify=true
+Terminal=false
+TerminalOptions=
+Type=Application' > "$PKG/usr/share/applications/wifislax/Diccionarios/$PRGNAM.desktop"
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Comprobamos version instalada del paquete
+f_versionInstalada
+#Compronar dependencias
+F_dependencias
+#Si no existe el fichero se descargara
+f_download
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales
