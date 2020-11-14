@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200617
+SCRIPT_VERSION=20201115
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -67,6 +67,7 @@ libxml++
 libffado
 jack
 nv-codec-headers
+dav1d
 "
 f_dependencias
 }
@@ -105,6 +106,7 @@ CXXFLAGS="$SLKCFLAGS" \
     --enable-libaom \
     --enable-libass \
     --enable-libbluray \
+    --enable-libdav1d \
     --enable-libdrm \
     --enable-libfreetype \
     --enable-libfribidi \
