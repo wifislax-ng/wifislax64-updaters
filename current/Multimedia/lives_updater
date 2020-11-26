@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20201126
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -44,10 +44,11 @@ sleep 2
 # Don't build toonz plugin (build failure when opencv is present)
 # https://sourceforge.net/p/lives/bugs/217/
 sed -i -e '/toonz/d' lives-plugins/weed-plugins/Makefile.am
-automake
 
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
+CPPFLAGS="$CPPFLAGS -I/usr/include/tirpc/" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX} -ltirpc" \
 ./configure \
   --prefix=/usr \
   --libdir=/usr/lib${LIBDIRSUFFIX} \
