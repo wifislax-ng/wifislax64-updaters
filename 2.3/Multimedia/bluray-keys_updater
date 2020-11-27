@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20201127
+SCRIPT_VERSION=20201128
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -23,7 +23,7 @@ F_variables() {
 	WEB=https://vlc-bluray.whoknowsmy.name/files/KEYDB.cfg
 	VERSION=$(curl -k -s $WEB|grep VUK|head -1|cut -d ' ' -f5)
 	SOURCES=KEYDB.cfg
-	DOWNLOAD=$WEB
+	DOWNLOAD="--no-check-certificate $WEB"
 }
 
 # Descomprimimos el fichero descargado y compilamos
