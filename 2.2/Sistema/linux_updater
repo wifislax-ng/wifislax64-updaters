@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20200107
+SCRIPT_VERSION=20201220
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -264,7 +264,6 @@ make modules_install INSTALL_MOD_PATH=$CONTAINER || exit 1
 
 # Instalamos las cabeceras kernel-headers
 make INSTALL_HDR_PATH=$CONTAINER/usr headers_install|| exit 1
-rm -r $CONTAINER/usr/include/*/{.install,..install.cmd}
 
 # Copiamos el vmlinuz (este con nombre generico para el modo live)
 cp /usr/src/$PRGNAM-$KERNEL_ELEGIDO/arch/$KARCH/boot/bzImage $HOME/Desktop/$VMLINUZ &>/dev/null
