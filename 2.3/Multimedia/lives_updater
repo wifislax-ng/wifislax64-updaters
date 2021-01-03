@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20201121
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -41,11 +41,6 @@ echo
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 2
 
-# Don't build toonz plugin (build failure when opencv is present)
-# https://sourceforge.net/p/lives/bugs/217/
-sed -i -e '/toonz/d' lives-plugins/weed-plugins/Makefile.am
-automake
-
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
@@ -55,10 +50,12 @@ CXXFLAGS="$SLKCFLAGS" \
   --localstatedir=/var \
   --mandir=/usr/man \
   --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --enable-turbo  \
+  --disable-doxygen \
   --build=$ARCH-slackware-linux
 
 make || exit 1
-make install-strip DESTDIR=$PKG
+make install DESTDIR=$PKG
 
 cd $PKG/usr/bin && rm -f lives && ln -s lives-exe lives
 }
