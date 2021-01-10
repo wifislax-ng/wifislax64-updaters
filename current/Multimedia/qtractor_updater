@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200628
+SCRIPT_VERSION=20210110
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -30,7 +30,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libvorbis libmad libsamplerate liblo ladspa_sdk vamp-plugin-sdk rubberband dssi serd sord sratom lv2 lilv libffado celt jack"
+DEPENDENCIAS="libmad libsamplerate liblo ladspa_sdk vamp-plugin-sdk rubberband dssi serd sord sratom lv2 lilv libffado celt jack"
 f_dependencias
 }
 

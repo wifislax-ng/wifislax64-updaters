@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210110
+SCRIPT_VERSION=20210111
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -46,7 +46,7 @@ sleep 2
 sed -i -e '/toonz/d' lives-plugins/weed-plugins/Makefile.am
 
 CFLAGS="$SLKCFLAGS" \
-CXXFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS -fcommon" \
 CPPFLAGS="$CPPFLAGS -I/usr/include/tirpc/" \
 LDFLAGS="-L/usr/lib${LIBDIRSUFFIX} -ltirpc" \
 ./configure \
