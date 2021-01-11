@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20201227
+SCRIPT_VERSION=20210111
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -244,7 +244,8 @@ modprobe configs && zcat /proc/config.gz > /usr/src/$PRGNAM-$KERNEL_ELEGIDO/.con
 fi
 
 # Compilamos el kernel
-make olddefconfig || exit 1
+make oldconfig || exit 1
+make prepare || exit 1
 make xconfig || exit 1
 
 # Variables para calcular tiempo de inicio
@@ -293,6 +294,11 @@ done
 
 # Por que usa una script que baja todos los firmwares desde el git
 rm -Rf $CONTAINER/lib/firmware
+
+# Hacemos depmod
+# Set LOCALVERSION to the value found inside the .config:
+LOCALVERSION="$(cat $RUTA_LIMPIEZA/.config 2> /dev/null | grep CONFIG_LOCALVERSION= | cut -f 2 -d = | tr -d \")"
+depmod -b $CONTAINER -a $KERNEL_ELEGIDO$LOCALVERSION || exit 1
 
 # Creamos xzm de kernel + sources
 mksquashfs $CONTAINER $CONTAINER.xzm -noappend -comp zstd -b 512K -Xcompression-level 18
