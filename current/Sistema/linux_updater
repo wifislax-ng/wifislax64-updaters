@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20210112
+SCRIPT_VERSION=20210114
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -208,7 +208,7 @@ sleep 1
 patch -f -p1 < $PARCHE||exit 1
 
 # Ponemos nuestro logo
-LOGO=/usr/share/pixmaps/wifislax_logo.png
+LOGO=/usr/share/pixmaps/wifislax_logo_blue.png
 LOGONEW=/usr/src/$PRGNAM-$KERNEL_ELEGIDO/drivers/video/logo/logo_linux_clut224.ppm
 if [ -f $LOGO ]; then
 echo ""
