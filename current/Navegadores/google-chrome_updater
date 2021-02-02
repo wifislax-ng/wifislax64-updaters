@@ -138,6 +138,6 @@ f_download
 #Descomprimir fichero descargado y compilamos
 F_compilar
 #Hacemos strip sobre el paquete
-f_strip
+#f_strip ESTROPEA EL PAQUETE EN -CURRENT
 #Creamos xzm , instalamos y salimos
 f_tareasFinales
