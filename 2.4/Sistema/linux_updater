@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20201220
+SCRIPT_VERSION=20210206
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -295,7 +295,7 @@ done
 rm -Rf $CONTAINER/lib/firmware
 
 # Creamos xzm de kernel + sources
-mksquashfs $CONTAINER $CONTAINER.xzm -noappend -comp xz -b 256K
+dir2xzm $CONTAINER $CONTAINER.xzm
 mv $CONTAINER.xzm $HOME/Desktop/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm
 
 # Finalizamos
