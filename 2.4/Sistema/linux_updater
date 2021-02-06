@@ -295,7 +295,7 @@ done
 rm -Rf $CONTAINER/lib/firmware
 
 # Creamos xzm de kernel + sources
-dir2xzm $CONTAINER $CONTAINER.xzm
+dir2xzm $CONTAINER $CONTAINER.xzm -n
 mv $CONTAINER.xzm $HOME/Desktop/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm
 
 # Finalizamos
