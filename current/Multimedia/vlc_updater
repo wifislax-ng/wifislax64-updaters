@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20201127
+SCRIPT_VERSION=20210218
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -21,11 +21,11 @@ F_variables() {
 	EXTENSION=tar.xz
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://download.videolan.org/vlc
-	VERSION=$(curl -s $WEB/|grep [0-9]/|cut -d '"' -f2|cut -d / -f-1|sort -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n|tail -1)
+	WEB=http://download.videolan.org/vlc/last
+	VERSION=$(curl -s $WEB/|grep $EXTENSION|head -1|cut -d- -f2|cut -dt -f1|sed 's/.$//g')
 	CD=$PRGNAM-$VERSION
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	DOWNLOAD=$WEB/$VERSION/$SOURCES
+	DOWNLOAD=$WEB/$SOURCES
 }
 
 # Comprobar dependencias
@@ -99,35 +99,28 @@ echo
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
-echo "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
-AARZWg=="|base64 -d > $TMP/patches.txz
+echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Bv/BIxdADgYSu7FL5n6pvg745dpgzgztyjlznaup/KQ
+Vx71MkLNQhpfu1JkkZRMbX+SvZ22WCzaa4g43TBQCk9ruzfi/hlLi7XQHaoo/tmrwjx/LvUhX69J
+b1njaWmEDeZhFeVylvls77rAzbjp//iAHge41gslTSf8mDuWYlnZsycF7mH0Q/2qyyxQtXSsu6Sj
+L/GJ0gpBEr/CDGPhwdtM8uI2NmehLiQc7lHyHzjWx0IiQP+79yLYOU1yZ2vlzUkWrVRl85UaoHfc
+kiB8BDLeATM4LNgYpp7A4/od0HAISPZR+EwwQcO4Qlqr8MGVqUtiJPktS66sJto5zjG8yd3NgJPm
+kUmnaB9i4rMjYRKPNW24Pp8eRIWOUT4naXANRuBX6PvQI+yCQcJIw486h36D9M9rJi4WKOCDgF9j
+hubPNDySE6IgUH2fsKgV9+pPtu2ilkU1nG0uSyHb8xeitcEL3c8IJDgh25JOST9eskmerO411trD
+I3MAf3gH4udymIbJnfHPD2M2RUFprIFXR6zU0qSVbrhykjDQXAnHzBXVF5MwZtDUXHpITiqfIUql
+ezx8m4hWcXj2qOAzjs0pWc8hictOLyWhco1qT5YlAjNro0g73ufeJ2FJWkPbN1CL3ovve7ryBuh0
+8mIzkmlG9ezLaHEY6zu5aVIObvjTyzj7hJZiXdfhJJ18huG8SSNRwG/0QQYkq+8JalpqUQeIhUb9
+IRVAIb9VqRxsZRflMcpk5eGCRaNvBl2nZIe3BpY02aSc7J/RZIKR2tGrsv1N4vPQsnZit/w31cwh
+m/fPvA9BeMvFKHez2OMsF/ZR0PFuzEHeiA9Ex4bHfKDO9dQjNAChUi7uzIabL6OXD7IB9n4AmjAF
+KFqm/UUozEMMNZiglFODJ+HxyYLeuehTWOrRvqvORAqjXMOnyGtmsS6W2tPej3EiF9dbE2b0w433
+yRpYsvQeEF47lGxa347FHk3cnxAWYWj0c/veRB5cb8OGo99wigElWAJnD8EHNGtEWHjhCPM6CZbe
+HqgXCYVeLTzMhr6tdObmV7UXEO/nKlvDp8jPRRZFkSx2ld6HxQrPDDujVqRgOfFwAjThgIsZgk8+
+aU2k+FwS2SqrWObxJ/TZ79pke2/LgN7kKbkMkGwrIV3AUMvpUgrB3nb/F5GflyHqlrT/RSjFj47m
+EpoWskoant12iM+VX6IqV3e0Zr1UtMZxwK62gChJjxWwKOwDuPsDML2nEOf2JW97wzqpKValXBT7
+gLnblpl65rwTKYnYiE6OPuHBabMu2srY8Da+VgwgEkTDlAg4dDstLWFUPCwKMLHndBMueCIpIvke
+evaWQ4KPIOLUkzts5ZIHzf9KWPCBjquFCgT+kLABwWj+Mvgw2sHjH7kW6zPf35+BTdS3fDlyN7pM
++3qbwlir5A2cVffZ9TDTPL0/HRL5879h6GMTF0p9I/JuEPYgBkEDCEH7usR6t+AiMyyl7i82dg+Y
+s30D60EYFAeXUeF6XbOzNZdsBOIxvVuSAWAS6yXCRNHqSVupNUr8Kr37Tj1TFIgyv82JMWcqNABU
+XBHUN2iF9wABqAmAOAAAPCcr/LHEZ/sCAAAAAARZWg=="|base64 -d > $TMP/patches.txz
 
 tar xvf $TMP/patches.txz &>/dev/null
 
@@ -135,7 +128,6 @@ patch -p0 < ./patches/patch-dvdread-503.diff
 patch -p0 < ./patches/patch-dvdnav-503.diff
 patch -p0 < ./patches/patch-projectM-fontpath.diff
 patch -p0 < ./patches/patch_vlc_cache_gen.diff
-patch -p1 < ./patches/qt-5.15.patch
 
 sed -i '/DEPRECATED/s:^://:' modules/text_renderer/freetype/text_layout.c
 
@@ -246,8 +238,7 @@ sleep 1
 make  || exit 1
 make install DESTDIR=$PKG || exit 1
 
-mkdir -p $PKG/$(cd /usr/share/vim/vim*/syntax ; pwd)
-cp extras/analyser/vlc.vim $PKG/$(cd /usr/share/vim/vim*/syntax ; pwd)/
+install -D -m0644 extras/analyser/vlc.vim $PKG/usr/share/vim/vimfiles/syntax/vlc.vim
 }
 
 ###################################
