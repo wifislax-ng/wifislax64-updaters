@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210218
+SCRIPT_VERSION=20210219
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -70,7 +70,7 @@ python3-attrs
 setuptools-scm
 python3-pytest
 ipython
-gst-python
+gst-python3
 setuptools-scm
 functools-lru-cache
 python-soupsieve
