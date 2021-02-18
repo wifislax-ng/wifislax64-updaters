@@ -55,6 +55,8 @@ LDFLAGS="-L/usr/lib${LIBDIRSUFFIX} -ltirpc" \
   --sysconfdir=/etc \
   --localstatedir=/var \
   --mandir=/usr/man \
+  --enable-turbo \
+  --disable-doxygen \
   --docdir=/usr/doc/$PRGNAM-$VERSION \
   --build=$ARCH-slackware-linux
 
