@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200628
+SCRIPT_VERSION=20210227
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -31,6 +31,9 @@ F_variables() {
 # Comprobar dependencias
 F_dependencias(){
 DEPENDENCIAS="
+python3
+py3cairo
+pygobject3-python3
 json-glib
 geoclue2
 ninja
