@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210226
+SCRIPT_VERSION=20210302
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -32,6 +32,7 @@ F_compilar(){
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
+if [ $(uname -r|cut -d- -f1|cut -d. -f-2) = 5.11 ]; then
 echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Af/ASddABqLgp23UhxLCEI0mO6mW//motbj5kmcBBjK
 0l9gqCS6jX76tEi95xHX+v7uc1qcAOtRmF2eT4DUVlR9RTnaQX9RbNmWJWj5nn8BeI90ni4tuhId
 XB7ToztX3ws0RjFwH04qTN1vQnTGD+l7jnjNLD+yUXu824fJNwnnHMU/NhhhgnG+LlbhEkZmKqtt
@@ -39,9 +40,9 @@ vwbrOrlJqLSd3DdLIDbNAsHfY6Kqz9yfZXsiMvs1PqXtP43Eid3tZp5jQi3vt4M0u82Spyg7fshg
 rnV8Sthszo77iVh8B/1fEQmktJe6c56osxRWoOijBRHVCP+RXENmnc0XGRl7BlCfoFiqI+1ph3bN
 oQdRcnq9eesnOKezJT90pcRl8ijcdTl9+besd80QZZZr2yUTmSObuAAAAAOBGmZxvslXAAHDAoAQ
 AADs/pbfscRn+wIAAAAABFla"|base64 -d > $TMP/patches.txz
-
 tar xvf $TMP/patches.txz &>/dev/null
 patch -p1 -i 5.11.patch || exit 1
+fi
 make || exit 1
 mkdir -p $PKG/lib/modules/$(uname -r)/kernel/drivers/net/wireless/
 make install MODDESTDIR=$PKG/lib/modules/$(uname -r)/kernel/drivers/net/wireless/|| exit 1
