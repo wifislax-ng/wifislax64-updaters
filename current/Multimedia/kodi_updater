@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200628
+SCRIPT_VERSION=20210302
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -42,7 +42,7 @@ dcadec
 libass
 libmpeg2
 tinyxml
-jdk
+jre
 yajl
 bluray-keys
 libaacs
@@ -51,8 +51,7 @@ libmicrohttpd
 crossguid
 libnfs
 python-gattlib
-pybluez
-ffmpeg" 
+pybluez" 
 f_dependencias
 }
 
@@ -111,17 +110,15 @@ LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}" \
   --prefix=/usr \
   --libdir=/usr/lib${LIBDIRSUFFIX} \
   --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --disable-silent-rules \
   --enable-static=no \
   --disable-debug \
   --enable-gl \
   --enable-mid \
-  --enable-goom \
   --enable-alsa \
-  --disable-asap-codec \
+  --enable-texturepacker \
   --enable-pulse \
   --enable-webserver \
-  --enable-shared-libraries \
-  --with-ffmpeg=shared \
   --build=$ARCH-slackware-linux
     
 echo 
