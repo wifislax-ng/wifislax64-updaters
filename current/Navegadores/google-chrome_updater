@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210307
+SCRIPT_VERSION=20210308
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -61,18 +61,27 @@ mkdir -p $PKG/usr/share/pixmaps
 cp -rf "$TMP/deb"/opt/google/chrome/product_logo_64.png $PKG/usr/share/pixmaps/google-chrome.png
 
 echo "[Desktop Entry]
-Name=Google Chrome
-Name[es]=Google Chrome
-Comment=Network Browbser
+Categories=Network;
+Comment[es_ES]=Navegador Web
 Comment=Navegador Web
 Exec=/opt/google/chrome/google-chrome --test-type --user-data-dir= --no-sandbox --password-store=basic
-Terminal=false
+GenericName[es_ES]=
+GenericName=
 Icon=google-chrome
-Type=Application
+MimeType=text/html;image/webp;application/xml;
+Name[es_ES]=Google Chrome
+Name=Google Chrome
+Path=
 StartupNotify=false
-MimeType=text/html;text/xml;application/xhtml_xml;image/webp;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/ftp;
+Terminal=false
+TerminalOptions=
+Type=Application
 X-Ayatana-Desktop-Shortcuts=NewWindow;NewIncognito
-Categories=Network;" > "$TMP/deb"/usr/share/applications/$PRGNAM.desktop
+X-DBUS-ServiceName=
+X-DBUS-StartupType=
+X-KDE-SubstituteUID=false
+X-KDE-Username=" > "$TMP/deb"/usr/share/applications/$PRGNAM.desktop
+chmod +x "$TMP/deb"/usr/share/applications/$PRGNAM.desktop
 cp -rfp "$TMP"/deb/* "$PKG"
 }
 
