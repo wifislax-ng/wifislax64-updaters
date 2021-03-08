@@ -69,9 +69,10 @@ Exec=/opt/google/chrome/google-chrome --test-type --user-data-dir= --no-sandbox 
 Terminal=false
 Icon=google-chrome
 Type=Application
+StartupNotify=false
 MimeType=text/html;text/xml;application/xhtml_xml;image/webp;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/ftp;
 X-Ayatana-Desktop-Shortcuts=NewWindow;NewIncognito
-Categories=Network;" > "$TMP/deb"/usr/share/applications/chrome.desktop
+Categories=Network;" > "$TMP/deb"/usr/share/applications/$PRGNAM.desktop
 cp -rfp "$TMP"/deb/* "$PKG"
 }
 
