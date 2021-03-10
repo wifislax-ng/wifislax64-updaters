@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200921
+SCRIPT_VERSION=20210310
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -27,12 +27,6 @@ F_variables() {
 	DOWNLOAD=https://download.teamviewer.com/download/linux/$SOURCES
 }
 
-#Comprobar dependencias
-F_dependencias() {
-DEPENDENCIAS="libwebp libxkbcommon libinput libwacom qt5 qt5-webkit"
-f_dependencias
-}
-
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 echo 
@@ -40,12 +34,6 @@ echo "$VERDE"Descomprimiendo ..."$CIERRE"
 sleep 1
 cd $PKG
 ar p $TMP/$SOURCES data.tar.xz | tar xJv
-
-# Make a .desktop file
-mkdir -p $PKG/usr/share/applications
-cat $PKG/opt/teamviewer/tv_bin/desktop/com.teamviewer.TeamViewer.desktop \
-  | sed -e 's/EXEC/teamviewer/' -e 's/ICON/teamviewer/' \
-  > $PKG/usr/share/applications/teamviewer.desktop
 
 # Remove the dangling symlink first
 rm -f $PKG/usr/bin/teamviewer
@@ -55,10 +43,11 @@ rm -f $PKG/usr/bin/teamviewer
 
 # Link icon to /usr/share/pixmaps
 mkdir -p $PKG/usr/share/pixmaps
-( ln -sf /opt/teamviewer/tv_bin/desktop/teamviewer.png  $PKG/usr/share/pixmaps/teamviewer.png )
+( ln -sf /opt/teamviewer/tv_bin/desktop/teamviewer_256.png  $PKG/usr/share/pixmaps/TeamViewer.png )
 
-# Eliminamos doc
-rm -rf $PKG/opt/teamviewer/doc/
+# Remove unwanted desktop file
+rm -rf $PKG/usr/share/applications/teamviewerapi.desktop
+rm -rf $PKG/opt/teamviewer/tv_bin/desktop/teamviewerapi.desktop
 
 # Create daemon
 mkdir -p $PKG/etc/rc.d
@@ -121,8 +110,6 @@ f_presentacion
 f_comprobarUpdates
 #Comprobamos version instalada del paquete
 f_versionInstalada
-# Comprobar dependencias
-F_dependencias
 #Si no existe el fichero se descargara
 f_download
 #Descomprimir fichero descargado y compilamos
