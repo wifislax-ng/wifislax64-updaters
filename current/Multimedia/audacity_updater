@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200918
+SCRIPT_VERSION=20210318
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -36,7 +36,6 @@ libxml++
 libconfig
 libffado
 celt
-wxGTK3
 jack
 ffmpeg
 ladspa_sdk
@@ -116,7 +115,8 @@ CFLAGS="$SLKCFLAGS" \
     -Daudacity_use_soundtouch=local \
     -Daudacity_use_twolame=system \
     -Daudacity_use_vamp=system \
-    -Daudacity_use_vorbis=system
+    -Daudacity_use_vorbis=system \
+    -Daudacity_use_wxwidgets=local
   
 echo ""
 echo "$VERDE"Compilamos ..."$CIERRE"
