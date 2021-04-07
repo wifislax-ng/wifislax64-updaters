@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200926
+SCRIPT_VERSION=20210408
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -23,7 +23,7 @@ F_variables() {
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/Ardour/${PRGNAM}
-	VERSION=6.3
+	VERSION=6.6
 	SOURCES=$SRCNAM-$VERSION.$EXTENSION
 	CD=$SRCNAM-$VERSION
 	DOWNLOAD=http://ponce.cc/slackware/sources/repo/$SOURCES
@@ -77,7 +77,7 @@ tar xvf $TMP/vendor_qm-dsp.txz &>/dev/null
 patch -p1 < vendor_qm-dsp.patch || exit 1
 
 CFLAGS="$SLKCFLAGS" \
-CXXFLAGS="$SLKCFLAGS -std=c++11" \
+CXXFLAGS="$SLKCFLAGS -std=c++11 -fpermissive" \
 ./waf configure \
   --prefix=/usr \
   --libdir=/usr/lib${LIBDIRSUFFIX} \
