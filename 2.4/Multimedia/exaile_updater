@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210227
+SCRIPT_VERSION=20210413
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -60,7 +60,7 @@ python-keybinder
 streamripper
 decorator
 parso
-jedi
+python3-jedi
 ptyprocess
 pexpect
 pathlib
@@ -74,6 +74,7 @@ traitlets
 Pygments
 ipython
 gst-plugins-bad
+dbus-python3
 " 
 f_dependencias
 }
