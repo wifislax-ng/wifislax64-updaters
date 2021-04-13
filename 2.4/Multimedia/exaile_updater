@@ -75,6 +75,7 @@ Pygments
 ipython
 gst-plugins-bad
 dbus-python3
+gst-python3
 " 
 f_dependencias
 }
