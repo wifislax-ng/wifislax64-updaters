@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210219
+SCRIPT_VERSION=20210413
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -88,6 +88,8 @@ libwpe
 wpebackend-fdo
 xdg-dbus-proxy
 webkit2gtk
+gst-python3
+feedparser
 " 
 f_dependencias
 }
