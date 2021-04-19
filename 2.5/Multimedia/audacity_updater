@@ -1,0 +1,200 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20210318
+CATEGORIA="Editores de audio"
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=audacity
+	SRCNAM=Audacity
+	EXTENSION=tar.gz
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://github.com/audacity/audacity
+	VERSION=$(curl -s $WEB/releases|grep -Po 'title="\K.*(?=")'|grep $SRCNAM-[0-9]|grep -v beta|grep -v rc[0-9]|head -1|cut -d- -f2)
+	SOURCES=$SRCNAM-$VERSION.$EXTENSION
+	CD=$PRGNAM-$SRCNAM-$VERSION
+	DOWNLOAD=$WEB/archive/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="cmake-202x
+libiec61883
+libxml++
+libconfig
+libffado
+celt
+jack
+ffmpeg
+ladspa_sdk
+lame
+soundtouch
+twolame
+vamp-plugin-sdk
+serd
+sord
+lv2
+sratom
+lilv
+suil"
+f_dependencias
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){  
+# Configuramos paquete
+echo ""
+echo "$VERDE"Configurando ..."$CIERRE"
+sleep 1
+
+echo "
+/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Av/AshdADCdSKuHgCFyvCk7s6Sv3e4GlgbyiyENDsRD
+csziW/EPPsO8Iz1joTBFMfueeoeyEjdZa5KLdjpz180RdCnrq+PxAkZHj2ibOq39aKu2mOOQc12U
+GNfpcsx4Z01FYeTRyra5z+rq/A4KmMEYjuw6wU4oY4FSt06v0hKUP0WUuV8z2EO+1J6c+KJ9hPjj
+8D2xq0AAfKGbO7nBdnoEXNConV0CBFAjzgAmcRg19kQVPrO5pmUMkmY0gJeuxqzNrTIFSyYFqKgA
+fdINZ8XVjuUFsBQOiynqRwPRR2xEn1+rER4XRg4VBolgqgDGXU7NnJmHHayYOto/UYUU6cHAe1Kl
+McZiY3rEA9013cryq4VsQ6T2D6QmBorH1XhtR5i32xZA9zDDX187fhIrRA339PR7dNFIGuRKDfjP
+GsIkZr18GH5DCzZoBZ1QW71AkYVnqtGilmQmrkcUcQspOZVJNcVHggjsrwl1dbYj7rVfsk+CZCEK
+7lfV9M1iYJxw63M9FrR0M+i/6SGYL7EVPaZHlhBZYueLmrYDh90oFWKDSoNWUp4bkp0pVsdCxvV3
+XQds1v/TougLzPEvi98QrDYd3CUbXRlgWjRh79CMRZoTY3vo2shIoWtx1oLTRc/zb/qwT2m1gBM+
+9eg3omOCpQ7PEh1SINwnQIaoGLOSd4YZrUIRaGLc7M38Gb7N3hG7V20rkXEN7fDe6wAJc9fIN0td
+n47zVm8zYsmdqTL8KW/4+2laheoydLsblMm1iYVvdbJm4OoXiGTPacwW0zRBeEN46XdxLvRGWxgK
+KeZdcbKPLn7+3QAcnCCb+sYnXn23v5s9mUDjpnPCFu/h8DhbvOG62BN1wnejVdcKlt8h2mLHFdew
+eEwbtJkXCx+Auhr1fz0TBjN3F8+MyteB2qni6XzNrDZUZK57T8WK5wWpf1bgbGRayj95lEWeZmuV
+LQAAhH0ki8FAXCUAAeQFgBgAAMpGDHmxxGf7AgAAAAAEWVo=" | base64 -d > $TMP/audacity-patch.txz
+tar xvf $TMP/audacity-patch.txz &>/dev/null
+patch -p1 < audacity-2.4.1_resize_crash.patch
+
+sed -e "s,lib/vamp,lib${LIBDIRSUFFIX}/vamp,g" \
+  -i lib-src/libvamp/src/vamp-hostsdk/PluginHostAdapter.cpp
+
+LDFLAGS="$SLKLDFLAGS -Wl,-rpath,/usr/lib${LIBDIRSUFFIX}/${PRGNAM}" \
+CXXFLAGS="$SLKCFLAGS" \
+CFLAGS="$SLKCFLAGS" \
+  mkdir -p build
+  cd build
+    /opt/cmake-202x/bin/cmake ..\
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_C_FLAGS_RELEASE:STRING="$SLKCFLAGS" \
+    -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS -DHAVE_VISIBILITY=1" \
+    -DCMAKE_CXX_FLAGS_RELEASE:STRING="$SLKCFLAGS -DHAVE_VISIBILITY=1" \
+    -DCMAKE_CXX_STANDARD=11 \
+    -DCMAKE_INSTALL_DOCDIR=/usr/doc/$PRGNAM-$VERSION \
+    -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
+    -DCMAKE_INSTALL_MANDIR=/usr/man \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_VERBOSE_MAKEFILE:BOOL="ON" \
+    -Daudacity_lib_preference="system" \
+    -Daudacity_use_expat=system \
+    -Daudacity_use_ffmpeg=linked \
+    -Daudacity_use_flac=system \
+    -Daudacity_use_id3tag=system \
+    -Daudacity_use_ladspa:BOOL="ON" \
+    -Daudacity_use_lame=system \
+    -Daudacity_use_lv2=system \
+    -Daudacity_use_mad=system \
+    -Daudacity_use_ogg=system \
+    -Daudacity_use_pa_alsa:BOOL="ON" \
+    -Daudacity_use_pa_jack=linked \
+    -Daudacity_use_portaudio=local \
+    -Daudacity_use_sndfile=system \
+    -Daudacity_use_soxr=system \
+    -Daudacity_use_soundtouch=local \
+    -Daudacity_use_twolame=system \
+    -Daudacity_use_vamp=system \
+    -Daudacity_use_vorbis=system \
+    -Daudacity_use_wxwidgets=local
+  
+echo ""
+echo "$VERDE"Compilamos ..."$CIERRE"
+sleep 1
+make || exit 1
+make install DESTDIR=$PKG
+
+cd ..
+install -vDm 644 plug-ins/*.ny -t $PKG/usr/share/$PRGNAM/plug-ins
+install -vDm 644 nyquist/*.lsp -t $PKG/usr/share/$PRGNAM/nyquist
+
+install -D -m 0644 images/AudacityLogo48x48.xpm \
+  $PKG/usr/share/pixmaps/$PRGNAM.xpm
+  
+echo "
+/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4BH/BQJdADCdSKuHgCFyvCxdYS/Le21Yp/ne7yg8B1xl
+1d189uFEczROqUeU8GC70OxtdtoEiJEWzMb2GXzclN+tOThEH0+5gYTfIdd8zWWjYQG34Oxr84A0
+6veyd8q+SIGqgxMB4I/mEZM8KMP2FlKNAbwwO+T87GJWaVnpaRz+2Ho+91lONSwi3WJTD+Jqp6Bs
+T6cI1rGdd+4YvmlbFP75MySs6HQzBS9rH8wrXVFvgKC1AwN7T7RCd8AC6tRi+TO/YSBsT/TEg0ZG
+4dyNzcVOBKqPBUTDl9UInjgjiydEvlj8+Q5U9KXlezg8Pw+2TzXShF+4xpFDMtGd+2qPGp5LjTNU
+TdOsFDHudCFDkWWV07asuHCfcus9TWC3FfvcJ+g5tGZInUyuJPklYythJteKYCD6Fdz61eSyisFP
+t3ZLKn3iV8zfw3thKXvBSbRJfKGh5/wLGA2r17w9QhwdSwJSNJRLjSNECGwC4/KqSsNX8QBYRQes
+OBRAirAtd7ujE7rxw+V80OEfNRwgRnVFlBIpGlQpLbq0HXogoYAFxWmnB0POzWXCFDxqxdk9FVQN
+XSuKiO0gJfzWEcybNCyW4Q7+1dXs6IjXTuKsPk9BGa5cD2q/ZM1UBKzxB5Tk3v2RoSudGHFDlXW2
+ihLHMqgH45jA4NcF/3Mg0kQmTP5W2sEJn8jLCJe1LDWjfo0CbOW+7mySgCGAydNdq9OW1qzPXaKz
+w3/yd5Ytfn55YSELEafSVhHCVMks50R8RYQAvH+wnwoBbdKoqOgSjRuCBZyeHoU+6z6Bi3GFpkI5
+yMjQxt5mcSFvpN3cD3ddFy1F75qKfEUC9OQQ6T+4+Eqrspuo4y/QiE7qu7Gs1eCwklkmxC1/DSkR
+5QCH4KAgJFORfn+Ul1zg12GZ6eLQg9iOhnGnBD9Mshm4sXBj+LeYGwLjENti+Eq1GnL2oyR+1O+n
+iy587CBtM9hWsshBXw9ZaxeoJQcGZSow7Jd8TpgGhrnFCmAg42MT0UURGj/LbQUmOpy0hIntJTQH
+tpvMlCn7onwSa7Caa6UDaFZE0hMWTi0FgQQ0kwmdZkjW/dhKwiJMuceh510npwzJxU8eZdBWHNLo
+coMTvxgaBGl7aTREOgO4bbjPGjqEwn5mFI0x2XR/GOB/Ixw0bTMEt/olGA0s2eIqVRey+CGItv/2
+0+d3amMd97C8SdNKjd07eWXtYe3XVSR0hicLXVwuuPBlr8UtUif6jV/GVteCtpI2lKyWV7QCB5NJ
+MBxXJX+NUclzmWotEhNAJYWLKBfhdJegtwkPwXLn2C7BpVpjpqXyX1EpoiqZru+19QwiOc+Yvn9/
+58vPBb25wbOm+VeZK8LwBx4hhsNB8RVP6tiNJZt2img1TIE06DVFRu88UAtuA5bW1CyUDLmB9Z5X
+RqvYCIoCShBew9EY/lzVbcwaLaHkieHL7/3OyQsVcRfNVsYJjLu8Cdatby0x/YQ9H4F4Ab0P63/Q
+l6z9Ru/ZkTiv7JbySOYBD1Y6a9lmd1uHauLLUchqBpLPOh+ygtqAzgNOpD8TADNqVHyMTsAMn7AV
+PRI6cKPZRnvn6SBskhpzTEED4AxsM8vzhmDXhjZcKF3UHSgKev5FYh4cg4DHD3kX2qd45pnvcP6V
+oPTIWikeeNQVj/bwVO/1+tJEw+R4Vev0zsvtOIwyYpiGbalL/YJDSjg/5i0udMDj9Ti5LkjokpCU
+AAAAAADGt2CxQLwhEAABngqAJAAASOOUfLHEZ/sCAAAAAARZWg==" | base64 -d > $TMP/desktop.txz
+tar xvf $TMP/desktop.txz &>/dev/null
+install -D -m 0644 $PRGNAM.desktop \
+  $PKG/usr/share/applications/$PRGNAM.desktop
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos version instalada del script
+f_versionInstalada
+# Comprobar dependencias
+F_dependencias
+#Si no existe el fichero se descargara
+f_download
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales
