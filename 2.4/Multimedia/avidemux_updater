@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200923
+SCRIPT_VERSION=20210427
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -22,7 +22,8 @@ F_variables() {
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=http://fixounet.free.fr/avidemux/download.html
-	VERSION=$(curl -s $WEB|grep .tar.gz|head -1|cut -d _ -f2|cut -d t -f1|sed "s/.$//g")
+	#VERSION=$(curl -s $WEB|grep .tar.gz|head -1|cut -d _ -f2|cut -d t -f1|sed "s/.$//g")
+	VERSION=2.7.6
 	SOURCES=${PRGNAM}_${VERSION}.$EXTENSION
 	CD=${PRGNAM}_${VERSION}
 	DOWNLOAD=https://downloads.sourceforge.net/avidemux/$SOURCES
@@ -57,15 +58,16 @@ F_compilar(){
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
- 
+
 sed -i 's|../avidemux/qt4|../avidemux/qt4 -DLRELEASE_EXECUTABLE=/usr/bin/lrelease-qt5|' bootStrap.bash || exit 1
 sed -i 's|0.19|1.0|' avidemux_plugins/ADM_videoFilters6/ass/CMakeLists.txt || exit 1
+
 bash bootStrap.bash --with-core --with-cli --with-plugins
+
 make -C buildCli DESTDIR="$PKG" install
 make -C buildCore DESTDIR="$PKG" install
 make -C buildPluginsCLI DESTDIR="$PKG" install
 make -C buildPluginsCommon DESTDIR="$PKG" install
-install -Dm 644 avidemux_icon.png $PKG/usr/share/pixmaps/avidemux.png
 make -C buildQt5 DESTDIR="$PKG" install
 make -C buildPluginsQt5 DESTDIR="$PKG" install
 }
