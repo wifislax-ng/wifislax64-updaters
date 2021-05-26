@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20210526
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -88,7 +88,7 @@ GNmMn5QH/gPJROxyC87rGwAAAABJRU5ErkJggg==" | base64 -d > $PKG/usr/share/pixmaps/$
 cat > $PKG/usr/share/applications/wifislax/Testing/$PRGNAM.desktop << "EOF"
 [Desktop Entry]
 Categories=Pentesting
-Exec=sh -c "wine /opt/NetworkMiner/NetworkMiner.exe;${SHELL:-bash}"
+Exec=bash -c "wine /opt/NetworkMiner/NetworkMiner.exe;bash"
 GenericName[es]=Analizador de capturas
 GenericName=Capture file analyzer
 Icon=NetworkMiner
