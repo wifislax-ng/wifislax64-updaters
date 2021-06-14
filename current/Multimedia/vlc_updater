@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210515
+SCRIPT_VERSION=20210614
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -21,11 +21,11 @@ F_variables() {
 	EXTENSION=tar.xz
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://www.videolan.org/vlc/download-sources.html
-	VERSION=$(curl -s $WEB|grep $EXTENSION|head -1|cut -d- -f2|cut -dt -f1|sed 's/.$//g')
+	WEB=https://github.com/videolan/vlc
+	VERSION=$(curl -s $WEB/releases|grep tar.gz|head -1|cut -d/ -f7|cut -dt -f-1|sed 's/.$//g')
 	CD=$PRGNAM-$VERSION
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	DOWNLOAD=http://get.videolan.org/vlc/$VERSION/$SOURCES
+	DOWNLOAD=https://download.videolan.org/$PRGNAM/$VERSION/$SOURCES
 }
 
 # Comprobar dependencias
@@ -89,6 +89,7 @@ google-apputils
 protobuf
 libdaemon
 avahi
+srt
 "
 f_dependencias
 }
@@ -99,42 +100,39 @@ echo
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
-echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Bv/BIxdADgYSu7FL5n6pvg745dpgzgztyjlznaup/KQ
-Vx71MkLNQhpfu1JkkZRMbX+SvZ22WCzaa4g43TBQCk9ruzfi/hlLi7XQHaoo/tmrwjx/LvUhX69J
-b1njaWmEDeZhFeVylvls77rAzbjp//iAHge41gslTSf8mDuWYlnZsycF7mH0Q/2qyyxQtXSsu6Sj
-L/GJ0gpBEr/CDGPhwdtM8uI2NmehLiQc7lHyHzjWx0IiQP+79yLYOU1yZ2vlzUkWrVRl85UaoHfc
-kiB8BDLeATM4LNgYpp7A4/od0HAISPZR+EwwQcO4Qlqr8MGVqUtiJPktS66sJto5zjG8yd3NgJPm
-kUmnaB9i4rMjYRKPNW24Pp8eRIWOUT4naXANRuBX6PvQI+yCQcJIw486h36D9M9rJi4WKOCDgF9j
-hubPNDySE6IgUH2fsKgV9+pPtu2ilkU1nG0uSyHb8xeitcEL3c8IJDgh25JOST9eskmerO411trD
-I3MAf3gH4udymIbJnfHPD2M2RUFprIFXR6zU0qSVbrhykjDQXAnHzBXVF5MwZtDUXHpITiqfIUql
-ezx8m4hWcXj2qOAzjs0pWc8hictOLyWhco1qT5YlAjNro0g73ufeJ2FJWkPbN1CL3ovve7ryBuh0
-8mIzkmlG9ezLaHEY6zu5aVIObvjTyzj7hJZiXdfhJJ18huG8SSNRwG/0QQYkq+8JalpqUQeIhUb9
-IRVAIb9VqRxsZRflMcpk5eGCRaNvBl2nZIe3BpY02aSc7J/RZIKR2tGrsv1N4vPQsnZit/w31cwh
-m/fPvA9BeMvFKHez2OMsF/ZR0PFuzEHeiA9Ex4bHfKDO9dQjNAChUi7uzIabL6OXD7IB9n4AmjAF
-KFqm/UUozEMMNZiglFODJ+HxyYLeuehTWOrRvqvORAqjXMOnyGtmsS6W2tPej3EiF9dbE2b0w433
-yRpYsvQeEF47lGxa347FHk3cnxAWYWj0c/veRB5cb8OGo99wigElWAJnD8EHNGtEWHjhCPM6CZbe
-HqgXCYVeLTzMhr6tdObmV7UXEO/nKlvDp8jPRRZFkSx2ld6HxQrPDDujVqRgOfFwAjThgIsZgk8+
-aU2k+FwS2SqrWObxJ/TZ79pke2/LgN7kKbkMkGwrIV3AUMvpUgrB3nb/F5GflyHqlrT/RSjFj47m
-EpoWskoant12iM+VX6IqV3e0Zr1UtMZxwK62gChJjxWwKOwDuPsDML2nEOf2JW97wzqpKValXBT7
-gLnblpl65rwTKYnYiE6OPuHBabMu2srY8Da+VgwgEkTDlAg4dDstLWFUPCwKMLHndBMueCIpIvke
-evaWQ4KPIOLUkzts5ZIHzf9KWPCBjquFCgT+kLABwWj+Mvgw2sHjH7kW6zPf35+BTdS3fDlyN7pM
-+3qbwlir5A2cVffZ9TDTPL0/HRL5879h6GMTF0p9I/JuEPYgBkEDCEH7usR6t+AiMyyl7i82dg+Y
-s30D60EYFAeXUeF6XbOzNZdsBOIxvVuSAWAS6yXCRNHqSVupNUr8Kr37Tj1TFIgyv82JMWcqNABU
-XBHUN2iF9wABqAmAOAAAPCcr/LHEZ/sCAAAAAARZWg=="|base64 -d > $TMP/patches.txz
+echo "
+/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Bf/BKNdADgYSu7FL5n6pvg745dpgzgztyjlznaup/KQ
+X0/D3YcFPA7mUg0r3m+Ofka/myjePfoYr8gohlzzDAUVlVG7KEfMFvVdUd0ExUiO0KKuNf+AzpAH
+TgMtMZwMS0p++LlUIkK/Gk3XIlWJEL+uLnDhdUy35PXYxZbObUPjTki0qtJsW+RRYENl/a6Aww6r
+73GAd1t60bJGXRfdI2TAUBDJaFFrXjb8JrBM+OSPYSZmZAMXNQOlVBvaA8vA/cAwdy4b19ecMA/S
+p8N0zI5jCYwZSGc4HgctBWFqJJ55qahYxrHZ01zjJ5fDcS5KhbAyhHK+OV4SKFK3dMlvzXy9M979
+uiutybztxhxj1LqimfbiFBuO9lRg6AGxDzHHKkEWPP5AAznSfjsJUytdvuCXBLfscs8ip+ZuGgZy
+DZOrbEdfNh5CQlZESY7i7UlEsXX6oDBcjLwp/StndWIK8fuadNgnjZC02ucwhlzT1BKUJe4w/3nc
+i3YQmui+wVnGrQWfuqciyAFM3uk5SPFkJ9P/NZnYRMXEGtRjKKWniQFrR+AfGbScQvS++PVy4eG9
+d7T0AJpxm/uQTznt7RSsybl0mChNUrRFJqpLbSYaovzoQEgULtb579UbPaXyndZRuRS1WlZRdLcH
+d4OxUz15cmsM78/+MxjI40oV2YK3qzeY1AMPq9HdIsNJgKiL62/vsHOzMSTjeYileqMVIDwVfm0V
+ZFe3ghqiFDRuTf/4QpEye9hj4wNabLOE11s+b/89YZkeD8+ovl8AYxlVwCyUVyA81bgj5vVVpsMS
+mtC0CJcLp0GdFmJ6WegvHE6O+Krrjk8gwXRfDVYAxxL5tDNictI8AOy5ITUarJKcZXCKj4bkc3XF
+bdNs5vaeljcOspDcY9l97MnIgv24yh6BXEGwmBElFf156T//9ix3lDfwc1YCK0i1++UwQ1fo8+3W
+awYQ3wAS71wMymuwft8+9pA2CqDgDjKNshEpQVMOujvMLF5o4Cwz7D4mZKSS+Geg01BWt/YT6bFS
+38ePE0PqBNfTpB9oFgFCw88kmP453lO9cA95jhxMnYW55N+0V85q2hp07b7ACpXgbZXU5Domp6E2
+7PJKcQtJe61SR+KpTtjrRPltxbpThd7XhT6M+1ZopFFm0tett6m7T/abzuqL5fjbIS3dA+MXYgwp
+bDc0zyd+jI0fCIN/L+CFDNkzkz4v/+ir699TvQVFJ0kmgLdi2a1veFu8IaDnq6o6IdVjYVsQSALh
+Krk8lhJan56g4SGlgnz9U8O3b1RKzh3z6FOn1qIr2bf9TwNAJBuzZKNTcdEl2cM14RjNViq4qvJa
+Dkzg363fTEGd5QLh2oyjUgJhOo9iiUFwr0X8NIp+Uhe6Iq6XiDq9lDnzPl769lG6Y4EnCbSNmC58
+qPFIDYivysL3K88IGh4TUiFT0u9V4UeIyRK5c6MVNrMKep1J2EDopBRnHDJnEw5RzsZ6ZXJH7ImL
+rbjT3be318ln8TITEdynmDy5defPyzXImuv7Qiqgk39o0y3P7sy5BeqpBBPQZ/oCguyFWOT9WJTw
+5y2IxWODBoTdFTFfz//JDcp86HsAAAB7SwkedC1x7wABvwmAMAAAp0Tr7LHEZ/sCAAAAAARZWg=="|base64 -d > $TMP/patches.txz
 
 tar xvf $TMP/patches.txz &>/dev/null
 
-patch -p0 < ./patches/patch-dvdread-503.diff
-patch -p0 < ./patches/patch-dvdnav-503.diff
-patch -p0 < ./patches/patch-projectM-fontpath.diff
-patch -p0 < ./patches/patch_vlc_cache_gen.diff
-
-sed -i '/DEPRECATED/s:^://:' modules/text_renderer/freetype/text_layout.c
+patch -p1 < ./patches/vlc-3.0.11.1-srt_1.4.2.patch
+#patch -p1 < ./patches/vlc-live-media-2021.patch
 
 autoreconf -fiv
 
-CFLAGS="$SLKCFLAGS" \
-CXXFLAGS="$SLKCFLAGS" \
+CFLAGS="$SLKCFLAGS  -I/usr/include/samba-4.0" \
+CXXFLAGS="$SLKCFLAGS -std=c++11" \
 LDFLAGS="$SLKLDFLAGS" \
 ./configure \
   --prefix=/usr \
@@ -229,6 +227,7 @@ LDFLAGS="$SLKLDFLAGS" \
   --enable-aribsub \
   --enable-aom \
   --enable-dav1d \
+  --enable-srt \
   --with-kde-solid=no \
   --build=$ARCH-slackware-linux
   
