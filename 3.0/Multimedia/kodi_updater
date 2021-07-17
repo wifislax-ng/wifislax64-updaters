@@ -1,0 +1,171 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20210302
+CATEGORIA="Reproductores multimedia"
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=kodi
+	SRCNAM=xbmc
+	EXTENSION=tar.gz
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://github.com/xbmc/xbmc
+	#RAMA=$(curl -s $WEB/releases/latest|cut -d "/" -f8|cut -d '"' -f1|cut -d- -f2)
+	#VERSION=$(curl -s $WEB/releases/latest|cut -d "/" -f8|cut -d '"' -f1|cut -d- -f-1)
+	RAMA=Krypton
+	VERSION=17.6
+	SOURCES=$SRCNAM-$VERSION-$RAMA.$EXTENSION
+	CD=$SRCNAM-$VERSION-$RAMA
+	DOWNLOAD=$WEB/archive/$VERSION-$RAMA/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="lockdev
+platform
+libcec
+python3-PyYAML
+dcadec
+libass
+libmpeg2
+tinyxml
+jre
+yajl
+bluray-keys
+libaacs
+libbdplus
+libmicrohttpd
+crossguid
+libnfs
+python-gattlib
+pybluez" 
+f_dependencias
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
+sleep 1
+
+# No need to show Git: "Version" in a release build.
+sed -i '/Git:/s|.*|  return GetVersionShort();|' $SRCNAM/utils/SystemInfo.cpp
+
+echo "
+ZGlmZiAtTmF1ciB4Ym1jLTE3LjEtS3J5cHRvbi5vcmlnL3hibWMvZmlsZXN5c3RlbS9TTUJEaXJl
+Y3RvcnkuY3BwIHhibWMtMTcuMS1LcnlwdG9uL3hibWMvZmlsZXN5c3RlbS9TTUJEaXJlY3Rvcnku
+Y3BwCi0tLSB4Ym1jLTE3LjEtS3J5cHRvbi5vcmlnL3hibWMvZmlsZXN5c3RlbS9TTUJEaXJlY3Rv
+cnkuY3BwCTIwMTctMDMtMjAgMTY6MTc6NDkuMDAwMDAwMDAwICswMDAwCisrKyB4Ym1jLTE3LjEt
+S3J5cHRvbi94Ym1jL2ZpbGVzeXN0ZW0vU01CRGlyZWN0b3J5LmNwcAkyMDE3LTAzLTIwIDIzOjAx
+OjUyLjQ0NDE2MDc0OSArMDAwMApAQCAtNDUsNyArNDUsNyBAQAogI2luY2x1ZGUgImxpbnV4L1hU
+aW1lVXRpbHMuaCIKICNlbmRpZgogCi0jaW5jbHVkZSA8bGlic21iY2xpZW50Lmg+CisjaW5jbHVk
+ZSA8c2FtYmEtNC4wL2xpYnNtYmNsaWVudC5oPgogCiBzdHJ1Y3QgQ2FjaGVkRGlyRW50cnkKIHsK
+ZGlmZiAtTmF1ciB4Ym1jLTE3LjEtS3J5cHRvbi5vcmlnL3hibWMvZmlsZXN5c3RlbS9TTUJGaWxl
+LmNwcCB4Ym1jLTE3LjEtS3J5cHRvbi94Ym1jL2ZpbGVzeXN0ZW0vU01CRmlsZS5jcHAKLS0tIHhi
+bWMtMTcuMS1LcnlwdG9uLm9yaWcveGJtYy9maWxlc3lzdGVtL1NNQkZpbGUuY3BwCTIwMTctMDMt
+MjAgMTY6MTc6NDkuMDAwMDAwMDAwICswMDAwCisrKyB4Ym1jLTE3LjEtS3J5cHRvbi94Ym1jL2Zp
+bGVzeXN0ZW0vU01CRmlsZS5jcHAJMjAxNy0wMy0yMCAyMzowMDoxNy4zNTUxNTQwMzQgKzAwMDAK
+QEAgLTI2LDcgKzI2LDcgQEAKICNpbmNsdWRlICJTTUJGaWxlLmgiCiAjaW5jbHVkZSAiUGFzc3dv
+cmRNYW5hZ2VyLmgiCiAjaW5jbHVkZSAiU01CRGlyZWN0b3J5LmgiCi0jaW5jbHVkZSA8bGlic21i
+Y2xpZW50Lmg+CisjaW5jbHVkZSA8c2FtYmEtNC4wL2xpYnNtYmNsaWVudC5oPgogI2luY2x1ZGUg
+ImZpbGVzeXN0ZW0vU3BlY2lhbFByb3RvY29sLmgiCiAjaW5jbHVkZSAic2V0dGluZ3MvQWR2YW5j
+ZWRTZXR0aW5ncy5oIgogI2luY2x1ZGUgInNldHRpbmdzL1NldHRpbmdzLmgiCg==
+" | base64 -d > $TMP/xbmc-Krypton-samba-4.0.patch
+patch -p1 -i $TMP/xbmc-Krypton-samba-4.0.patch || exit 1
+
+echo "
+LS0tIHRvb2xzL2RlcGVuZHMvbmF0aXZlL1RleHR1cmVQYWNrZXIvTWFrZWZpbGUub2xkCTIwMTUt
+MDMtMTcgMjI6Mjk6MTguODgwMDI5NTA5ICswMTAwCisrKyB0b29scy9kZXBlbmRzL25hdGl2ZS9U
+ZXh0dXJlUGFja2VyL01ha2VmaWxlCTIwMTUtMDMtMTcgMjI6Mjk6NDEuNDU5NjcxNjc5ICswMTAw
+CkBAIC05LDE0ICs5LDEwIEBACiAKIGlmZXEgKCQoTkFUSVZFUExBVEZPUk0pLCkKICAgUExBVEZP
+Uk0gPSBuYXRpdmUKLSAgRVhUUkFfQ09ORklHVVJFID0gLS1lbmFibGUtc3RhdGljCiBlbHNlCiAg
+IFBMQVRGT1JNID0gJChOQVRJVkVQTEFURk9STSkKIGVuZGlmCiAKLWlmZXEgKCQoTkFUSVZFX09T
+KSwgbGludXgpCi0gIEVYVFJBX0NPTkZJR1VSRSA9IC0tZW5hYmxlLXN0YXRpYwotZW5kaWYKIGlm
+ZXEgKCQoTkFUSVZFX09TKSwgYW5kcm9pZCkKICAgRVhUUkFfQ09ORklHVVJFID0gLS1lbmFibGUt
+c3RhdGljCiBlbmRpZgo=
+" | base64 -d > $TMP/kodi-texturepacker.patch
+patch -p0 -i $TMP/kodi-texturepacker.patch || exit 1
+
+export PATH="$PATH:$PWD/tools/depends/native/JsonSchemaBuilder/bin"
+
+./bootstrap
+
+CFLAGS="$SLKCFLAGS $AFPFS_NGFLAGS" \
+CXXFLAGS="$SLKCFLAGS $AFPFS_NGFLAGS" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --disable-silent-rules \
+  --enable-static=no \
+  --disable-debug \
+  --enable-gl \
+  --enable-mid \
+  --enable-alsa \
+  --enable-texturepacker \
+  --enable-pulse \
+  --enable-webserver \
+  --build=$ARCH-slackware-linux
+    
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
+sleep 1
+make VERBOSE=1 || exit 1
+
+
+make install DESTDIR=$PKG || exit 1
+python -m compileall $PKG/usr/share/$PRGNAM/addons/service.xbmc.versioncheck
+install -m 0755 tools/TexturePacker/TexturePacker $PKG/usr/lib${LIBDIRSUFFIX}/$PRGNAM
+find $PKG \( -name "Makefile*" -o -name "*cmake*" -o -name "*\.in" \) -exec rm -f '{}' \;
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos version instalada del paquete
+f_versionInstalada
+#Compronar dependencias
+F_dependencias
+#Si no existe el fichero se descargara
+f_download
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales

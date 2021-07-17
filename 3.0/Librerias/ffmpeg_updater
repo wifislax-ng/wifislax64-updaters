@@ -1,0 +1,176 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20210614
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=ffmpeg
+	SRCNAM=FFmpeg
+	EXTENSION=tar.gz
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://github.com/$SRCNAM/$SRCNAM
+	VERSION=$(curl -s $WEB/releases|grep [0-9].$EXTENSION|grep "n4.4"|head -1|cut -d/ -f7|cut -dt -f-1|sed 's/.$//g'|sed 's/n//g')
+	SOURCES=n$VERSION.$EXTENSION
+	CD=$SRCNAM-n$VERSION
+	DOWNLOAD=$WEB/archive/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="
+celt
+aom
+ladspa_sdk
+libavc1394
+libiec61883
+recode
+perl-Cstools
+perl-Unicode-Map
+perl-Unicode-String
+perl-Unicode-Map8
+enca
+libass
+libaacs
+libbdplus
+gsm
+libmodplug
+opencore-amr
+soxr
+x264
+x265
+xvidcore
+libdbus-c++
+libconfig
+libxml++
+libffado
+jack
+nv-codec-headers
+dav1d
+srt
+"
+f_dependencias
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
+sleep 1
+
+# Fix linking with flite
+sed -i "s| -lflite\"| -lflite -lm -lasound\"|" \
+  ./configure
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+    --prefix=/usr \
+    --libdir=/usr/lib${LIBDIRSUFFIX} \
+    --shlibdir=/usr/lib${LIBDIRSUFFIX} \
+    --disable-doc \
+    --disable-htmlpages \
+    --disable-manpages \
+    --disable-podpages \
+    --disable-txtpages \
+    --disable-debug \
+    --disable-static \
+    --disable-stripping \
+    --enable-avresample \
+    --enable-fontconfig \
+    --enable-gmp \
+    --enable-gnutls \
+    --enable-gpl \
+    --enable-ladspa \
+    --enable-libaom \
+    --enable-libass \
+    --enable-libbluray \
+    --enable-libdav1d \
+    --enable-libdrm \
+    --enable-libfreetype \
+    --enable-libfribidi \
+    --enable-libgsm \
+    --enable-libiec61883 \
+    --enable-libjack \
+    --enable-libmodplug \
+    --enable-libmp3lame \
+    --enable-libopencore_amrnb \
+    --enable-libopencore_amrwb \
+    --enable-libopenjpeg \
+    --enable-libopus \
+    --enable-libpulse \
+    --enable-libsoxr \
+    --enable-libspeex \
+    --enable-libsrt \
+    --enable-libssh \
+    --enable-libtheora \
+    --enable-libv4l2 \
+    --enable-libvidstab \
+    --enable-libvorbis \
+    --enable-libvpx \
+    --enable-libwebp \
+    --enable-libx264 \
+    --enable-libx265 \
+    --enable-libxcb \
+    --enable-libxml2 \
+    --enable-libxvid \
+    --enable-nvdec \
+    --enable-nvenc \
+    --enable-opencl \
+    --enable-shared \
+    --enable-version3 \
+    --arch=$ARCH
+  
+  make || exit 1
+  make install DESTDIR=$PKG
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos version instalada del script
+f_versionInstalada
+#Compronar dependencias
+F_dependencias
+#Si no existe el fichero se descargara
+f_download
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales

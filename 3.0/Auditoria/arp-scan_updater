@@ -1,0 +1,110 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20200704
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=arp-scan
+	EXTENSION=tar.gz
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://github.com/royhills/arp-scan
+	VERSION=$(curl -s $WEB/releases|grep $EXTENSION|head -1|rev|cut -d/ -f1|rev|cut -dt -f-1|sed 's/.$//g')
+	SOURCES=$VERSION.$EXTENSION
+	CD=$PRGNAM-$VERSION
+	DOWNLOAD=$WEB/archive/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="libpcap
+perl-net-http
+perl-www-robotrules
+perl-http-date
+perl-file-listing
+perl-IO-HTML
+perl-encode-locale
+perl-lwp-mediatypes
+perl-html-tagset
+perl-html-parser
+perl-http-message
+perl-http-negotiate
+perl-http-cookies
+perl-http-daemon 
+libwww-perl
+perl-Mozilla-CA
+perl-Net-LibIDN
+perl-Test-RequiresInternet
+perl-LWP-Protocol-https"
+f_dependencias
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
+sleep 1
+
+autoreconf -fiv
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --mandir=/usr/man \
+  --build=$ARCH-slackware-linux
+
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
+sleep 1
+make||exit 1
+make DESTDIR="$PKG" install||exit 1
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Comprobamos version instalada del paquete
+f_versionInstalada
+# Comprobar dependencias
+F_dependencias
+#Si no existe el fichero se descargara
+f_download
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales
