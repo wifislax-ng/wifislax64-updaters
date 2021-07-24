@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20210724
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -20,17 +20,11 @@ F_variables() {
 	EXTENSION=tar.gz
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=http://repo.steampowered.com/steam/archive/precise
-	VERSION=$(curl -s $WEB/|grep .$EXTENSION| tail -2|grep steam_|head -1|cut -d '"' -f12|sed "s/steam_//g"|sed 's/.tar.gz//g')
+	WEB=https://repo.steampowered.com/steam/archive/precise
+	VERSION=$(curl -s $WEB/|grep steam_[0-9]|grep .$EXTENSION|tail -1|cut -d_ -f2|cut -dt -f-1|sed 's/.$//g')
 	SOURCES=${PRGNAM}_${VERSION}.$EXTENSION
-	CD=${PRGNAM}
+	CD=${PRGNAM}-launcher
 	DOWNLOAD=${WEB}/${SOURCES}
-}
-
-# Comprobar dependencias
-F_dependencias(){
-DEPENDENCIAS="libtxc_dxtn"
-f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
@@ -39,10 +33,34 @@ echo
 echo "$VERDE"Compilamos ..."$CIERRE"
 sleep 1
 
-make install DESTDIR=$PKG
+# apply roundups for udev rules
+sed -r 's|("0666")|"0660", TAG+="uaccess"|g' -i subprojects/steam-devices/60-steam-input.rules
+sed -r 's|("misc")|\1, OPTIONS+="static_node=uinput"|g' -i subprojects/steam-devices/60-steam-input.rules
+sed -r 's|(, TAG\+="uaccess")|, MODE="0660"\1|g' -i subprojects/steam-devices/60-steam-vr.rules
 
+# separated runtime/native desktop files
+sed -r 's|(Name=Steam)|\1 (Runtime)|' -i steam.desktop
+sed -r 's|(/usr/bin/steam)|\1-runtime|' -i steam.desktop
+  
+make DESTDIR="${PKG}" install
+
+echo "#!/bin/sh
+exec /usr/lib/steam/steam "$@"" > "${PKG}/usr/bin/steam-runtime"
+chmod +x "${PKG}/usr/bin/steam-runtime"
+install -d "${PKG}/usr/lib/steam"
+mv "${PKG}/usr/bin/steam" "${PKG}/usr/lib/steam/steam"
+ln -sf /usr/bin/steam-runtime "${PKG}/usr/bin/steam"
+
+# blank steamdeps because apt-get
+ln -sf /usr/bin/true "${PKG}/usr/bin/steamdeps"
+
+install -Dm 644 subprojects/steam-devices/60-steam-input.rules \
+    "${PKG}/usr/lib/udev/rules.d/70-steam-input.rules"
+install -Dm 644 subprojects/steam-devices/60-steam-vr.rules \
+    "${PKG}/usr/lib/udev/rules.d/70-steam-vr.rules"
+    
 # Eliminamos la restriccion root
-sed -i '137,141d' $PKG/usr/bin/steam
+sed -i '159,164d' ${PKG}/usr/lib/steam/bin_steam.sh
 }
 
 ###################################
@@ -67,8 +85,6 @@ f_comprobarUpdates
 f_arquitectura
 #Comprobamos version instalada del paquete
 f_versionInstalada
-# Comprobar dependencias
-F_dependencias
 #Si no existe el fichero se descargara
 f_download
 #Descomprimir sources
