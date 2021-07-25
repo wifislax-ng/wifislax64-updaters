@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20181122
+SCRIPT_VERSION=20210725
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -20,14 +20,11 @@ F_variables() {
 	EXTENSION=tar.xz
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://dist.torproject.org/torbrowser/
-	VERSION=$(curl -s $WEB|sed -e 's/\(<[^<][^<]*>\)//g'|grep "\."|grep -|awk '{print $1}'|sort -g|tail -1|cut -d "/" -f1)
-	SOURCES=$(curl -s $WEB/$VERSION/|sed -e 's/\(<[^<][^<]*>\)//g'|awk '{print $1}'|grep ${EXTENSION}$|grep -i $IDIOMA|grep 64)
+	WEB=https://dist.torproject.org/torbrowser
+	VERSION=$(curl -s $WEB/|sed -e 's/\(<[^<][^<]*>\)//g'|grep "\."|grep -|awk '{print $1}'|sort -g|tail -1|cut -d "/" -f1)
+	SOURCES=$(curl -s $WEB/$VERSION/|sed -e 's/\(<[^<][^<]*>\)//g'|awk '{print $1}'|grep ${EXTENSION}$|grep -i "$(echo $LANG|cut -d. -f1|sed 's/_/-/g')"|grep 64)
 	DOWNLOAD=$WEB/$VERSION/$SOURCES
 }
-
-
-
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
@@ -37,19 +34,7 @@ mv $TMP/${PRGNAM}_* $PKG/opt/Tor
 find $PKG/opt/Tor -type f -name start-tor-browser -exec sed -i -e 's/`" -eq 0/`" -eq 1/g' {} \;
 #Cambiamos de propietario
 chown -R root:root $PKG/*
-# Creamos entrada de menu desktop
-echo "[Desktop Entry]
-Exec=/opt/Tor/Browser/start-tor-browser
-Icon=/opt/Tor/Browser/browser/icons/mozicon128.png
-MimeType=
-Name[es]=Tor Browser
-Name=Tor Browser
-Categories=Network;
-StartupNotify=false
-Terminal=false
-TerminalOptions=
-Type=Application
-">$PKG/usr/share/applications/Tor.desktop
+mv $PKG/opt/Tor/*.desktop $PKG/usr/share/applications/
 }
 
 ###################################
