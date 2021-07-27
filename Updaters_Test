@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPTVERSION=1.2
+SCRIPTVERSION=1.3
 
 # v1.2 Se añade funcion timeout
 # v1.1 Se añade mensaje si todos los upadters funcionan
@@ -16,7 +16,22 @@ if [ -z "$ARCH" ]; then
   esac
 fi
 
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
 export ARCH
+export LIBDIRSUFFIX
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
