@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210614
+SCRIPT_VERSION=20210815
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -86,7 +86,7 @@ libnfs
 pytz
 python-gflags
 google-apputils
-protobuf
+protobuf3
 libdaemon
 avahi
 srt
