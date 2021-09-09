@@ -2,7 +2,7 @@
 
 # Script for www.seguridadwireless.net by vk496
 
-SCRIPT_VERSION=20210526
+SCRIPT_VERSION=20210909
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -125,7 +125,7 @@ for carpeta in $carpetas; do
 #Creamos el desktop del menu
 echo "[Desktop Entry]
 Categories=$CATEGORIA;
-Exec=bash -c \"/opt/wifislax-updaters/$carpeta/$archivo;bash\"
+Exec=sh -c \"/opt/wifislax-updaters/$carpeta/$archivo;bash\"
 Icon=updaters
 MimeType=
 Name=$PRGNAM_CORTO
