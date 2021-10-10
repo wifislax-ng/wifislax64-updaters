@@ -53,6 +53,8 @@ libmusicbrainz
 libofa
 libquicktime
 lv2
+libcuefile
+libreplaygain
 musepack-tools
 rtmpdump
 schroedinger
