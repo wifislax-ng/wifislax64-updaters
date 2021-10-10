@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210815
+SCRIPT_VERSION=20211011
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -31,6 +31,7 @@ F_variables() {
 # Comprobar dependencias
 F_dependencias(){
 DEPENDENCIAS="
+soxr
 dav1d
 libgme
 libiec61883

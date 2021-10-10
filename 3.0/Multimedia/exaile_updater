@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210927
+SCRIPT_VERSION=20211011
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -45,6 +45,7 @@ libdc1394
 libdca
 libfdk-aac
 libkate
+raptor
 liblrdf
 libmimic
 libmodplug
@@ -69,10 +70,8 @@ python3-attrs
 setuptools-scm
 python3-pytest
 ipython
-gst-python3
-setuptools-scm
 functools-lru-cache
-python-soupsieve
+python2-soupsieve
 python3-soupsieve
 BeautifulSoup4
 html5lib
