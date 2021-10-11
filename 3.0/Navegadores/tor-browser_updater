@@ -34,19 +34,17 @@ mv $TMP/${PRGNAM}_* $PKG/opt/Tor
 find $PKG/opt/Tor -type f -name start-tor-browser -exec sed -i -e 's/`" -eq 0/`" -eq 1/g' {} \;
 #Cambiamos de propietario
 chown -R root:root $PKG/*
-# Creamos entrada de menu desktop
+# Hacemos nuestro desktop
 echo "[Desktop Entry]
 Exec=/opt/Tor/Browser/start-tor-browser
-Icon=/opt/Tor/Browser/browser/chrome/icons/default/default128.png
-MimeType=
-Name[es]=Tor Browser
-Name=Tor Browser
-Categories=Network;
-StartupNotify=false
-Terminal=false
-TerminalOptions=
+Path=/opt/Tor/Browser/
+Icon=/opt/Tor/Browser/browser/chrome/icons/default/default48.png
 Type=Application
-">$PKG/usr/share/applications/Tor.desktop
+Categories=Network;
+Name=Tor-Browser
+GenericName=Anonymous Web Browser
+MimeType=text/html;text/xml;application/xhtml+xml;application/vnd.mozilla.xul+xml;text/mml;x-scheme-handler/http;x-scheme-handler/https;
+X-KDE-StartupNotify=false" > $PKG/usr/share/applications/$PRGNAM.desktop
 }
 
 ###################################
