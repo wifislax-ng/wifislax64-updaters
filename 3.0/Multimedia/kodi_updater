@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210817
+SCRIPT_VERSION=20211011
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -42,7 +42,7 @@ dcadec
 libass
 libmpeg2
 tinyxml
-jre
+jdk
 yajl
 bluray-keys
 libaacs
