@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210228
+SCRIPT_VERSION=20211013
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -31,7 +31,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="ffmpeg mjpegtools ladspa_sdk libunicap libdv schroedinger libavc1394"
+DEPENDENCIAS="mjpegtools ladspa_sdk libunicap libdv schroedinger libavc1394"
 f_dependencias
 }
 

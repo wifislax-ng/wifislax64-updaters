@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20211011
+SCRIPT_VERSION=20211014
 CATEGORIA="Editores de audio"
 
 ############################################################
@@ -38,9 +38,7 @@ libconfig
 libffado
 celt
 jack
-ffmpeg
 ladspa_sdk
-lame
 soundtouch
 twolame
 vamp-plugin-sdk

@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20211011
+SCRIPT_VERSION=20211013
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -47,8 +47,6 @@ libupnp
 lua
 portaudio
 twolame 
-ffmpeg
-freerdp
 gsm
 numpy3
 libtar
