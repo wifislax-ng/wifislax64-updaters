@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20211013
+SCRIPT_VERSION=20211027
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -42,7 +42,6 @@ jack
 nv-codec-headers
 x265
 faad2
-lame
 libdca
 x264
 xvidcore
