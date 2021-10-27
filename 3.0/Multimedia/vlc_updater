@@ -245,6 +245,7 @@ make  || exit 1
 make install DESTDIR=$PKG || exit 1
 
 install -D -m0644 extras/analyser/vlc.vim $PKG/usr/share/vim/vimfiles/syntax/vlc.vim
+rm -rf $PKG/usr/lib64/vlc/plugins/plugins.dat
 }
 
 ###################################
