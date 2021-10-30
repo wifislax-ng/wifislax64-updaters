@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20211030
+SCRIPT_VERSION=20211027
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -39,6 +39,7 @@ libxml++
 libconfig
 libffado
 opus
+jack
 nv-codec-headers
 x265
 faad2
@@ -49,14 +50,6 @@ faac
 dcaenc
 aom
 twolame
-recode
-perl-Cstools
-perl-Unicode-Map
-perl-Unicode-String
-perl-Unicode-Map8
-enca
-libass
-jack
 "
 f_dependencias
 }
