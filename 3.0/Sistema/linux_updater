@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20211031
+SCRIPT_VERSION=20211105
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -245,7 +245,6 @@ fi
 
 # Compilamos el kernel
 make olddefconfig || exit 1
-sed -i "s/^int preempt_dynamic_mode = preempt_dynamic_full;$/int preempt_dynamic_mode = preempt_dynamic_none;/g" kernel/sched/core.c
 make xconfig || exit 1
 
 # Variables para calcular tiempo de inicio

@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210611
+SCRIPT_VERSION=20211105
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -37,7 +37,7 @@ deb2dir $TMP/$SOURCES "$TMP/deb"
 rm -rf "$TMP/deb"/{etc,usr/share/man/,usr/share/doc,/usr/share/menu,/usr/share/gnome-control-center}
 rm -rf "$TMP/deb"/usr/share/applications/*.desktop
 
-# Symlink desktop environment icons
+# Symlink desktop environment icons hicolor
 for png in "$TMP/deb"/opt/google/chrome/product_logo_*.png; do
   pngsize="${png##*/product_logo_}"
   mkdir -p "$TMP/deb"/usr/share/icons/hicolor/${pngsize%.png}x${pngsize%.png}/apps
@@ -47,67 +47,39 @@ for png in "$TMP/deb"/opt/google/chrome/product_logo_*.png; do
   )
 done
 
-echo "[Desktop Entry]
-Version=1.0
-Name=Google Chrome
-GenericName=Web Browser
-GenericName[ar]=متصفح الشبكة
-GenericName[bg]=Уеб браузър
-GenericName[ca]=Navegador web
-GenericName[cs]=WWW prohlížeč
-GenericName[da]=Browser
-GenericName[de]=Web-Browser
-GenericName[el]=Περιηγητής ιστού
-GenericName[en_GB]=Web Browser
-GenericName[es]=Navegador web
-GenericName[et]=Veebibrauser
-GenericName[fi]=WWW-selain
-GenericName[fr]=Navigateur Web
-GenericName[gu]=વેબ બ્રાઉઝર
-GenericName[he]=דפדפן אינטרנט
-GenericName[hi]=वेब ब्राउज़र
-GenericName[hu]=Webböngésző
-GenericName[it]=Browser Web
-GenericName[ja]=ウェブブラウザ
-GenericName[kn]=ಜಾಲ ವೀಕ್ಷಕ
-GenericName[ko]=웹 브라우저
-GenericName[lt]=Žiniatinklio naršyklė
-GenericName[lv]=Tīmekļa pārlūks
-GenericName[ml]=വെബ് ബ്രൌസര്‍
-GenericName[mr]=वेब ब्राऊजर
-GenericName[nb]=Nettleser
-GenericName[nl]=Webbrowser
-GenericName[pl]=Przeglądarka WWW
-GenericName[pt]=Navegador Web
-GenericName[pt_BR]=Navegador da Internet
-GenericName[ro]=Navigator de Internet
-GenericName[ru]=Веб-браузер
-GenericName[sl]=Spletni brskalnik
-GenericName[sv]=Webbläsare
-GenericName[ta]=இணைய உலாவி
-GenericName[th]=เว็บเบราว์เซอร์
-GenericName[tr]=Web Tarayıcı
-GenericName[uk]=Навігатор Тенет
-GenericName[zh_CN]=网页浏览器
-GenericName[zh_HK]=網頁瀏覽器
-GenericName[zh_TW]=網頁瀏覽器
-GenericName[bn]=ওয়েব ব্রাউজার
-GenericName[fil]=Web Browser
-GenericName[hr]=Web preglednik
-GenericName[id]=Browser Web
-GenericName[or]=ଓ୍ବେବ ବ୍ରାଉଜର
-GenericName[sk]=WWW prehliadač
-GenericName[sr]=Интернет прегледник
-GenericName[te]=మహాతల అన్వేషి
-GenericName[vi]=Bộ duyệt Web
-Exec=/opt/google/chrome/google-chrome --test-type --user-data-dir= --no-sandbox --password-store=basic
-Terminal=false
-Icon=google-chrome
-Type=Application
-Categories=Network;WebBrowser;
-MimeType=application/pdf;application/rdf+xml;application/rss+xml;application/xhtml+xml;application/xhtml_xml;application/xml;image/gif;image/jpeg;image/png;image/webp;text/html;text/xml;x-scheme-handler/http;x-scheme-handler/https;
-X-Ayatana-Desktop-Shortcuts=NewWindow;NewIncognito" > "$TMP/deb"/usr/share/applications/$PRGNAM.desktop
+# Symlink desktop environment icons oxygen
+for png in "$TMP/deb"/opt/google/chrome/product_logo_*.png; do
+  pngsize="${png##*/product_logo_}"
+  mkdir -p "$TMP/deb"/usr/share/icons/oxygen/base/${pngsize%.png}x${pngsize%.png}/apps
+  (
+    cd "$TMP/deb"/usr/share/icons/oxygen/base/${pngsize%.png}x${pngsize%.png}/apps/
+    ln -s ../../../../../../../opt/google/chrome/product_logo_${pngsize} google-chrome.png
+  )
+done
 
+mkdir -p $PKG/usr/share/pixmaps
+cp -rf "$TMP/deb"/opt/google/chrome/product_logo_64.png $PKG/usr/share/pixmaps/google-chrome.png
+
+echo "[Desktop Entry]
+Categories=Network;
+Comment[es_ES]=Navegador Web
+Comment=Navegador Web
+Exec=/opt/google/chrome/google-chrome --test-type --user-data-dir= --no-sandbox --password-store=basic
+Icon=google-chrome
+MimeType=application/pdf;application/rdf+xml;application/rss+xml;application/xhtml+xml;application/xhtml_xml;application/xml;image/gif;image/jpeg;image/png;image/webp;text/html;text/xml;x-scheme-handler/http;x-scheme-handler/https;
+Name[es_ES]=Google Chrome
+Name=Google Chrome
+Path=
+StartupNotify=false
+Terminal=false
+TerminalOptions=
+Type=Application
+X-Ayatana-Desktop-Shortcuts=NewWindow;NewIncognito
+X-DBUS-ServiceName=
+X-DBUS-StartupType=
+X-KDE-SubstituteUID=false
+X-KDE-Username=" > "$TMP/deb"/usr/share/applications/$PRGNAM.desktop
+chmod +x "$TMP/deb"/usr/share/applications/$PRGNAM.desktop
 cp -rfp "$TMP"/deb/* "$PKG"
 }
 
@@ -137,7 +109,5 @@ f_versionInstalada
 f_download
 #Descomprimir fichero descargado y compilamos
 F_compilar
-#Hacemos strip sobre el paquete
-f_strip
 #Creamos xzm , instalamos y salimos
 f_tareasFinales
