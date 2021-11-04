@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20211013
+SCRIPT_VERSION=20211104
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -99,8 +99,8 @@ sed -i -e 's|share/man|man|g' Makefile
 
 make
 PREFIX=/usr \
-LIBINSTALLDIR=/lib${LIBDIRSUFFIX} \
-make install DESTDIR=$PKG PREFIX=/usr LIBINSTALLDIR=/lib${LIBDIRSUFFIX}
+LIBINSTALLDIR=/usr/lib${LIBDIRSUFFIX} \
+make install DESTDIR=$PKG PREFIX=/usr LIBINSTALLDIR=/usr/lib${LIBDIRSUFFIX}
 }
 
 ###################################
