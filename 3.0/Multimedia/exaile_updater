@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20211104
+SCRIPT_VERSION=20211111
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -81,7 +81,6 @@ pylast
 musicbrainzngs
 bubblewrap
 geoclue2
-libseccomp
 libwpe
 wpebackend-fdo
 xdg-dbus-proxy
