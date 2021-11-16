@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20200427
+SCRIPT_VERSION=20211116
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -21,7 +21,7 @@ F_variables() {
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=http://dl.winehq.org/wine/$PRGNAM
-	VERSION=2.47.1
+	VERSION=2.47.2
 	SOURCES=$PRGNAM-$VERSION-$ARCH.$EXTENSION
 	DOWNLOAD=$WEB/$VERSION/$SOURCES
 }
@@ -61,7 +61,5 @@ f_versionInstalada
 f_download
 #Descomprimir fichero descargado y compilamos
 F_compilar
-#Hacemos strip sobre el paquete
-f_strip
 #Creamos xzm , instalamos y salimos
 f_tareasFinales

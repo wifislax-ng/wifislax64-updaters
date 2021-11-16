@@ -21,7 +21,6 @@ F_variables() {
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://dl.winehq.org/wine/$PRGNAM
-	#VERSION=$(curl -s $WEB/|egrep -o ">[0-9].[0-9]{1,2}.[0-9]{1,2}/"|tr -d '>/'|tail -1)
 	VERSION=6.4.0
 	SOURCES=${PRGNAM}-$VERSION-x86.$EXTENSION
 	DOWNLOAD=$WEB/$VERSION/$SOURCES
@@ -65,7 +64,5 @@ f_versionInstalada
 f_download
 #Descomprimir fichero descargado y compilamos
 F_compilar
-#Hacemos strip sobre el paquete
-f_strip
 #Creamos xzm , instalamos y salimos
 f_tareasFinales
