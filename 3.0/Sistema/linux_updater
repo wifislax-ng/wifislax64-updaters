@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20211113
+SCRIPT_VERSION=20211125
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -207,29 +207,6 @@ echo ""$VERDE"Aplicando parche wireless para channel -1 "$BLANCO"..."$CIERRE""
 sleep 1
 patch -f -p1 < $PARCHE||exit 1
 
-if [ $RAMA_ELEGIDO = 5.15 ]; then
-# Aplicamos parche si hay error se parara el proceso ( exit 1 )
-echo ""
-echo ""$VERDE"Aplicando parche radiotap kernel 5.15.x "$BLANCO"..."$CIERRE""
-sleep 1
-PARCHE2=radiotap.patch
-cat > $PARCHE2 << "EOF"
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -364,7 +364,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 	 * the compiler to think we have walked past the end of the
- 	 * struct member.
- 	 */
--	pos = (void *)&rthdr->it_optional[it_present - rthdr->it_optional];
-+	pos = (void *)&rthdr->it_optional[it_present + 1 - rthdr->it_optional];
- 
- 	/* the order of the following fields is important */
-
-EOF
-
-patch -f -p1 < $PARCHE2||exit 1
-fi
-
 # Ponemos nuestro logo
 LOGO=/usr/share/pixmaps/wifislax_logo_blue.png
 LOGONEW=/usr/src/$PRGNAM-$KERNEL_ELEGIDO/drivers/video/logo/logo_linux_clut224.ppm
@@ -309,7 +286,7 @@ cp -r /usr/src/$PRGNAM-$KERNEL_ELEGIDO $CONTAINER/usr/src
 
 # Realizamos limpieza
 RUTA_LIMPIEZA=$CONTAINER/usr/src/$PRGNAM-$KERNEL_ELEGIDO
-FILES_BORRAR="kernel.txt Negative-channel-multi.patch radiotap.patch ralink.patch .config.old"
+FILES_BORRAR="kernel.txt Negative-channel-multi.patch ralink.patch .config.old"
 for X in $FILES_BORRAR; do
 rm $RUTA_LIMPIEZA/$X &>/dev/null
 done
