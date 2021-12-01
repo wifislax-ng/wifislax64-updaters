@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20211111
+SCRIPT_VERSION=20211201
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -31,34 +31,6 @@ F_variables() {
 # Comprobar dependencias
 F_dependencias(){
 DEPENDENCIAS="
-TiMidity++
-aom
-amrnb
-amrwb
-celt
-faac
-faad2
-gsm
-libass
-libcdaudio
-libdc1394
-libdca
-libfdk-aac
-libkate
-raptor
-liblrdf
-libmimic
-libmodplug
-libmusicbrainz
-libofa
-lv2
-libcuefile
-libreplaygain
-musepack-tools
-rtmpdump
-schroedinger
-soundtouch
-xvidcore
 cddb-py
 streamripper
 mutagen
@@ -68,8 +40,19 @@ py
 more-itertools
 atomicwrites
 python3-attrs
-setuptools-scm
 python3-pytest
+decorator
+ipython_genutils
+parso
+python3-jedi
+python3-ptyprocess
+python3-pexpect
+pathlib
+pickleshare
+python3-prompt_toolkit
+simplegeneric
+traitlets
+backcall
 ipython
 functools-lru-cache
 python2-soupsieve
