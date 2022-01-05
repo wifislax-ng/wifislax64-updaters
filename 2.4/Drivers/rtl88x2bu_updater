@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210403
+SCRIPT_VERSION=20211205
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -20,10 +20,10 @@ F_variables() {
 	SRCNAM=88x2bu
 	GESTOR=git
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/morrownr/$SRCNAM
+	WEB=https://github.com/morrownr/$SRCNAM-20210702
 	VERSION="5.8.7.4_$(curl -s $WEB|grep commit/|head -1|cut -d / -f5|cut -c 1-7)"
-	SOURCES=$SRCNAM
-	CD=$SRCNAM
+	SOURCES=$SRCNAM-20210702
+	CD=$SRCNAM-20210702
 	DOWNLOAD=$WEB
 }
 
