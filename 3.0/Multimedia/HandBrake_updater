@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20211011
+SCRIPT_VERSION=20220201
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -39,8 +39,7 @@ F_compilar(){
 CFLAGS="$SLKCFLAGS " \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
-    --prefix=/usr \
-    --enable-qsv
+    --prefix=/usr
 
   make -C build
   make -C build DESTDIR=$PKG install
