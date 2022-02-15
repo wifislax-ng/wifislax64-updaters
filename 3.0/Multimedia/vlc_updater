@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20211027
+SCRIPT_VERSION=20220215
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -245,7 +245,8 @@ make  || exit 1
 make install DESTDIR=$PKG || exit 1
 
 install -D -m0644 extras/analyser/vlc.vim $PKG/usr/share/vim/vimfiles/syntax/vlc.vim
-rm -rf $PKG/usr/lib64/vlc/plugins/plugins.dat
+rm -rf $PKG/usr/lib${LIBDIRSUFFIX}/vlc/plugins/plugins.dat
+rm -rf $PKG/usr/lib${LIBDIRSUFFIX}/*.la
 }
 
 ###################################
