@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220216
+SCRIPT_VERSION=20220217
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -194,8 +194,6 @@ LDFLAGS="$SLKLDFLAGS" \
     --enable-libplacebo \
     --enable-libxml2 \
     --enable-lirc \
-    --enable-png \
-    --enable-postproc \
     --enable-libtar \
     --enable-live555 \
     --enable-mad \
@@ -206,25 +204,26 @@ LDFLAGS="$SLKLDFLAGS" \
     --enable-mpg123 \
     --enable-mtp \
     --enable-ncurses \
+    --enable-nfs \
     --enable-notify \
     --enable-ogg \
     --enable-oggspots \
     --enable-opus \
+    --enable-png \
+    --enable-postproc \
     --enable-projectm \
     --enable-pulse \
     --enable-qt=5 \
-    --enable-schroedinger \
-    --enable-smbclient \
-    --enable-sftp \
-    --enable-nfs \
     --enable-realrtsp \
     --enable-run-as-root \
     --enable-samplerate \
     --enable-schroedinger \
     --enable-sdl-image \
     --enable-secret \
+    --enable-sftp \
     --enable-shout \
     --enable-skins2 \
+    --enable-smbclient \
     --enable-soxr \
     --enable-speex \
     --enable-srt \
