@@ -39,6 +39,11 @@ libxml++
 libconfig
 libffado
 celt
+perl-Cstools
+perl-Unicode-Map
+perl-Unicode-String
+perl-Unicode-Map8
+enca
 libass
 libdc1394
 libdvbpsi
