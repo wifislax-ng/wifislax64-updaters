@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220211
+SCRIPT_VERSION=20220222
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -31,7 +31,6 @@ F_variables() {
 F_dependencias(){
 DEPENDENCIAS="
 libmaxminddb
-spandsp
 rubygem-asciidoctor
 libsmi
 snappy
