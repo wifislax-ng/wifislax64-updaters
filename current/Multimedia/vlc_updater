@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220217
+SCRIPT_VERSION=20220227
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -21,11 +21,11 @@ F_variables() {
 	EXTENSION=tar.xz
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/videolan/vlc
-	VERSION=$(curl -s $WEB/tags|grep tar.gz|head -1|cut -d/ -f7|cut -dt -f-1|sed 's/.$//g')
+	WEB=http://get.videolan.org/vlc/last
+	VERSION=$(curl -s $WEB/|grep $EXTENSION|head -1|cut -d- -f2|cut -dt -f-1|sed 's/.$//g')
 	CD=$PRGNAM-$VERSION
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	DOWNLOAD=https://download.videolan.org/$PRGNAM/$VERSION/$SOURCES
+	DOWNLOAD=$WEB/$SOURCES
 }
 
 # Comprobar dependencias

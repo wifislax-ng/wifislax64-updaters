@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210515
+SCRIPT_VERSION=20220227
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -21,19 +21,17 @@ F_variables() {
 	EXTENSION=tar.xz
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://www.videolan.org/vlc/download-sources.html
-	VERSION=$(curl -s $WEB|grep $EXTENSION|head -1|cut -d- -f2|cut -dt -f1|sed 's/.$//g')
+	WEB=http://get.videolan.org/vlc/last
+	VERSION=$(curl -s $WEB/|grep $EXTENSION|head -1|cut -d- -f2|cut -dt -f-1|sed 's/.$//g')
 	CD=$PRGNAM-$VERSION
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	DOWNLOAD=http://get.videolan.org/vlc/$VERSION/$SOURCES
+	DOWNLOAD=$WEB/$SOURCES
 }
 
 # Comprobar dependencias
 F_dependencias(){
 DEPENDENCIAS="
-python3
-ninja
-meson
+soxr
 dav1d
 libgme
 libiec61883
@@ -41,6 +39,11 @@ libxml++
 libconfig
 libffado
 celt
+perl-Cstools
+perl-Unicode-Map
+perl-Unicode-String
+perl-Unicode-Map8
+enca
 libass
 libdc1394
 libdvbpsi
@@ -48,11 +51,7 @@ libmpeg2
 libupnp
 lua
 portaudio
-twolame
-opus 
-ffmpeg
-freerdp
-libwebp
+twolame 
 gsm
 numpy3
 libtar
@@ -62,7 +61,6 @@ libdca
 libebml
 libmatroska
 libshout
-speex
 jack
 libsidplay2
 zvbi
@@ -78,29 +76,24 @@ gnome-vfs
 live555
 rtmpdump
 libdvdcss
-fluidsynth
 schroedinger
 libminizip
 chromaprint
 x264
 x265
-bluray-keys
 libaacs
 libbdplus
-libbluray
 ftgl
 aom
-vulkan-sdk
-Mako
 libplacebo
 libnfs
 pytz
 python-gflags
 google-apputils
-protobuf
+protobuf3
 libdaemon
 avahi
-qt5
+srt
 "
 f_dependencias
 }
@@ -111,152 +104,152 @@ echo
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
-echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Bv/BIxdADgYSu7FL5n6pvg745dpgzgztyjlznaup/JO
-4eXHDmkgIwrAIMPh6iR1pV+e3zRZ4ilVbfbipkKS7gp15/cY/T7XjzvwnOx575jnAPcbYgioZr7c
-vWn1bj9Pv8AVso1KP8ytyNXbFBXE7ngeMfn/n7/UeUKMV/qbXAYi3MMRHs1erUQR/6wKcbaCJ3jb
-d5i9XumTQ7QjnmjVavxlQYTwgRZQ2XA+uEPW44SCGyv3Z1MDezpJ+Zr8HpDyQNgjJfKO/WIuWwZy
-OGnk+KgRbYZjIOiVTR2Ye7gj36GWj0KCIHhUKgmq3iDiPg4RtLLe0hRG/Tn3af+6LDE/uBSvEs1U
-Pf5jU7J+revgg8gCnPaKwb61C6OTBCNvXHCq4qrnG5b0odqH/Sv45ETGm8qXYcPEaCj5SJeLN4nC
-9ehU1opJP5DTFrKK0x/SFZCJe/kxKDVPpnxEeafChxa9D/fxhnRR7+ObOlWb20mYqf7gPAwYPh1B
-zb+EBGp+EZv3mQVGmeFyV9IF7xONxEk0AWXlQwsKwS2ZZWeG7jT6cUFUEN4LjSXHY1uBi9XFqtsn
-A6mCAqkTLDEL/5OB4j6ofqFHLHl0HLWiOK22+ns7TjNurzJ1y5oK35zMXe6XJY8moVWxTCrTnDiy
-COZ/lPJb2UwyTHhCvG85799r1dMxBGo2b+EUTkiJt97ksB5m4xmQnp/6zw0T4gRI6+G0OEziQtoa
-F6xcuHmq94vaTxWai9AyDn3+aYwGDHxYKF2oqfbMTeHQISEQWSTPznWHBPn28UG71kckwED+5kqy
-ppNUr27olqN5mscZ5Kj+hAr34IGtI6X0L0GC0vzyTo2cPY5zw7X0XVaDBeX4OLBicMVTB4HrNLnp
-mNQZ2w7Vje3WmLZrQQSXQylWVmYqqVELwo70m+9A2jwriWLmqAo4Bs/lAN+lIfYmkOFimVRoOVbe
-CcJZa7HPkjOoZviGGV/CnPB3p9XLzo5CaPYNlck+ofg2n4TpzRCbbzTlhQOJALeklLMMWc54u4TM
-k3JXpa1L+bO6ChDDVB628e9HMgUqi+ifyjZULEKJTusvS38y4clBKcxgWc7TNW1g18sIp06aEaZf
-fMPD/L05xP3a7/VlcTBtjadRBzp876W0llddV1SPWrXWSIqtFeaF36m8hv9vE9Z0sk/GJPFuacRJ
-yrZ04teX9WCcqABMqhYt62by3rsi/GdMShLykWE0qNW2fGVeSB0EIeAWn0It71TaOlOOtJd28wTb
-GOr9lWwWWaS2NbirbcQyho9t/Zy54KIR+SrjL6HvY4LEc4y+bx+id8mBtEjTKCyHg59sczcJOobs
-8f3qdOU8/zaemjRh5DH/acc4yC6RXI+UTnK2yl2L/tQ75hKnVwYCjCDlVcy9rEOWTwD19NPLZrqE
-a5CGya8d5hHsw2sbBzwWKOtMUXZs30URXhpAjHLqBBGLtvkpqGRs7Wl1Rh96kjefzPYUocFtswca
-M/vhbIew8BZztvTP8k5iTxuIjs/aJEsu7OedA1CanyGCMgvuOLOj+MZn5LI4Ss/9lnoqKMctAAA/
-66gW6O9E6QABqAmAOAAAPCcr/LHEZ/sCAAAAAARZWg=="|base64 -d > $TMP/patches.tar.xz
+echo "
+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
+AAGwDIA8AABmgEfcscRn+wIAAAAABFla"|base64 -d > $TMP/patches.txz
 
-tar xvf $TMP/patches.tar.xz &>/dev/null
+tar xvf $TMP/patches.txz &>/dev/null
 
-patch -p0 < ./patches/patch-dvdread-503.diff || exit 1
-patch -p0 < ./patches/patch-dvdnav-503.diff || exit 1
-patch -p0 < ./patches/patch-projectM-fontpath.diff || exit 1
-patch -p0 < ./patches/patch_vlc_cache_gen.diff || exit 1
-
-FIND=$(ls /var/log/packages|grep -m1 libva-intel-driver|cut -d- -f4)
-if [ $FIND = 1.6.2 ]; then
-LIBVA="--enable-libva=no"
-else
-LIBVA="--enable-libva"
-fi
+patch -p1 < ./patches/vlc-3.0.11.1-srt_1.4.2.patch||exit 1 
+patch -p0 < ./patches/patch_vlc_cache_gen.patch||exit 1
+#patch -p1 < ./patches/vlc-live-media-2021.patch
 
 autoreconf -fiv
 
-CFLAGS="$SLKCFLAGS" \
-CXXFLAGS="$SLKCFLAGS" \
+CFLAGS="$SLKCFLAGS  -I/usr/include/samba-4.0" \
+CXXFLAGS="$SLKCFLAGS -std=c++11" \
 LDFLAGS="$SLKLDFLAGS" \
 ./configure \
-  --prefix=/usr \
-  --libdir=/usr/lib${LIBDIRSUFFIX} \
-  --sysconfdir=/etc \
-  --mandir=/usr/man \
-  --docdir=/usr/doc/vlc-$VERSION \
-  --localstatedir=/var \
-  --enable-run-as-root \
-  --disable-opencv \
-  --disable-fdkaac \
-  --disable-schroedinger \
-  --disable-libgcrypt \
-  --disable-update-check \
-  --enable-qt=5 \
-  --enable-merge-ffmpeg \
-  --enable-archive \
-  --enable-live555 \
-  --enable-dc1394 \
-  --enable-dv1394 \
-  --enable-dvdread \
-  --enable-dvdnav \
-  --enable-bluray \
-  --enable-smbclient \
-  --enable-sftp \
-  --enable-nfs \
-  --enable-realrtsp \
-  --enable-dvbpsi \
-  --enable-gme \
-  --enable-ogg \
-  --enable-shout \
-  --enable-matroska \
-  --enable-mod \
-  --enable-mpc \
-  --enable-mad \
-  --enable-mpg123 \
-  --enable-gst-decode \
-  --enable-avcodec \
-    $LIBVA \
-  --enable-avformat \
-  --enable-postproc \
-  --enable-faad \
-  --enable-vpx \
-  --enable-twolame \
-  --enable-a52 \
-  --enable-dca \
-  --enable-flac \
-  --enable-libmpeg2 \
-  --enable-vorbis \
-  --enable-speex \
-  --enable-opus \
-  --enable-oggspots \
-  --enable-png \
-  --enable-jpeg \
-  --enable-x264 \
-  --enable-x265 \
-  --enable-zvbi \
-  --enable-libass \
-  --enable-kate \
-  --enable-vdpau \
-  --enable-sdl-image \
-  --enable-freetype \
-  --enable-fribidi \
-  --enable-harfbuzz \
-  --enable-fontconfig \
-  --enable-svg \
-  --enable-svgdec \
-  --enable-aa \
-  --enable-caca \
-  --enable-pulse \
-  --enable-alsa \
-  --enable-jack \
-  --enable-samplerate \
-  --enable-soxr \
-  --enable-chromaprint \
-  --enable-chromecast \
-  --enable-skins2 \
-  --enable-libtar \
-  --enable-ncurses \
-  --enable-lirc \
-  --enable-projectm \
-  --enable-avahi \
-  --enable-mtp \
-  --enable-upnp \
-  --enable-libxml2 \
-  --enable-gnutls \
-  --enable-taglib \
-  --enable-secret \
-  --enable-notify \
-  --enable-libplacebo \
-  --enable-vlc \
-  --enable-aribsub \
-  --enable-aom \
-  --enable-dav1d \
-  --with-kde-solid=no \
-  --build=$ARCH-slackware-linux
+    --prefix=/usr \
+    --libdir=/usr/lib${LIBDIRSUFFIX} \
+    --sysconfdir=/etc \
+    --mandir=/usr/man \
+    --docdir=/usr/doc/vlc-$VERSION \
+    --localstatedir=/var \
+    --disable-opencv \
+    --disable-update-check \
+    --with-kde-solid=no \
+    --enable-a52 \
+    --enable-aa \
+    --enable-alsa \
+    --enable-aom \
+    --enable-archive \
+    --enable-aribsub \
+    --enable-avahi \
+    --enable-avcodec \
+    --enable-avformat \
+    --enable-bluray \
+    --enable-caca \
+    --enable-chromaprint \
+    --enable-chromecast \
+    --enable-dav1d \
+    --enable-dc1394 \
+    --enable-dca \
+    --enable-dv1394 \
+    --enable-dvdread \
+    --enable-dvbpsi \
+    --enable-dvdnav \
+    --enable-faad \
+    --enable-flac \
+    --enable-fontconfig \
+    --enable-freetype \
+    --enable-fribidi \
+    --enable-gme \
+    --enable-gnutls \
+    --enable-gst-decode \
+    --enable-harfbuzz \
+    --enable-jack \
+    --enable-jpeg \
+    --enable-kate \
+    --enable-libass \
+    --enable-libva \
+    --enable-libmpeg2 \
+    --enable-libplacebo \
+    --enable-libxml2 \
+    --enable-lirc \
+    --enable-libtar \
+    --enable-live555 \
+    --enable-mad \
+    --enable-matroska \
+    --enable-merge-ffmpeg \
+    --enable-mod \
+    --enable-mpc \
+    --enable-mpg123 \
+    --enable-mtp \
+    --enable-ncurses \
+    --enable-nfs \
+    --enable-notify \
+    --enable-ogg \
+    --enable-oggspots \
+    --enable-opus \
+    --enable-png \
+    --enable-postproc \
+    --enable-projectm \
+    --enable-pulse \
+    --enable-qt=5 \
+    --enable-realrtsp \
+    --enable-run-as-root \
+    --enable-samplerate \
+    --enable-schroedinger \
+    --enable-sdl-image \
+    --enable-secret \
+    --enable-sftp \
+    --enable-shout \
+    --enable-skins2 \
+    --enable-smbclient \
+    --enable-soxr \
+    --enable-speex \
+    --enable-srt \
+    --enable-svg \
+    --enable-svgdec \
+    --enable-taglib \
+    --enable-twolame \
+    --enable-upnp \
+    --enable-vorbis \
+    --enable-vdpau \
+    --enable-vlc \
+    --enable-vpx \
+    --enable-x264 \
+    --enable-x265 \
+    --enable-zvbi \
+    --build=$ARCH-slackware-linux
   
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
-make  || exit 1
+make || exit 1
 make install DESTDIR=$PKG || exit 1
 
-mkdir -p $PKG/$(cd /usr/share/vim/vim*/syntax ; pwd)
-cp extras/analyser/vlc.vim $PKG/$(cd /usr/share/vim/vim*/syntax ; pwd)/
+install -D -m0644 extras/analyser/vlc.vim $PKG/usr/share/vim/vimfiles/syntax/vlc.vim
+rm -rf $PKG/usr/lib${LIBDIRSUFFIX}/vlc/plugins/plugins.dat
+rm -rf $PKG/usr/lib${LIBDIRSUFFIX}/*.la
 }
 
 ###################################
