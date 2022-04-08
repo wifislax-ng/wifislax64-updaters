@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220228
+SCRIPT_VERSION=20220408
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -22,10 +22,11 @@ F_variables() {
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=http://get.videolan.org/vlc
-	VERSION=$(curl -s $WEB/last/|grep $EXTENSION|head -1|cut -d- -f2|cut -dt -f-1|sed 's/.$//g')
+	#VERSION=$(curl -s $WEB/last/|grep $EXTENSION|head -1|cut -d- -f2|cut -dt -f-1|sed 's/.$//g')
+	VERSION=3.0.17.3
 	CD=$PRGNAM-$VERSION
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	DOWNLOAD=$WEB/$VERSION/$SOURCES
+	DOWNLOAD=https://download.videolan.org/$PRGNAM/$VERSION/$SOURCES
 }
 
 # Comprobar dependencias
@@ -104,41 +105,20 @@ echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
 echo "
-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
-AAGwDIA8AABmgEfcscRn+wIAAAAABFla"|base64 -d > $TMP/patches.txz
+/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Av/AhBdADgYSu7FL5n6pvg745dpgzgztyjlznaup/J2
+hqfmGrDNeaOHii2cjOvOxdHWqCo9YqhEVFkBDV3KhEcMHimzw6jdyc7N5ZhDpXvCpHfk42BXtjhb
+zfJdIjPdHkXCdym9RF0fcnWRm3VgMcAeBF9gAhuUzwQeLn+d17DisOuVD8mSxM+oCXfRa+Nu1V60
+4mrbrXWIRg0KNdWMUBnTP2Z8dElt5kVzgzoqPc8z5XFML70gN1Lsq4sL6ke9G6NiLFJaxF4bW2eT
+uIyvmaSi+VsMjovSWwR0faR/Jom9XuSzcwKeNeDQE7NjkS3afSznKzJxXjQMHUJIlAGfcI3VeKMc
+zhRCgo30PwlTgT72+jYrRNgCB1Ph+JuYZqz58W9oWz5ZCsDSXz6obA3FJr6Wa2hkDio2CacQ0HQ6
+ri1cSAfwzOknVL9YxLLL6qSykZpNdyJ8pZQ9pMU0rosXIxkzAhyzFamOQOVf5RGh2Xk4BHfJy3Jt
+vekqY3uIeBau2xVjRAOlwKHCQR8uFpLB8/8p5xYjx/q5+D22ltcxd/qUINrr6Q1JpOeKUcoIQfkz
+Q6SMSRNrya/L8YEy0AO+I8MXN8td3CILfKltF797iyWaq+DjE74KuiIdUtjOAX1dR8MJqFw9TYOS
+ULtNYXmvEoq6uU1PYSqHf45Rp1Vpqw+LjZsaivbs9+NyAEyq//4I1kxMA03qAADOvJitNWI/dgAB
+rASAGAAAe+dnp7HEZ/sCAAAAAARZWg=="|base64 -d > $TMP/patches.txz
 
 tar xvf $TMP/patches.txz &>/dev/null
-
-patch -p1 < ./patches/vlc-3.0.11.1-srt_1.4.2.patch||exit 1 
 patch -p0 < ./patches/patch_vlc_cache_gen.patch||exit 1
-#patch -p1 < ./patches/vlc-live-media-2021.patch
 
 autoreconf -fiv
 
