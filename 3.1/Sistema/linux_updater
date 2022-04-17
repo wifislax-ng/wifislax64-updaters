@@ -26,6 +26,7 @@ PRGNAM=linux
 KARCH=x86
 SCRIPTNAME=linux_updater
 TAG=wifislax
+WIFISLAX=$(cat /etc/wifislax-version|cut -d ' ' -f2|cut -d_ -f1)
 DESKTOP=$(cat '/root/.config/user-dirs.dirs' |grep DESKTOP|cut -d '"' -f2|cut -d/ -f2)
 M0DNUM=000
 MODNAM=Kernel

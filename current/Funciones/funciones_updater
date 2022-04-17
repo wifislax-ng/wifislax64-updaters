@@ -260,11 +260,6 @@ f_download(){
 if [ $GESTOR = wget ]; then
 ARGS="-N -L -c -q --show-progress --no-passive-ftp"
 fi
-if
-[ $PRGNAM = jdk ]; then
-echo ".oracle.com	TRUE	/	FALSE	1906724535	oraclelicense	accept-securebackup-cookie	oraclelicense=a">cookie
-ARGS="-N -L -c -q --user=wifislaxdevelopers@hotmail.com --password=Wifislax-ng0 --show-progress --no-passive-ftp --load-cookies=cookie"
-fi
 
 if [ $GESTOR = git ]; then
 ARGS=clone
