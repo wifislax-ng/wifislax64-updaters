@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20211125
+SCRIPT_VERSION=20220417
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -19,13 +19,14 @@ ROSA=${ROSA:-"[1;35m"}
 # Variables globales
 # El PRGNAM2 se usa en la creacion del xzm ,NO BORRAR
 # KARCH se usara siempre x86 ya que especifica arcquitectura "PC"
-ARCH="x86_64"
+ARCH=$(uname -m)
 VMLINUZ="vmlinuz"
 PRGNAM2=kernel
 PRGNAM=linux
 KARCH=x86
 SCRIPTNAME=linux_updater
 TAG=wifislax
+DESKTOP=$(cat '/root/.config/user-dirs.dirs' |grep DESKTOP|cut -d '"' -f2|cut -d/ -f2)
 M0DNUM=000
 MODNAM=Kernel
 BUILD=1
@@ -60,7 +61,7 @@ exit 0
 fi
 
 # Comprobar updates para el script
-SERVIDOR_WEB="https://raw.githubusercontent.com/wifislax-ng/wifislax64-updaters/master"
+SERVIDOR_WEB="https://raw.githubusercontent.com/wifislax-ng/wifislax64-updaters/master/$WIFISLAX"
 DIRECTORIO=$(find /opt/wifislax-updaters -type f -name ${SCRIPTNAME} | rev | cut -d/ -f2- | rev | head -1)
 SERVIDOR_VERSION=$(timeout -s SIGTERM 3 curl -s $SERVIDOR_WEB/${DIRECTORIO##*/}/${SCRIPTNAME} | grep "SCRIPT_VERSION=" | head -1 |cut -d "=" -f2)
 
@@ -258,7 +259,7 @@ make modules || exit 1
 # Cuando es un kernel rc suele aparecer solo la rama
 # Grepeamos aqui la version completa del kernel en el fichero .config
 KERNEL_VERSION=$(grep $(echo $KERNEL_ELEGIDO|cut -d- -f-1) .config|head -1|cut -d ' ' -f3)
-CONTAINER=$HOME/Desktop/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG
+CONTAINER=$HOME/$DESKTOP/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG
 mkdir -p $CONTAINER
 make modules_install INSTALL_MOD_PATH=$CONTAINER || exit 1
 
@@ -266,7 +267,7 @@ make modules_install INSTALL_MOD_PATH=$CONTAINER || exit 1
 make INSTALL_HDR_PATH=$CONTAINER/usr headers_install|| exit 1
 
 # Copiamos el vmlinuz (este con nombre generico para el modo live)
-cp /usr/src/$PRGNAM-$KERNEL_ELEGIDO/arch/$KARCH/boot/bzImage $HOME/Desktop/$VMLINUZ &>/dev/null
+cp /usr/src/$PRGNAM-$KERNEL_ELEGIDO/arch/$KARCH/boot/bzImage $HOME/$DESKTOP/$VMLINUZ &>/dev/null
 
 # Generamos kernel sources recortadas
 mv System.map ../
@@ -296,7 +297,7 @@ rm -Rf $CONTAINER/lib/firmware
 
 # Creamos xzm de kernel + sources
 dir2xzm $CONTAINER $CONTAINER.xzm -n
-mv $CONTAINER.xzm $HOME/Desktop/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm
+mv $CONTAINER.xzm $HOME/$DESKTOP/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm
 
 # Finalizamos
 rm -Rf $CONTAINER
@@ -322,8 +323,8 @@ echo ""$AMARILLO"Pulsa ENTER si quieres instalar el kernel,si no te interesa cie
 read junk
 echo ""
 echo ""$VERDE"Instalando Kernel $KERNEL_VERSION en sistema ..."$CIERRE""
-xzm2dir $HOME/Desktop/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm /
-cp -r $HOME/Desktop/$VMLINUZ /boot/vmlinuz-${KERNEL_VERSION}${VMLINUZNAME}
+xzm2dir $HOME/$DESKTOP/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm /
+cp -r $HOME/$DESKTOP/$VMLINUZ /boot/vmlinuz-${KERNEL_VERSION}${VMLINUZNAME}
 update-grub
 echo ""
 echo ""$CYAN"Instalacion completada ..."$CIERRE""
