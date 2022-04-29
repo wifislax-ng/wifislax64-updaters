@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220317
+SCRIPT_VERSION=20220429
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -53,6 +53,14 @@ python3-prompt_toolkit
 simplegeneric
 traitlets
 backcall
+pure_eval
+python-executing
+python-keyring
+wheel
+python-toml
+python2-setuptools-scm
+asttokens
+stack_data
 ipython
 functools-lru-cache
 python2-soupsieve

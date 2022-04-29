@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20211030
+SCRIPT_VERSION=20220429
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -35,7 +35,8 @@ amrwb
 celt
 libdbus-c++
 libiec61883
-libxml++
+mm-common
+libxml++3
 libconfig
 libffado
 opus
