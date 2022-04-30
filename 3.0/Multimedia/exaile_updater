@@ -86,6 +86,7 @@ wpebackend-fdo
 xdg-dbus-proxy
 webkit2gtk
 gst-python
+python3-sgmllib3k
 feedparser
 " 
 f_dependencias
