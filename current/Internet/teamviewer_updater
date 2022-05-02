@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210516
+SCRIPT_VERSION=20220502
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -41,14 +41,6 @@ rm -f $PKG/usr/bin/teamviewer
 # Re-create the generic executable
 ( cd $PKG/usr/bin; ln -s /opt/teamviewer/tv_bin/script/teamviewer teamviewer )
 
-# Link icon to /usr/share/pixmaps
-mkdir -p $PKG/usr/share/pixmaps
-( ln -sf /opt/teamviewer/tv_bin/desktop/teamviewer_256.png  $PKG/usr/share/pixmaps/TeamViewer.png )
-
-# Remove unwanted desktop file
-rm -rf $PKG/usr/share/applications/teamviewerapi.desktop
-rm -rf $PKG/opt/teamviewer/tv_bin/desktop/teamviewerapi.desktop
-
 # Create daemon
 mkdir -p $PKG/etc/rc.d
 echo '#!/bin/sh
@@ -86,6 +78,18 @@ case "$1" in
 esac' > $PKG/etc/rc.d/rc.teamviewerd
 
 chmod 755 $PKG/etc/rc.d/rc.teamviewerd
+
+echo '[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Type=Application
+Categories=Network;
+
+Name=TeamViewer
+Comment=Remote control and meeting solution.
+Exec=/opt/teamviewer/tv_bin/script/teamviewer -r
+
+Icon=TeamViewer' > $PKG/opt/teamviewer/tv_bin/desktop/com.teamviewer.TeamViewer.desktop
 }
 
 ###################################
