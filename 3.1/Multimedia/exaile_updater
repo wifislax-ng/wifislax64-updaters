@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220430
+SCRIPT_VERSION=20220507
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -77,6 +77,12 @@ python3-soupsieve
 BeautifulSoup4
 html5lib
 lxml
+python3-rfc3986
+python3-sniffio
+python3-anyio
+python3-h11
+python3-httpcore
+python3-httpx
 pylast
 musicbrainzngs
 bubblewrap
