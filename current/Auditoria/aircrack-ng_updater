@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210517
+SCRIPT_VERSION=20220514
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -33,10 +33,12 @@ echo
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
+autoreconf -fiv
+
 LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}" \
-CFLAGS="$SLKCFLAGS -fcommon" \
+CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
-./autogen.sh \
+./configure \
   --prefix=/usr \
   --libdir=/usr/lib${LIBDIRSUFFIX} \
   --sbindir=/usr/bin \
@@ -52,8 +54,7 @@ echo
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 
-make
-make docdir="/usr/doc/$PKGNAM-$VERSION" DESTDIR=$PKG install
+make DESTDIR=$PKG install
 
 # Creamos el fichero oui
 echo $VERDE
