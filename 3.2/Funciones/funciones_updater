@@ -118,7 +118,7 @@ set -e
 
 # Detecta la version instalada en el sistema
 f_versionInstalada() {
-   INSTALADA="$(ls /var/log/packages|rev|cut -d'-' -f3-|sed 's/-/ /'|rev|grep "^$PRGNAM "|cut -d' ' -f2|tail -1)"
+   INSTALADA="$(ls /var/lib/pkgtools/packages|rev|cut -d'-' -f3-|sed 's/-/ /'|rev|grep "^$PRGNAM "|cut -d' ' -f2|tail -1)"
    if [ -z $INSTALADA ];then
    INSTALADA="NO INSTALADA"
    VERSIONLOCAL=$INSTALADA
@@ -144,7 +144,7 @@ f_versionInstalada() {
 
 # Si el paquete esta instalado y es el mismo se sube el numero de build
 if [ "$INSTALADA" = $VERSION ]; then
-BUILDLOCAL="$(ls /var/log/packages/$PRGNAM-$INSTALADA-*|rev|cut -d'-' -f1|grep -o "[0-9]*"|rev|tail -1)"
+BUILDLOCAL="$(ls /var/lib/pkgtools/packages/$PRGNAM-$INSTALADA-*|rev|cut -d'-' -f1|grep -o "[0-9]*"|rev|tail -1)"
 BUILD=$(expr $BUILDLOCAL + 1)
 fi
 
@@ -156,7 +156,7 @@ f_dependencias(){
 echo "$ROSA"Comprobando dependencias ..."$CIERRE"
 echo ""
 for D in $DEPENDENCIAS; do
-BUSCAR=$(echo "$(ls /var/log/packages|rev|cut -d '-' -f4-|rev|grep -x $D)")
+BUSCAR=$(echo "$(ls /var/lib/pkgtools/packages|rev|cut -d '-' -f4-|rev|grep -x $D)")
 if [ -z "$BUSCAR" ]; then
 echo "${BLANCO}Dependencia ${AMARILLO}${D} ${ROJO}NO INSTALADA${BLANCO} ...resolviendo${CIERRE}."
 UPDATER=$(echo "$(find /opt/wifislax-updaters/* -name ${D}_updater)")
@@ -182,7 +182,7 @@ if [ ! -d ${HOME}/$DESKTOP/${PRGNAM}_depends/$GROUP ]; then
 mkdir -p ${HOME}/$DESKTOP/${PRGNAM}_depends/$GROUP
 fi
 fi
-VERIFICAR=$(echo "$(ls /var/log/packages|rev|cut -d '-' -f4-|rev|grep -x $D)")
+VERIFICAR=$(echo "$(ls /var/lib/pkgtools/packages|rev|cut -d '-' -f4-|rev|grep -x $D)")
 if [ -z "$VERIFICAR" ]; then
 echo ""
 echo "${ROJO}No se puedo resolver la dependencia ${AMARILLO}${D}${CIERRE}."
@@ -201,7 +201,7 @@ rm -rf /usr/src/slapt-src/${GROUP}/${D}
 find /usr/src/slapt-src -empty -type d -delete
 else
 xterm -e sh -c "yes y | $UPDATER"
-VERIFICAR=`echo "$(ls /var/log/packages|rev|cut -d '-' -f4-|rev|grep -x $D)"`
+VERIFICAR=`echo "$(ls /var/lib/pkgtools/packages|rev|cut -d '-' -f4-|rev|grep -x $D)"`
 if [ -z "$VERIFICAR" ]; then
 echo ""
 echo "${ROJO}No se puedo resolver la dependencia ${AMARILLO}${D}${CIERRE}."
@@ -233,7 +233,7 @@ f_elimina() {
 
    echo ""
    echo "$ROJO"Eliminando la version del sistema..."$CIERRE"
-   removepkg $(ls /var/log/packages|rev|cut -d'-' -f3-|sed 's/-/ /'|rev|grep "^$PRGNAM "|cut -d' ' -f1)
+   removepkg $(ls /var/lib/pkgtools/packages|rev|cut -d'-' -f3-|sed 's/-/ /'|rev|grep "^$PRGNAM "|cut -d' ' -f1)
 }
 
 # Crea el directorio temporal de trabajo
