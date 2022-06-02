@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220420
+SCRIPT_VERSION=20220602
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -30,25 +30,25 @@ F_variables() {
 # Creamos directorios , eliminamos sobrantes .git y movemos
 F_compilar(){
 echo "$VERDE"Compilando ..."$CIERRE"
-echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4BP/A+5dABhoCEWkVCEyh/JK0ItzgRmFhm6NLSuMjSLX
-N+iWTi2P5fbAJfF7FiBrn8C2U/Ic4VLQbBVS8pjvN0/eI45Kt5OsnOzkYfEr9fYV2V+7A5Ji7uD7
-2Bs+UBDGCAMZiaPgsrLyKRbByRYvVfMDMeZV6Hu5KqKQIBZcuR3zpPdJ6SzVr0Sx7v4Hg2OIdyyX
-r8D/k5GE4CGG9Jwl6js1ZWmf3KBKIBDOiYvjuNiHZCmWAg85YonG+Mbzak1uf55Y5DJA3soVHGlY
-b/Ob2mZ9i8c0kasoz4844ui+ezf27lMO5fqH2jO/WMkDIyVsrx/VVGUs1ZEGiwYh2yjOcASwIy/x
-S4tOBzdQhGk1yvJhf45tzrIvPEqKtPdm/dyopL84Oz/kY/2Qeq1CbxhJbwy552OkfJMubTm74NQX
-Q8SEVyRd4cXe76Wxz2X9csmsB7Hrc0ROaLy8piaF8fZc5a8RAHFyvPobHywqOXuKpCxDEfVSlkaC
-BdnSLyyukuo5y6wHb/DB9LFDPZ9VbNqOGJD9TUbEFll/2BwctfZ2e2HCW4zoQkd4YRJV61AauBdv
-RIxthbwzpX+J2mW9DPfovydM/uoZ2XHUrTtTB5H4buu/f990uqG84LY3hVhSltBFNPvodQyet8JA
-2cNpb9SgMZzzzbkCb+XW+On3/LX8SwDY0S4XEd9BrRNnGwK6ZWUtILjHC96ZsUr7pq1BZ6pcKevB
-BV8RX21SMLyhB4gM9WDfdRtiuuBT2WMkdvPXLglePFyQIGc999QcLYDEzGfZ6j/9ojAeWdbt5Owd
-PGThN7URBwcbPZuptKHMTlBRsd3PTz7cjbYTX3P3OlZ4mEBjVG3A+uZ7jpqjqggQ7LnGPsL5MQAv
-sgd7iWzAOe61OAbE3I9XztYFdRJWUESGIePIwJwrQ7UVJ1lukUAc57Ph48a/bhE3m3vlNh3CpuIQ
-g+y7A38T1dLGwpc39Gm7X7dB/5AV6H+rr6mGFUu2Y78ClxuSPU1x3Qg23HxDR8jmsa788gXw/2AR
-KSfko2kkectHUqpecUEdxx1wbwF1nsJp8146pnd3t4zKYLTgq24ji7b0NhuxAr/+ZAvB/e0PNZ9B
-WhQLQUx3lIro2ylJ/jA623ELwjuQ/ke4f7ToFWG0nwKj1DifZynRD3RanJm8p6NnyPeCUt/v1T47
-K0iIdwap+U4X3U6kcIcOKaR9NzPurWwR/Zm0YndHoOo5Jb28QpXsKW7bydhaKUsLxFNoZo6gnWXl
-nY8JXH/k6RlKDt543WHeKEFyW0LBsRsfVm7FlgfSLb9LVFQ78blEJ5zG3sproqUFyimc8EICEkjK
-AIjmHYaribawZqAAAACUMgWGkcwrGQABigiAKAAAwQkJl7HEZ/sCAAAAAARZWg=="|base64 -d > $TMP/patch.txz
+echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4BP/A+xdABhoCEWkVCEyh/JK0ItzgRmFhm6NLSuMjSLX
+N+iWTi2P5fbAJfF7FiBrn8C2U/Ic4VLQbBVS8pjvN0/eI45Kt5OsnOzkYfEzwPjtCDeOdLSUVsI6
+s5rczZn5kF22KWZoXIG2Lnv/WaJM27ZSEa3EvhHdjCis0aKBCgQJOfi5vqBcD4CrstSqFZx/9dDT
+ylfgoMWlgTDzfC4w4cIx1YHgDqczH08tP/4hoWtnUKpkIAtD2y7I7rzUoTJxveDuq64pWX2a+AcB
+FzKqh3MngELV3kEn9wYV0ALr9McTDbArxyM6kopyVu7Wr5nNVUWW054ZhdWhvfFJI13mWyFQUkr1
+BDyYxegs3AiklDR7eVV8o2+5PEUzXVAOrDxCqdlVsZTv2OYS9G1sp9lX0C6HxQT9ycUBihjMdWLs
+WVWZ9z5pGWUluTvuNdJAC8jruTouOwnAelTm6wOfU0O+mb7fMNjVPLIwIHEANsGfgOuVIMymwp8y
+I8y8xA+CrfQvma1AWRFLf3bLm/8mscFuSPlGB4kO1InnpB/uA+mDUM6SEaGJoXJ1Nx+bL/l1POsF
+7TvlDE+MrT/5N0OBD+e6XyMAJGJmC37//G64H5UE4HcM2aX2xTlspq9kC21eFgsdIftHR5M1HWYz
+xrInHcVieWCShm5Df1PMeYI1j7zPrjydsGPy0oEdezoww/Ez6RGidsqYsThhVvCP63rrDBm6NtBx
+AVw75MAVGztOsk2L0idkJpF/eZItom/0I9+9K8UwxMmxPZrjv9kWAW2LbYVncxSqm/usAY3hBMtf
+pTLgpdxJztWjri3u5HoG0m4Pkqy0c2s+SuTA3Hi2VFNw6yAb8Jb8XdKpA5qVZQM8Snew49CxgxaI
+A6CrlE5sVEtZxB6MNg2XI3Gm+tbCW3U/WcEwk1bF+fAcv/t340zNeIWgiEzYEbqLRg1442MuBTqG
+MXqC2VGE1eO96YmjBrxfP/lBf5xIPwSI0rM18DxyNlCZSSTBeldfUXB8l5dz+Bju03Y6s/KtkL05
+vRaWP/XaT7onLkcSl8M7ffjHVDfau9EL4vRZbqUeT9VZQOvL2g+hbyPlieTAZCY2UZSNMoyotFCI
+wmHP4eOc5t3QwFnET/D5DAkQjD0u3EnREaVsANgJ94iocVBsdVo9fue0gmCfLBoCB7gt9JlF+Tkj
+9g8tENFTEd6ZqQzw4iwL3SaH3+r7o49arSIhfaiAJJwY+dStTddLK5kQXp0F74YeEq4ly0Ij0I0Y
+FpbxFPNdZEgTkPsVh29MsnCZ46jIxPTqZ1yShPBiILV+gnOkNq9lhgWLbuAoh0uLzX3+8agq8IT0
+vsRtzcRj+oEAAMRmMCuz7gO5AAGICIAoAADKqMHascRn+wIAAAAABFla"|base64 -d > $TMP/patch.txz
 tar xvf $TMP/patch.txz &>/dev/null
 patch -p1 < ./0001-Add-support-for-compressing-firmware-in-copy-firmware.patch||exit 1
 make DESTDIR=$PKG FIRMWAREDIR=/lib/firmware installcompress
