@@ -2,7 +2,7 @@
 
 # Script for www.seguridadwireless.net by vk496
 
-SCRIPT_VERSION=20210909
+SCRIPT_VERSION=20220722
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -154,7 +154,7 @@ if [ $CREAR_MODULO = SI ]; then
    mkdir -p $PKG/usr/bin/ $PKG/usr/share/applications/wifislax/Actualizadores/Tools $PKG/{opt,etc}/wifislax-updaters $PKG/usr/share/pixmaps
    cp -Ru /usr/share/applications/wifislax/Actualizadores/ $PKG/usr/share/applications/wifislax/
    cp -Ru /opt/wifislax-updaters/ $PKG/opt/
-   cp -Ru /usr/share/pixmaps/{Blacklist_updaters.png,updaters.png,buscador_updaters.png,Config_updaters.png} $PKG/usr/share/pixmaps/
+   cp -Ru /usr/share/pixmaps/{Blacklist_updaters.png,wifislax-updater.png,buscador_updaters.png,Config_updaters.png} $PKG/usr/share/pixmaps/
    cp -Ru /etc/wifislax-updaters/* $PKG/etc/wifislax-updaters
    cp -Ru /usr/bin/{buscador_updaters,Config_updaters,Blacklist_updaters,slackbuilds.txt_updater,base_updater} $PKG/usr/bin/
    
