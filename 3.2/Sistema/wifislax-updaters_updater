@@ -126,7 +126,7 @@ for carpeta in $carpetas; do
 echo "[Desktop Entry]
 Categories=$CATEGORIA;
 Exec=sh -c \"/opt/wifislax-updaters/$carpeta/$archivo;bash\"
-Icon=updaters
+Icon=wifislax-updater
 MimeType=
 Name=$PRGNAM_CORTO
 Path=/opt/wifislax-updaters/$carpeta/
