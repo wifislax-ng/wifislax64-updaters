@@ -33,6 +33,27 @@ F_compilar(){
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
+echo "
+/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4A//A21dABqLgohI+L6zWFrp6vuDaJ7GiXBc88j0dslS
+b+xOnIqpNa9zjSgPgTOlV8FXyfZOmbasLFT3/wgm835ScqlXn/TO0KnYNL94censqw7KtHrczEeA
+G/+oesf1X+duvSScnTGsYd8VfXy61KeHUTQAVFqtFNDr6uuioNK9IqYbRzOTxbr+k+qiXKjHFZ2H
+HFPdezyR/fEZLQ8TuzRNuX0bSYQpdaYrda0BlLNf6+eUmfnbUppmX6/63JzIYG+viW1hyhRj+Vso
+yIcF3GJWfiiGw6W6QqbPZzOCaOVpZItr/9I8Y/O+9M73eYaudcvxPjbAwSap+fe1qLEdUTd+AGGN
+dTgBfRTUmxyw1UcWPRVbuHRq1pgksnltEVVIBLWVr3WphLc22XYx0ASEuBBZ0o82S4PQ5Z5WO8ey
+OWrhxL2a37sh/jCDP4rvmIM1jX+Kxo4KDuNYeblHq+E+VkjzxaFceGAze7LGz9dEWw6qxU7993vG
+jpeRHCWu96LTSA/osOsirw0A6iP89cJmZAAQpYaf7Myzs4Dx/88JpuuKUpbnQDirNGHV6AqH6HGH
+0BpLci+OnNl/CYUvIFxoTgYkXMi8hH4yjFbc0SlHpqmN2uCLlvep7FrbJTRtHj7tczZ1t09m6FpV
+5yCOeFpnk8vJNr0nyWJnBBP3tGCpAmai4GR1IO0KbJyv8aiF5UN2XoObwG3yqp0j81hDsLKXUzou
+OPxWEYjNRKSCKpDsSjJEXJgVBPWStmgQdjEFUJ+cLxB08QQ2CpuvtUJ6RGWAG5tO0jfBTaO5MAuA
+nBfXgOM5vNeQQTU6IqJlZen6RAi2T71c54789zZGtkZXL5AYStXytJtkba11Di2O75KFy1E495Kw
+sdeNz4dbHxlmDCtmI2kKRGvvPBRQpGBSGIwWxCR1hw5j+/Bv6ABIuaM9KAFtcyLSf3HWjFSSNYcx
+PepYdla4B9mfi5XQcd5h0FdeVFB5u/OCcdPXQOdNJUcOw//jdDUdtEehifQR4eSPNX9A9hgvkDZ9
+NvVJcVC4j2TBJ07CKXStCK9asWPFXqi6qugZvfhuz5O1cVgTrSk8v0aG84xOn0hHBV4E8l6V6r89
+9JYStZAsv+3wGxail8AHuepjFvVjoNZLVZqf3giKW2rQeVmVhnmdBMoqWyKE/LEyxqf/uwAAAAAA
+K2f86yIOCTQAAYkHgCAAAAa93p2xxGf7AgAAAAAEWVo="|base64 -d > $TMP/5.19-Fix.txz
+tar xvf $TMP/5.19-Fix.txz &>/dev/null
+patch -p0 < ./5.19-Fix.patch||exit 1
+
 make || exit 1
 mkdir -p $PKG/lib/modules/$(uname -r)/kernel/drivers/net/wireless/
 make install MODDESTDIR=$PKG/lib/modules/$(uname -r)/kernel/drivers/net/wireless/|| exit 1
