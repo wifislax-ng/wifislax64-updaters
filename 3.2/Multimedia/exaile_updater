@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220507
+SCRIPT_VERSION=20220823
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -31,6 +31,8 @@ F_variables() {
 # Comprobar dependencias
 F_dependencias(){
 DEPENDENCIAS="
+libdaemon
+avahi
 cddb-py
 streamripper
 mutagen
