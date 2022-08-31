@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220410
+SCRIPT_VERSION=20220901
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -20,7 +20,7 @@ F_variables() {
 	GESTOR=git
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/drygdryg/$PRGNAM
-	VERSION="5.3.9_$(curl -s $WEB|grep -v kernel/|grep commit/|head -1|cut -d / -f6|cut -c 1-7)"
+	VERSION="5.3.9_$(curl -s $WEB|grep -v kernel/|grep commit/|head -1|cut -d/ -f5|cut -c 1-7)"
 	SOURCES=$PRGNAM
 	CD=$SOURCES
 	DOWNLOAD=$WEB
