@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220827
+SCRIPT_VERSION=20220906
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -30,8 +30,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="
-libdaemon
+DEPENDENCIAS="libdaemon
 avahi
 cddb-py
 streamripper
@@ -100,8 +99,7 @@ xdg-dbus-proxy
 webkit2gtk
 gst-python
 python3-sgmllib3k
-feedparser
-" 
+feedparser"
 f_dependencias
 }
 
