@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210621
+SCRIPT_VERSION=20220918
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -23,7 +23,7 @@ F_variables() {
 	WEB=https://www.frostwire.com/downloads
 	VERSION=$(curl -s ${WEB}|grep '>v[0-9]'|tail -1|cut -d v -f2|cut -d '<' -f-1|cut -d ' ' -f1)
 	SOURCES=$PRGNAM-$VERSION.amd64.$EXTENSION
-	DOWNLOAD=https://dl.frostwire.com/frostwire/$VERSION/$SOURCES
+	DOWNLOAD="--no-check-certificate https://dl.frostwire.com/frostwire/$VERSION/$SOURCES"
 }
 
 #Comprobar dependencias
