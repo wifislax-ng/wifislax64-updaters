@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20201005
+SCRIPT_VERSION=20220923
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -20,10 +20,10 @@ F_variables() {
 	EXTENSION=jar
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/angryip/ipscan/releases
-	VERSION=$(curl -s $WEB|grep .jar|grep linux64|head -1|cut -d / -f6)
+	WEB=https://github.com/angryip/$PRGNAM
+	VERSION=$(curl -s $WEB/tags|grep .tar.gz|head -1|cut -d / -f7|cut -dt -f1|sed 's/.$//g')
 	SOURCES=ipscan-linux${LIBDIRSUFFIX}-$VERSION.$EXTENSION
-	DOWNLOAD=$WEB/download/$VERSION/$SOURCES
+	DOWNLOAD=$WEB/releases/download/$VERSION/$SOURCES
 }
 
 #Comprobar dependencias

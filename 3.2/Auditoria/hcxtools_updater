@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210220
+SCRIPT_VERSION=20220923
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -21,7 +21,7 @@ F_variables() {
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/ZerBea/$PRGNAM
-	VERSION=$(curl -s $WEB/releases|grep $EXTENSION|head -1|cut -d/ -f6)
+	VERSION=$(curl -s $WEB/tags|grep $EXTENSION|head -1|cut -d/ -f7|cut -dt -f1|sed 's/.$//g')
 	SOURCES=$VERSION.$EXTENSION
 	CD=$PRGNAM-$VERSION
 	DOWNLOAD=$WEB/archive/$SOURCES
