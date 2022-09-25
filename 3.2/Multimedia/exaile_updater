@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220906
+SCRIPT_VERSION=20220925
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -36,7 +36,7 @@ cddb-py
 streamripper
 mutagen
 bsddb3
-pluggy
+python3-pluggy
 py
 more-itertools
 atomicwrites
