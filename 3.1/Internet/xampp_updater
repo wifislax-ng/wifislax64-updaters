@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220923
+SCRIPT_VERSION=20221001
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -221,6 +221,7 @@ Vk4Cq2nUm+H/IQRSF/LMJwrOeebLibKcKMvkIroHn5TIPCYA3/67BweS0yPbgsD+aU7im4Jy0Zp8
 +/bAGGMM2Faa/7+QRLOWcIBzQoSgcWk8lmC2bApzGnYekKD9Pz7yz09f+h8vyfPYNv/ETwAAAABJ
 RU5ErkJggg==
 " | base64 -d > $PKG/usr/share/pixmaps/xampp.png
+chmod 777 -R $PKG/opt/lampp
 }
 
 ###################################
