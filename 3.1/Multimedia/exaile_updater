@@ -86,6 +86,7 @@ python3-soupsieve
 BeautifulSoup4
 python3-webencodings
 html5lib
+python2-BeautifulSoup4
 lxml
 python3-rfc3986
 python3-sniffio
