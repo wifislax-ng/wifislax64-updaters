@@ -55,6 +55,7 @@ x265
 xvidcore
 libdbus-c++
 libconfig
+mm-common
 libxml++3
 libffado
 jack
