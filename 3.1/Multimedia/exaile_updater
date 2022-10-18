@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20221015
+SCRIPT_VERSION=20221018
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -53,6 +53,14 @@ pathlib
 pickleshare
 python3-prompt_toolkit
 simplegeneric
+wheel
+python3-pep517
+python3-build
+python3-installer
+python3-pluggy
+python3-editables
+python3-pathspec
+python3-hatchling
 traitlets
 python3-matplotlib-inline
 backcall
@@ -62,7 +70,6 @@ entrypoints
 python2-setuptools-scm
 python-jeepney
 secretstorage
-wheel
 asn1crypto
 pyasn1
 python-toml
