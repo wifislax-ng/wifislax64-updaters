@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220512
+SCRIPT_VERSION=20221021
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -74,6 +74,9 @@ libreplaygain
 musepack-tools
 vcdimager
 dirac
+ORBit2
+libbonobo
+gnome-mime-data
 gnome-vfs
 live555
 rtmpdump
