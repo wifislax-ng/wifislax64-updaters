@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20220602
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=firmwares
+	SRCNAM=linux-firmware
+	GESTOR=git
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+	VERSION=$(lynx -dump -width=256 $WEB/commit/?id=HEAD | grep "   committer " | head -n 1 | rev | cut -f 3 -d ' ' | rev | tr -d -)
+	SOURCES=$PRGNAM
+	CD=$SRCNAM
+	DOWNLOAD=$WEB
+}
+
+# Creamos directorios , eliminamos sobrantes .git y movemos
+F_compilar(){
+echo "$VERDE"Compilando ..."$CIERRE"
+echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4BP/A+xdABhoCEWkVCEyh/JK0ItzgRmFhm6NLSuMjSLX
+N+iWTi2P5fbAJfF7FiBrn8C2U/Ic4VLQbBVS8pjvN0/eI45Kt5OsnOzkYfEzwPjtCDeOdLSUVsI6
+s5rczZn5kF22KWZoXIG2Lnv/WaJM27ZSEa3EvhHdjCis0aKBCgQJOfi5vqBcD4CrstSqFZx/9dDT
+ylfgoMWlgTDzfC4w4cIx1YHgDqczH08tP/4hoWtnUKpkIAtD2y7I7rzUoTJxveDuq64pWX2a+AcB
+FzKqh3MngELV3kEn9wYV0ALr9McTDbArxyM6kopyVu7Wr5nNVUWW054ZhdWhvfFJI13mWyFQUkr1
+BDyYxegs3AiklDR7eVV8o2+5PEUzXVAOrDxCqdlVsZTv2OYS9G1sp9lX0C6HxQT9ycUBihjMdWLs
+WVWZ9z5pGWUluTvuNdJAC8jruTouOwnAelTm6wOfU0O+mb7fMNjVPLIwIHEANsGfgOuVIMymwp8y
+I8y8xA+CrfQvma1AWRFLf3bLm/8mscFuSPlGB4kO1InnpB/uA+mDUM6SEaGJoXJ1Nx+bL/l1POsF
+7TvlDE+MrT/5N0OBD+e6XyMAJGJmC37//G64H5UE4HcM2aX2xTlspq9kC21eFgsdIftHR5M1HWYz
+xrInHcVieWCShm5Df1PMeYI1j7zPrjydsGPy0oEdezoww/Ez6RGidsqYsThhVvCP63rrDBm6NtBx
+AVw75MAVGztOsk2L0idkJpF/eZItom/0I9+9K8UwxMmxPZrjv9kWAW2LbYVncxSqm/usAY3hBMtf
+pTLgpdxJztWjri3u5HoG0m4Pkqy0c2s+SuTA3Hi2VFNw6yAb8Jb8XdKpA5qVZQM8Snew49CxgxaI
+A6CrlE5sVEtZxB6MNg2XI3Gm+tbCW3U/WcEwk1bF+fAcv/t340zNeIWgiEzYEbqLRg1442MuBTqG
+MXqC2VGE1eO96YmjBrxfP/lBf5xIPwSI0rM18DxyNlCZSSTBeldfUXB8l5dz+Bju03Y6s/KtkL05
+vRaWP/XaT7onLkcSl8M7ffjHVDfau9EL4vRZbqUeT9VZQOvL2g+hbyPlieTAZCY2UZSNMoyotFCI
+wmHP4eOc5t3QwFnET/D5DAkQjD0u3EnREaVsANgJ94iocVBsdVo9fue0gmCfLBoCB7gt9JlF+Tkj
+9g8tENFTEd6ZqQzw4iwL3SaH3+r7o49arSIhfaiAJJwY+dStTddLK5kQXp0F74YeEq4ly0Ij0I0Y
+FpbxFPNdZEgTkPsVh29MsnCZ46jIxPTqZ1yShPBiILV+gnOkNq9lhgWLbuAoh0uLzX3+8agq8IT0
+vsRtzcRj+oEAAMRmMCuz7gO5AAGICIAoAADKqMHascRn+wIAAAAABFla"|base64 -d > $TMP/patch.txz
+tar xvf $TMP/patch.txz &>/dev/null
+patch -p1 < ./0001-Add-support-for-compressing-firmware-in-copy-firmware.patch||exit 1
+make DESTDIR=$PKG FIRMWAREDIR=/lib/firmware installcompress
+# Vamos a ahorrar espacio
+rm -rf $PKG/lib/firmware/{bnx2x,libertas,liquidio,mellanox,mrvl,mwl8k,mwlwifi,netronome,qcom,qed,qlogic}
+rm -rf $PKG/lib/firmware/{a300_*,bnx2x*,cbfw*,ct2fw*,ctfw*,ql2*}
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Asignamos o detectamos arquitectura
+f_arquitectura noarch
+#Comprobamos version instalada del script
+f_versionInstalada
+#Descarga los firmwares mas nuevos disponibles
+f_download
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Creamos xzm , instalamos y salimos
+f_tareasFinales

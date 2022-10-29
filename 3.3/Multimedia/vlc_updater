@@ -1,0 +1,273 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20221021
+CATEGORIA="Reproductores multimedia"
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=vlc
+	EXTENSION=tar.xz
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=http://get.videolan.org/vlc
+	VERSION=$(curl -s $WEB/last/|grep $EXTENSION|head -1|cut -d- -f2|cut -dt -f-1|sed 's/.$//g')
+	CD=$PRGNAM-$VERSION
+	SOURCES=$PRGNAM-$VERSION.$EXTENSION
+	DOWNLOAD=https://download.videolan.org/$PRGNAM/$VERSION/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="
+soxr
+dav1d
+libgme
+libiec61883
+libconfig
+libdbus-c++
+mm-common
+libxml++3
+libffado
+celt
+perl-Cstools
+perl-Unicode-Map
+perl-Unicode-String
+perl-Unicode-Map8
+enca
+libass
+libdc1394
+libdvbpsi
+libmpeg2
+libupnp
+lua
+portaudio
+twolame 
+gsm
+numpy3
+libtar
+libkate
+faac
+libdca
+libebml
+libmatroska
+libshout
+jack
+libsidplay2
+zvbi
+faad2
+libavc1394
+libmodplug
+libcuefile
+libreplaygain
+musepack-tools
+vcdimager
+dirac
+ORBit2
+libbonobo
+gnome-mime-data
+gnome-vfs
+live555
+rtmpdump
+libdvdcss
+schroedinger
+libminizip
+chromaprint
+x264
+x265
+libaacs
+libbdplus
+ftgl
+aom
+libplacebo
+libnfs
+pytz
+python-gflags
+google-apputils
+protobuf3
+libdaemon
+avahi
+srt"
+f_dependencias
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
+sleep 1
+
+echo "
+/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Av/AhBdADgYSu7FL5n6pvg745dpgzgztyjlznaup/J2
+hqfmGrDNeaOHii2cjOvOxdHWqCo9YqhEVFkBDV3KhEcMHimzw6jdyc7N5ZhDpXvCpHfk42BXtjhb
+zfJdIjPdHkXCdym9RF0fcnWRm3VgMcAeBF9gAhuUzwQeLn+d17DisOuVD8mSxM+oCXfRa+Nu1V60
+4mrbrXWIRg0KNdWMUBnTP2Z8dElt5kVzgzoqPc8z5XFML70gN1Lsq4sL6ke9G6NiLFJaxF4bW2eT
+uIyvmaSi+VsMjovSWwR0faR/Jom9XuSzcwKeNeDQE7NjkS3afSznKzJxXjQMHUJIlAGfcI3VeKMc
+zhRCgo30PwlTgT72+jYrRNgCB1Ph+JuYZqz58W9oWz5ZCsDSXz6obA3FJr6Wa2hkDio2CacQ0HQ6
+ri1cSAfwzOknVL9YxLLL6qSykZpNdyJ8pZQ9pMU0rosXIxkzAhyzFamOQOVf5RGh2Xk4BHfJy3Jt
+vekqY3uIeBau2xVjRAOlwKHCQR8uFpLB8/8p5xYjx/q5+D22ltcxd/qUINrr6Q1JpOeKUcoIQfkz
+Q6SMSRNrya/L8YEy0AO+I8MXN8td3CILfKltF797iyWaq+DjE74KuiIdUtjOAX1dR8MJqFw9TYOS
+ULtNYXmvEoq6uU1PYSqHf45Rp1Vpqw+LjZsaivbs9+NyAEyq//4I1kxMA03qAADOvJitNWI/dgAB
+rASAGAAAe+dnp7HEZ/sCAAAAAARZWg=="|base64 -d > $TMP/patches.txz
+
+tar xvf $TMP/patches.txz &>/dev/null
+patch -p0 < ./patches/patch_vlc_cache_gen.patch||exit 1
+
+autoreconf -fiv
+
+CFLAGS="$SLKCFLAGS  -I/usr/include/samba-4.0" \
+CXXFLAGS="$SLKCFLAGS -std=c++11" \
+LDFLAGS="$SLKLDFLAGS" \
+./configure \
+    --prefix=/usr \
+    --libdir=/usr/lib${LIBDIRSUFFIX} \
+    --sysconfdir=/etc \
+    --mandir=/usr/man \
+    --docdir=/usr/doc/vlc-$VERSION \
+    --localstatedir=/var \
+    --disable-opencv \
+    --disable-update-check \
+    --with-kde-solid=no \
+    --enable-a52 \
+    --enable-aa \
+    --enable-alsa \
+    --enable-aom \
+    --enable-archive \
+    --enable-aribsub \
+    --enable-avahi \
+    --enable-avcodec \
+    --enable-avformat \
+    --enable-bluray \
+    --enable-caca \
+    --enable-chromaprint \
+    --enable-chromecast \
+    --enable-dav1d \
+    --enable-dc1394 \
+    --enable-dca \
+    --enable-dv1394 \
+    --enable-dvdread \
+    --enable-dvbpsi \
+    --enable-dvdnav \
+    --enable-faad \
+    --enable-flac \
+    --enable-fontconfig \
+    --enable-freetype \
+    --enable-fribidi \
+    --enable-gme \
+    --enable-gnutls \
+    --enable-gst-decode \
+    --enable-harfbuzz \
+    --enable-jack \
+    --enable-jpeg \
+    --enable-kate \
+    --enable-libass \
+    --enable-libva \
+    --enable-libmpeg2 \
+    --enable-libplacebo \
+    --enable-libxml2 \
+    --enable-lirc \
+    --enable-libtar \
+    --enable-live555 \
+    --enable-mad \
+    --enable-matroska \
+    --enable-merge-ffmpeg \
+    --enable-mod \
+    --enable-mpc \
+    --enable-mpg123 \
+    --enable-mtp \
+    --enable-ncurses \
+    --enable-nfs \
+    --enable-notify \
+    --enable-ogg \
+    --enable-oggspots \
+    --enable-opus \
+    --enable-png \
+    --enable-postproc \
+    --enable-projectm \
+    --enable-pulse \
+    --enable-qt=5 \
+    --enable-realrtsp \
+    --enable-run-as-root \
+    --enable-samplerate \
+    --enable-schroedinger \
+    --enable-sdl-image \
+    --enable-secret \
+    --enable-sftp \
+    --enable-shout \
+    --enable-skins2 \
+    --enable-smbclient \
+    --enable-soxr \
+    --enable-speex \
+    --enable-srt \
+    --enable-svg \
+    --enable-svgdec \
+    --enable-taglib \
+    --enable-twolame \
+    --enable-upnp \
+    --enable-vorbis \
+    --enable-vdpau \
+    --enable-vlc \
+    --enable-vpx \
+    --enable-x264 \
+    --enable-x265 \
+    --enable-zvbi \
+    --build=$ARCH-slackware-linux
+  
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
+sleep 1
+make || exit 1
+make install DESTDIR=$PKG || exit 1
+
+install -D -m0644 extras/analyser/vlc.vim $PKG/usr/share/vim/vimfiles/syntax/vlc.vim
+rm -rf $PKG/usr/lib${LIBDIRSUFFIX}/vlc/plugins/plugins.dat
+rm -rf $PKG/usr/lib${LIBDIRSUFFIX}/*.la
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Comprobamos version instalada del script
+f_versionInstalada
+# Comprobar dependencias
+F_dependencias
+#Si no existe el fichero se descargara
+f_download
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales
