@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20211116
+SCRIPT_VERSION=20221031
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -45,7 +45,7 @@ sed -r 's|(/usr/bin/steam)|\1-runtime|' -i steam.desktop
 make DESTDIR="${PKG}" install
 
 echo "#!/bin/sh
-exec /usr/lib/steam/steam "$@"" > "${PKG}/usr/bin/steam-runtime"
+exec /usr/lib/steam/steam -no-cef-sandbox "$@"" > "${PKG}/usr/bin/steam-runtime"
 chmod +x "${PKG}/usr/bin/steam-runtime"
 install -d "${PKG}/usr/lib/steam"
 mv "${PKG}/usr/bin/steam" "${PKG}/usr/lib/steam/steam"
