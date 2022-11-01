@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210725
+SCRIPT_VERSION=20221101
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -22,23 +22,23 @@ F_variables() {
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://dist.torproject.org/torbrowser
 	VERSION=$(curl -s $WEB/|sed -e 's/\(<[^<][^<]*>\)//g'|grep "\."|grep -|awk '{print $1}'|sort -g|tail -1|cut -d "/" -f1)
-	SOURCES=$(curl -s $WEB/$VERSION/|sed -e 's/\(<[^<][^<]*>\)//g'|awk '{print $1}'|grep ${EXTENSION}$|grep -i "$(echo $LANG|cut -d. -f1|sed 's/_/-/g')"|grep 64)
+	SOURCES=$(curl -s $WEB/$VERSION/|sed -e 's/\(<[^<][^<]*>\)//g'|awk '{print $1}'|grep ${EXTENSION}$|grep 64|grep ALL)
 	DOWNLOAD=$WEB/$VERSION/$SOURCES
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-mkdir -p  $PKG/{opt,usr/share/applications/}
-mv $TMP/${PRGNAM}_* $PKG/opt/Tor
+mkdir -p  $PKG/{opt/Tor,usr/share/applications/}
+mv $TMP/$PRGNAM/Browser/* $PKG/opt/Tor/
 #Permitimos usuarios root para ejecutar Tor
 find $PKG/opt/Tor -type f -name start-tor-browser -exec sed -i -e 's/`" -eq 0/`" -eq 1/g' {} \;
 #Cambiamos de propietario
 chown -R root:root $PKG/*
 # Hacemos nuestro desktop
 echo "[Desktop Entry]
-Exec=/opt/Tor/Browser/start-tor-browser
-Path=/opt/Tor/Browser/
-Icon=/opt/Tor/Browser/browser/chrome/icons/default/default48.png
+Exec=/opt/Tor/start-tor-browser
+Path=/opt/Tor/
+Icon=/opt/Tor/browser/chrome/icons/default/default128.png
 Type=Application
 Categories=Network;
 Name=Tor-Browser
