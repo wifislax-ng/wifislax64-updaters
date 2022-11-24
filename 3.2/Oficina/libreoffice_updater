@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210218
+SCRIPT_VERSION=20221124
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -44,9 +44,6 @@ rm -rf desktop-integration *.rpm
 mv opt usr $PKG
 cd $PKG
 
-# Kill a broken symlink
-rm -f $PKG/usr/share/applications/libreoffice3-startcenter.desktop
-
 # Create symlinks in /usr/bin to actual binaries
 cd $PKG/usr/bin
   for FILE in \
@@ -86,10 +83,10 @@ cd -
 
 # Eliminamos de los desktop la categoria education
 cd $PKG/opt/libreoffice*/share/xdg/
-  for DESKTOP in $(find -type f); do
-  cat $DESKTOP | sed 's/Cate.*/Categories=Office;/g' >${DESKTOP}2
-  rm $DESKTOP
-  mv ${DESKTOP}2 ${DESKTOP}
+  for MENU in $(find -type f); do
+  cat $MENU | sed 's/Cate.*/Categories=Office;/g' >${MENU}2
+  rm $MENU
+  mv ${MENU}2 ${MENU}
   done
 }
 
