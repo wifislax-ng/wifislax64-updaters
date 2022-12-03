@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20221020
+SCRIPT_VERSION=20221203
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -82,6 +82,7 @@ cryptography
 python-keyring
 asttokens
 stack_data
+python3-executing
 ipython
 functools-lru-cache
 python2-soupsieve
