@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20221203
+SCRIPT_VERSION=20221216
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -68,7 +68,6 @@ traitlets
 python3-matplotlib-inline
 backcall
 pure_eval
-python-executing
 entrypoints
 python2-setuptools-scm
 python-jeepney
