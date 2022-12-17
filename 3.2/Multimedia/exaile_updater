@@ -99,6 +99,7 @@ python3-httpcore
 click
 CommonMark
 python3-rich
+python3-hatch_fancy_pypi_readme
 python3-httpx
 pylast
 musicbrainzngs
