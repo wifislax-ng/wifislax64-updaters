@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20221203
+SCRIPT_VERSION=20230104
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -84,57 +84,7 @@ rm -rf $PKG/lib/firmware/intel/{ibt-hw-37.8.10-fw-22.50.19.14.f.bseq.*,ibt-hw-37
 rm -rf $PKG/lib/firmware/intel/{irci_irci_ecr-master_20161208_0213_20170112_1500.bin.*,ibt-18-16-1.sfi.*}
 # Vamos a ahorrar espacio borrando ficheros
 rm -rf $PKG/lib/firmware/{wsm_22.*,ar7010.*,ar7010_1_1.*,ar9170-1.*,ar9170-2.*,ar9271.*,as102_data1_st.hex}
-rm -rf $PKG/lib/firmware/{as102_data2_st.hex,ctspeq.*,dvb-usb-terratec-h5-drxk.*,hfi1_dc8051.*,hfi1_fabric.*}
-rm -rf $PKG/lib/firmware/{hfi1_pcie.*,hfi1_sbus.*,iwlwifi-1000-3.*,iwlwifi-3168-22.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-3168-27.*,iwlwifi-5000-1.*,iwlwifi-5000-2.*,iwlwifi-6000-4.*,iwlwifi-6000g2a-5.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-6000g2b-5.*,iwlwifi-6050-4.*,iwlwifi-7265D-22.*,iwlwifi-7265D-27.*,iwlwifi-8000C-22.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-8000C-27.*,iwlwifi-8000C-31.*,iwlwifi-8000C-34.*,iwlwifi-8265-22.*,iwlwifi-8265-27.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-8265-31.*,iwlwifi-8265-34.*,iwlwifi-9000-pu-b0-jf-b0-33.*,iwlwifi-9000-pu-b0-jf-b0-34.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-9000-pu-b0-jf-b0-38.*,iwlwifi-9000-pu-b0-jf-b0-41.*,iwlwifi-9000-pu-b0-jf-b0-43.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-9260-th-b0-jf-b0-33.*,iwlwifi-9260-th-b0-jf-b0-34.*,iwlwifi-9260-th-b0-jf-b0-38.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-9260-th-b0-jf-b0-41.*,iwlwifi-9260-th-b0-jf-b0-43.*,iwlwifi-Qu-b0-hr-b0-48.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-b0-hr-b0-50.*,iwlwifi-Qu-b0-hr-b0-53.*,iwlwifi-Qu-b0-hr-b0-55.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-b0-hr-b0-59.*,iwlwifi-Qu-b0-hr-b0-62.*,iwlwifi-Qu-b0-hr-b0-63.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-b0-hr-b0-66.*,iwlwifi-Qu-b0-hr-b0-68.*,iwlwifi-Qu-b0-hr-b0-71.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-b0-hr-b0-72.*,iwlwifi-Qu-b0-hr-b0-73.*,iwlwifi-Qu-b0-hr-b0-74.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-b0-hr-b0-77.*,iwlwifi-Qu-b0-jf-b0-48.*,iwlwifi-Qu-b0-jf-b0-50.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-b0-jf-b0-53.*,iwlwifi-Qu-b0-jf-b0-55.*,iwlwifi-Qu-b0-jf-b0-59.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-b0-jf-b0-62.*,iwlwifi-Qu-b0-jf-b0-63.*,iwlwifi-Qu-b0-jf-b0-66.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-b0-jf-b0-68.*,iwlwifi-Qu-b0-jf-b0-71.*,iwlwifi-Qu-b0-jf-b0-72.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-b0-jf-b0-73.*,iwlwifi-Qu-b0-jf-b0-74.*,iwlwifi-Qu-b0-jf-b0-77.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-c0-hr-b0-48.*,iwlwifi-Qu-c0-hr-b0-50.*,iwlwifi-Qu-c0-hr-b0-53.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-c0-hr-b0-55.*,iwlwifi-Qu-c0-hr-b0-59.*,iwlwifi-Qu-c0-hr-b0-62.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-c0-hr-b0-63.*,iwlwifi-Qu-c0-hr-b0-66.*,iwlwifi-Qu-c0-hr-b0-68.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-c0-hr-b0-71.*,iwlwifi-Qu-c0-hr-b0-72.*,iwlwifi-Qu-c0-hr-b0-73.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-c0-hr-b0-74.*,iwlwifi-Qu-c0-hr-b0-77.*,iwlwifi-Qu-c0-jf-b0-48.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-c0-jf-b0-50.*,iwlwifi-Qu-c0-jf-b0-53.*,iwlwifi-Qu-c0-jf-b0-55.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-c0-jf-b0-59.*,iwlwifi-Qu-c0-jf-b0-62.*,iwlwifi-Qu-c0-jf-b0-63.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-c0-jf-b0-66.*,iwlwifi-Qu-c0-jf-b0-68.*,iwlwifi-Qu-c0-jf-b0-71.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-c0-jf-b0-72.*,iwlwifi-Qu-c0-jf-b0-73.*,iwlwifi-Qu-c0-jf-b0-74.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-Qu-c0-jf-b0-77.*,iwlwifi-QuZ-a0-hr-b0-48.*,iwlwifi-QuZ-a0-hr-b0-50.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-QuZ-a0-hr-b0-53.*,iwlwifi-QuZ-a0-hr-b0-55.*,iwlwifi-QuZ-a0-hr-b0-59.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-QuZ-a0-hr-b0-62.*,iwlwifi-QuZ-a0-hr-b0-63.*,iwlwifi-QuZ-a0-hr-b0-66.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-QuZ-a0-hr-b0-67.*,iwlwifi-QuZ-a0-hr-b0-68.*,iwlwifi-QuZ-a0-hr-b0-71.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-QuZ-a0-hr-b0-72.*,iwlwifi-QuZ-a0-hr-b0-73.*,iwlwifi-QuZ-a0-hr-b0-74.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-QuZ-a0-hr-b0-77.*,iwlwifi-QuZ-a0-jf-b0-48.*,iwlwifi-QuZ-a0-jf-b0-50.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-QuZ-a0-jf-b0-53.*,iwlwifi-QuZ-a0-jf-b0-55.*,iwlwifi-QuZ-a0-jf-b0-59.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-QuZ-a0-jf-b0-62.*,iwlwifi-QuZ-a0-jf-b0-63.*,iwlwifi-QuZ-a0-jf-b0-66.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-QuZ-a0-jf-b0-68.*,iwlwifi-QuZ-a0-jf-b0-71.*,iwlwifi-QuZ-a0-jf-b0-72.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-QuZ-a0-jf-b0-73.*,iwlwifi-QuZ-a0-jf-b0-74.*,iwlwifi-QuZ-a0-jf-b0-77.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-cc-a0-46.*iwlwifi-cc-a0-48.*,iwlwifi-cc-a0-50.*,iwlwifi-cc-a0-53.*,iwlwifi-cc-a0-55.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-cc-a0-59.*,iwlwifi-cc-a0-62.*,iwlwifi-cc-a0-63.*,iwlwifi-cc-a0-66.*,iwlwifi-cc-a0-67.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-cc-a0-68.*,iwlwifi-cc-a0-71.*,iwlwifi-cc-a0-72.*,iwlwifi-cc-a0-73.*,iwlwifi-cc-a0-74.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-cc-a0-77.*,iwlwifi-so-a0-gf-a0-64.*,iwlwifi-so-a0-gf-a0-67.*,iwlwifi-so-a0-gf-a0-68.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-so-a0-gf-a0-71.*,iwlwifi-so-a0-gf-a0-72.*,iwlwifi-so-a0-gf-a0-73.*,iwlwifi-so-a0-gf-a0-74.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-so-a0-gf-a0-77.*,iwlwifi-so-a0-gf-a0.pnvm,iwlwifi-so-a0-gf4-a0-67.*,iwlwifi-so-a0-gf4-a0-68.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-so-a0-gf4-a0-71.*,iwlwifi-so-a0-gf4-a0-72.*,iwlwifi-so-a0-gf4-a0-73.*,iwlwifi-so-a0-gf4-a0-74.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-so-a0-gf4-a0-77.*,iwlwifi-so-a0-gf4-a0.pnvm,iwlwifi-so-a0-hr-b0-64.*,iwlwifi-so-a0-hr-b0-68.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-so-a0-hr-b0-71.*,iwlwifi-so-a0-hr-b0-72.*,iwlwifi-so-a0-hr-b0-73.*,iwlwifi-so-a0-hr-b0-74.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-so-a0-hr-b0-77.*,iwlwifi-so-a0-jf-b0-64.*,iwlwifi-so-a0-jf-b0-68.*,iwlwifi-so-a0-jf-b0-71.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-so-a0-jf-b0-72.*,iwlwifi-so-a0-jf-b0-73.*,iwlwifi-so-a0-jf-b0-74.*,iwlwifi-so-a0-jf-b0-77.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-ty-a0-gf-a0-59.*,iwlwifi-ty-a0-gf-a0-62.*,iwlwifi-ty-a0-gf-a0-63.*,iwlwifi-ty-a0-gf-a0-66.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-ty-a0-gf-a0-67.*,iwlwifi-ty-a0-gf-a0-68.*,iwlwifi-ty-a0-gf-a0-71.*,iwlwifi-ty-a0-gf-a0-72.*}
-rm -rf $PKG/lib/firmware/{iwlwifi-ty-a0-gf-a0-73.*,iwlwifi-ty-a0-gf-a0-74.*,iwlwifi-ty-a0-gf-a0-77.*,iwlwifi-ty-a0-gf-a0.pnvm}
+rm -rf $PKG/lib/firmware/{as102_data2_st.hex,ctspeq.*,dvb-usb-terratec-h5-drxk.*,hfi1_dc8051.*,hfi1_fabric.*,hfi1_pcie.*,hfi1_sbus.*}
 rm -rf $PKG/lib/firmware/{lt9611uxc_*.*,mt7650.*,myri10ge_eth_big_z8e.*,myri10ge_eth_z8e.*,myri10ge_ethp_big_z8e.*}
 rm -rf $PKG/lib/firmware/{myri10ge_ethp_z8e.*,myri10ge_rss_eth_big_z8e.*,myri10ge_rss_eth_z8e.*,myri10ge_rss_ethp_big_z8e.*}
 rm -rf $PKG/lib/firmware/{myri10ge_rss_ethp_z8e.*,phan*.*,qat_mmp.*,r8a779x_usb3*,rp2.*,rsi_91x.}
