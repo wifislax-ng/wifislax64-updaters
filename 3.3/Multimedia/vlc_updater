@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20221113
+SCRIPT_VERSION=20230128
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -90,6 +90,7 @@ libaacs
 libbdplus
 ftgl
 aom
+python3-glad
 libplacebo
 libnfs
 pytz
