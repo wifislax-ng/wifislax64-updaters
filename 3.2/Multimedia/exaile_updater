@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20221216
+SCRIPT_VERSION=20230128
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -98,6 +98,10 @@ python3-h11
 python3-httpcore
 click
 CommonMark
+python3-poetry-core
+python3-flit_core
+python3-mdurl
+python3-markdown-it-py
 python3-rich
 python3-hatch_fancy_pypi_readme
 python3-httpx
