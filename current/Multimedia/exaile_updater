@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20230128
+SCRIPT_VERSION=20230204
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -67,7 +67,7 @@ python3-hatchling
 traitlets
 python3-matplotlib-inline
 backcall
-pure_eval
+python3-pure_eval
 entrypoints
 python2-setuptools-scm
 python-jeepney
@@ -80,7 +80,7 @@ python3-setuptools-rust
 cryptography
 python-keyring
 asttokens
-stack_data
+python3-stack_data
 python3-executing
 ipython
 functools-lru-cache
