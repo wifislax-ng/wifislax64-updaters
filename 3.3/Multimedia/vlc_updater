@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20230128
+SCRIPT_VERSION=20230204
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -110,20 +110,45 @@ echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
 echo "
-/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Av/AhBdADgYSu7FL5n6pvg745dpgzgztyjlznaup/J2
-hqfmGrDNeaOHii2cjOvOxdHWqCo9YqhEVFkBDV3KhEcMHimzw6jdyc7N5ZhDpXvCpHfk42BXtjhb
-zfJdIjPdHkXCdym9RF0fcnWRm3VgMcAeBF9gAhuUzwQeLn+d17DisOuVD8mSxM+oCXfRa+Nu1V60
-4mrbrXWIRg0KNdWMUBnTP2Z8dElt5kVzgzoqPc8z5XFML70gN1Lsq4sL6ke9G6NiLFJaxF4bW2eT
-uIyvmaSi+VsMjovSWwR0faR/Jom9XuSzcwKeNeDQE7NjkS3afSznKzJxXjQMHUJIlAGfcI3VeKMc
-zhRCgo30PwlTgT72+jYrRNgCB1Ph+JuYZqz58W9oWz5ZCsDSXz6obA3FJr6Wa2hkDio2CacQ0HQ6
-ri1cSAfwzOknVL9YxLLL6qSykZpNdyJ8pZQ9pMU0rosXIxkzAhyzFamOQOVf5RGh2Xk4BHfJy3Jt
-vekqY3uIeBau2xVjRAOlwKHCQR8uFpLB8/8p5xYjx/q5+D22ltcxd/qUINrr6Q1JpOeKUcoIQfkz
-Q6SMSRNrya/L8YEy0AO+I8MXN8td3CILfKltF797iyWaq+DjE74KuiIdUtjOAX1dR8MJqFw9TYOS
-ULtNYXmvEoq6uU1PYSqHf45Rp1Vpqw+LjZsaivbs9+NyAEyq//4I1kxMA03qAADOvJitNWI/dgAB
-rASAGAAAe+dnp7HEZ/sCAAAAAARZWg=="|base64 -d > $TMP/patches.txz
+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"|base64 -d > $TMP/patches.txz
 
 tar xvf $TMP/patches.txz &>/dev/null
 patch -p0 < ./patches/patch_vlc_cache_gen.patch||exit 1
+patch -p1 < ./patches/libplacebo-5.patch||exit 1
 
 autoreconf -fiv
 
