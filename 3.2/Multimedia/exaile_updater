@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20230212
+SCRIPT_VERSION=20230220
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -59,10 +59,6 @@ python3-wcwidth
 python3-prompt_toolkit
 simplegeneric
 wheel
-python3-pep517
-python3-build
-python3-installer
-python3-pluggy
 python3-editables
 python3-pathspec
 python3-hatchling
@@ -71,7 +67,6 @@ python3-matplotlib-inline
 backcall
 python3-pure_eval
 entrypoints
-python2-setuptools-scm
 python3-flit_core
 python-jeepney
 secretstorage
