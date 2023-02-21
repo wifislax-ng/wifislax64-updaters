@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20221208
+SCRIPT_VERSION=20230221
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -20,11 +20,11 @@ F_variables() {
 	EXTENSION=tar.xz
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=http://www.wireshark.org/download/src/
-	VERSION=$(curl -s https://www.wireshark.org|grep -i stable|head -1|rev|cut -d ' ' -f1|rev|sed 's/.$//g')
+	WEB=https://www.wireshark.org
+	VERSION=$(curl -s $WEB/download/src/|grep -v latest|grep $EXTENSION|tail -1|cut -d- -f2|cut -d t -f1|sed 's/.$//g')
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
 	CD=$PRGNAM-$VERSION
-	DOWNLOAD=$WEB/$SOURCES
+	DOWNLOAD=https://1.eu.dl.wireshark.org/src/$SOURCES
 }
 
 # Comprobar dependencias
