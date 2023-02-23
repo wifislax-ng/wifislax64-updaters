@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20230204
+SCRIPT_VERSION=20230223
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -95,6 +95,7 @@ libplacebo
 libnfs
 pytz
 python-gflags
+python2-dateutil
 google-apputils
 protobuf3
 libdaemon
