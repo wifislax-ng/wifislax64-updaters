@@ -22,7 +22,7 @@ F_variables() {
 	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/ZerBea/$PRGNAM
 	#VERSION=$(curl -s $WEB/tags|grep $EXTENSION|head -1|cut -d/ -f7|cut -dt -f1|sed 's/.$//g')
-	VERSION=2.6.7
+	VERSION=6.2.7
 	SOURCES=$VERSION.$EXTENSION
 	CD=$PRGNAM-$VERSION
 	DOWNLOAD=$WEB/archive/$SOURCES
