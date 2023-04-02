@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220918
+SCRIPT_VERSION=20230402
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -20,10 +20,11 @@ F_variables() {
 	EXTENSION=tar.gz
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://www.frostwire.com/downloads
-	VERSION=$(curl -s ${WEB}|grep '>v[0-9]'|tail -1|cut -d v -f2|cut -d '<' -f-1|cut -d ' ' -f1)
+	WEB=https://sourceforge.net/projects/frostwire/files
+	VERSION=$(curl -s ${WEB}/|grep frostwire-desktop|head -1|cut -d- -f7)
+	RAMA=$(curl -s $WEB/|grep frostwire-desktop|head -1|cut -d/ -f7)
 	SOURCES=$PRGNAM-$VERSION.amd64.$EXTENSION
-	DOWNLOAD="--no-check-certificate https://dl.frostwire.com/frostwire/$VERSION/$SOURCES"
+	DOWNLOAD=$WEB/$RAMA/$SOURCES
 }
 
 #Comprobar dependencias
