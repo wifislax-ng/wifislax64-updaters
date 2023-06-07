@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220923
+SCRIPT_VERSION=20230607
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -35,6 +35,14 @@ f_dependencias
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
+echo "LS0tIGEvcGx1Zy1pbnMvc3Nsc3RyaXAvc3Nsc3RyaXAuYworKysgYi9wbHVnLWlucy9zc2xzdHJp
+cC9zc2xzdHJpcC5jCkBAIC01MSw3ICs1MSw3IEBACiAKICNpbmNsdWRlIDxjdXJsL2N1cmwuaD4K
+IAotI2lmIChMSUJDVVJMX1ZFUlNJT05fTUFKT1IgPCA3KSB8fCAoTElCQ1VSTF9WRVJTSU9OX01J
+Tk9SIDwgMjYpCisjaWYgKExJQkNVUkxfVkVSU0lPTl9NQUpPUiA8IDcpIHx8IChMSUJDVVJMX1ZF
+UlNJT05fTUFKT1IgPT0gNyAmJiBMSUJDVVJMX1ZFUlNJT05fTUlOT1IgPCAyNikKICNlcnJvciBs
+aWJjdXJsIDcuMjYuMCBvciB1cCBpcyBuZWVkZWQKICNlbmRpZgogCg==" |base64 -d > $TMP/curl8.patch
+patch -p1 -i $TMP/curl8.patch||exit 1
+
 echo 
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
