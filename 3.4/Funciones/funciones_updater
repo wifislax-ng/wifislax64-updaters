@@ -23,7 +23,7 @@ WIFISLAX=$(cat /etc/wifislax-version|cut -d ' ' -f2|cut -d_ -f1)
 
 # Miramos config de empaquetado
 CONFIG=/etc/wifislax-updaters/wifislax-updaters.conf
-PACKAGETYPE=$(cat $CONFIG|grep PACKAGETYPE|cut -d = -f2)
+PACKAGETYPE=${PACKAGETYPE:-$(cat $CONFIG|grep PACKAGETYPE|cut -d = -f2)}
 
 # Si el equipo tiene mas de un nucleo usamos todos
 export MAKEFLAGS=-j$(nproc)
