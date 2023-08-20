@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20211105
+SCRIPT_VERSION=20230820
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -81,6 +81,8 @@ X-KDE-SubstituteUID=false
 X-KDE-Username=" > "$TMP/deb"/usr/share/applications/$PRGNAM.desktop
 chmod +x "$TMP/deb"/usr/share/applications/$PRGNAM.desktop
 cp -rfp "$TMP"/deb/* "$PKG"
+# Remove qt6 things
+rm -rf $PKG/opt/google/chrome/libqt6_shim.so
 }
 
 ###################################
