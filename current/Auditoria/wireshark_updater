@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20230221
+SCRIPT_VERSION=20230825
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -43,13 +43,6 @@ f_dependencias
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-echo "LS0tIHdpcmVzaGFyay0zLjIuMC9zaGFya2Rfc2Vzc2lvbi5jLm9yaWcJMjAxOS0xMi0yNCAwNzox
-ODozMy4yODg5NzYxNjMgKzA3MDAKKysrIHdpcmVzaGFyay0zLjIuMC9zaGFya2Rfc2Vzc2lvbi5j
-CTIwMTktMTItMjQgMDc6MTg6NTIuNDQ4MTY4ODA4ICswNzAwCkBAIC0xNiw2ICsxNiw3IEBACiAj
-aW5jbHVkZSA8c3RkYXJnLmg+CiAjaW5jbHVkZSA8c3RyaW5nLmg+CiAjaW5jbHVkZSA8ZXJybm8u
-aD4KKyNpbmNsdWRlIDxzdGRpbnQuaD4KIAogI2luY2x1ZGUgPGdsaWIuaD4KIAo=
-"|base64 -d > $TMP/wireshark.patch
-patch -p1 -i $TMP/wireshark.patch||exit 1
 echo ""
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
@@ -62,6 +55,7 @@ cd build
     -DCMAKE_INSTALL_MANDIR=/usr/man \
     -DCMAKE_INSTALL_DOCDIR=/usr/doc \
     -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
+    -DUSE_qt6=OFF \
     -DCMAKE_BUILD_TYPE=Release ..
 
 # Compilamos
