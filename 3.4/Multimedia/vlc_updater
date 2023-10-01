@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20230414
+SCRIPT_VERSION=20231001
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -31,72 +31,35 @@ F_variables() {
 # Comprobar dependencias
 F_dependencias(){
 DEPENDENCIAS="
-soxr
-dav1d
-libgme
-libiec61883
-libconfig
-libdbus-c++
-mm-common
-libxml++3
-libffado
-celt
-perl-Cstools
-perl-Unicode-Map
-perl-Unicode-String
-perl-Unicode-Map8
-enca
-libass
-libdc1394
-libdvbpsi
-libmpeg2
-libupnp
 lua
-portaudio
-twolame 
-gsm
-python3-numpy
-libtar
-faac
-libdca
+live555
+libdc1394
+libavc1394
+libnfs
+libdvbpsi
+libgme
+libshout
 libebml
 libmatroska
-libshout
-jack
-libsidplay2
-zvbi
-faad2
-libavc1394
 libmodplug
-libcuefile
-libreplaygain
-musepack-tools
-vcdimager
-dirac
-ORBit2
-libbonobo
-gnome-mime-data
-gnome-vfs
-live555
-rtmpdump
-libdvdcss
-schroedinger
-libminizip
-chromaprint
-x264
-x265
-libaacs
-libbdplus
-ftgl
 aom
-python3-glad
-libplacebo
-libnfs
+dav1d
+twolame
+libdca
+libmpeg2
+x265
+x264
+libkate
+jack
+soxr
 protobuf3
+srt
 libdaemon
 avahi
-srt
-libkate"
+libupnp
+python3-glad
+libplacebo
+"
 f_dependencias
 }
 
@@ -159,92 +122,98 @@ LDFLAGS="$SLKLDFLAGS" \
     --mandir=/usr/man \
     --docdir=/usr/doc/vlc-$VERSION \
     --localstatedir=/var \
-    --disable-opencv \
     --disable-update-check \
-    --with-kde-solid=no \
-    --enable-a52 \
-    --enable-aa \
-    --enable-alsa \
-    --enable-aom \
+    --enable-run-as-root \
+    --with-kde-solid=/usr/share/solid/actions/ \
+    --disable-rpath \
+    --enable-nls \
     --enable-archive \
-    --enable-aribsub \
-    --enable-avahi \
-    --enable-avcodec \
-    --enable-avformat \
-    --enable-bluray \
-    --enable-caca \
-    --enable-chromaprint \
-    --enable-chromecast \
-    --enable-dav1d \
+    --enable-live555 \
     --enable-dc1394 \
-    --enable-dca \
     --enable-dv1394 \
     --enable-dvdread \
-    --enable-dvbpsi \
     --enable-dvdnav \
-    --enable-faad \
-    --enable-flac \
-    --enable-fontconfig \
-    --enable-freetype \
-    --enable-fribidi \
+    --enable-bluray \
+    --disable-opencv \
+    --enable-smbclient \
+    --enable-sftp \
+    --enable-nfs \
+    --enable-realrtsp \
+    --enable-dvbpsi \
     --enable-gme \
-    --enable-gnutls \
-    --enable-gst-decode \
-    --enable-harfbuzz \
-    --enable-jack \
-    --enable-jpeg \
-    --enable-kate \
-    --enable-libass \
-    --enable-libva \
-    --enable-libmpeg2 \
-    --enable-libplacebo \
-    --enable-libxml2 \
-    --enable-lirc \
-    --enable-libtar \
-    --enable-live555 \
-    --enable-mad \
+    --enable-ogg \
+    --enable-shout \
     --enable-matroska \
-    --enable-merge-ffmpeg \
     --enable-mod \
     --enable-mpc \
+    --enable-mad \
     --enable-mpg123 \
-    --enable-mtp \
-    --enable-ncurses \
-    --enable-nfs \
-    --enable-notify \
-    --enable-ogg \
-    --enable-oggspots \
-    --enable-opus \
-    --enable-png \
+    --enable-gst-decode \
+    --enable-avcodec \
+    --enable-libva \
+    --enable-avformat \
     --enable-postproc \
-    --enable-projectm \
-    --enable-pulse \
-    --enable-qt=5 \
-    --enable-realrtsp \
-    --enable-run-as-root \
-    --enable-samplerate \
-    --enable-schroedinger \
-    --enable-sdl-image \
-    --enable-secret \
-    --enable-sftp \
-    --enable-shout \
-    --enable-skins2 \
-    --enable-smbclient \
-    --enable-soxr \
-    --enable-speex \
-    --enable-srt \
-    --enable-svg \
-    --enable-svgdec \
-    --enable-taglib \
-    --enable-twolame \
-    --enable-upnp \
-    --enable-vorbis \
-    --enable-vdpau \
-    --enable-vlc \
+    --enable-faad \
     --enable-vpx \
+    --enable-twolame \
+    --disable-fdkaac \
+    --enable-a52 \
+    --enable-dca \
+    --enable-flac \
+    --enable-libmpeg2 \
+    --enable-vorbis \
+    --enable-speex \
+    --enable-opus \
+    --enable-oggspots \
+    --disable-schroedinger \
+    --enable-png \
+    --enable-jpeg \
     --enable-x264 \
     --enable-x265 \
     --enable-zvbi \
+    --enable-libass \
+    --enable-kate \
+    --enable-vdpau \
+    --enable-wayland \
+    --enable-sdl-image \
+    --enable-freetype \
+    --enable-fribidi \
+    --enable-harfbuzz \
+    --enable-fontconfig \
+    --enable-svg \
+    --enable-svgdec \
+    --enable-aa \
+    --enable-caca \
+    --enable-pulse \
+    --enable-alsa \
+    --enable-jack \
+    --enable-samplerate \
+    --enable-soxr \
+    --disable-chromaprint \
+    --enable-chromecast \
+    --enable-qt \
+    --enable-skins2 \
+    --enable-libtar \
+    --enable-ncurses \
+    --enable-lirc \
+    --enable-projectm \
+    --enable-avahi \
+    --enable-mtp \
+    --enable-upnp \
+    --enable-libxml2 \
+    --disable-libgcrypt \
+    --enable-gnutls \
+    --enable-taglib \
+    --enable-secret \
+    --enable-kwallet \
+    --enable-notify \
+    --enable-libplacebo \
+    --enable-vlc \
+    --enable-aribsub \
+    --enable-aribcam \
+    --enable-aom \
+    --enable-srt \
+    --enable-dav1d \
     --build=$ARCH-slackware-linux
   
 echo 
