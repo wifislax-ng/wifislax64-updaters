@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20231001
+SCRIPT_VERSION=20231005
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -110,6 +110,14 @@ tar xvf $TMP/patches.txz &>/dev/null
 patch -p0 < ./patches/patch_vlc_cache_gen.patch||exit 1
 patch -p1 < ./patches/libplacebo-5.patch||exit 1
 
+# libva no esta activado en ffmpeg5 y falla al compilar
+vaapi=$(ffmpeg -version |head -1| cut -d ' ' -f3|cut -d . -f1)
+if [ $vaapi = 5 ] ; then
+libva="--disable-libva"
+else
+libva="--enable-libva"
+fi
+
 autoreconf -fiv
 
 CFLAGS="$SLKCFLAGS  -I/usr/include/samba-4.0" \
@@ -150,7 +158,6 @@ LDFLAGS="$SLKLDFLAGS" \
     --enable-mpg123 \
     --enable-gst-decode \
     --enable-avcodec \
-    --enable-libva \
     --enable-avformat \
     --enable-postproc \
     --enable-faad \
@@ -214,6 +221,7 @@ LDFLAGS="$SLKLDFLAGS" \
     --enable-aom \
     --enable-srt \
     --enable-dav1d \
+    $libva \
     --build=$ARCH-slackware-linux
   
 echo 
