@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20230820
+SCRIPT_VERSION=20231105
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -61,20 +61,22 @@ mkdir -p $PKG/usr/share/pixmaps
 cp -rf "$TMP/deb"/opt/google/chrome/product_logo_64.png $PKG/usr/share/pixmaps/google-chrome.png
 
 echo "[Desktop Entry]
-Categories=Network;
-Comment[es_ES]=Navegador Web
-Comment=Navegador Web
-Exec=/opt/google/chrome/google-chrome --test-type --user-data-dir= --no-sandbox --password-store=basic
+Categories=Application;Network;
+Comment[es_ES]=
+Comment=
+Encoding=UTF-8
+Exec=/opt/google/chrome/google-chrome --test-type --user-data-dir= --no-sandbox %u
+GenericName[es_ES]=Navegador Web
+GenericName=Navegador Web
 Icon=google-chrome
-MimeType=application/pdf;application/rdf+xml;application/rss+xml;application/xhtml+xml;application/xhtml_xml;application/xml;image/gif;image/jpeg;image/png;image/webp;text/html;text/xml;x-scheme-handler/http;x-scheme-handler/https;
-Name[es_ES]=Google Chrome
-Name=Google Chrome
+MimeType=text/html;
+Name[es_ES]=Google-chrome
+Name=Google-chrome
 Path=
 StartupNotify=false
 Terminal=false
 TerminalOptions=
 Type=Application
-X-Ayatana-Desktop-Shortcuts=NewWindow;NewIncognito
 X-DBUS-ServiceName=
 X-DBUS-StartupType=
 X-KDE-SubstituteUID=false
