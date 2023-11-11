@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20230630
+SCRIPT_VERSION=20231111
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -27,10 +27,16 @@ F_variables() {
 	DOWNLOAD=$WEB
 }
 
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="rdfind"
+f_dependencias
+}
+
 # Creamos directorios , eliminamos sobrantes .git y movemos
 F_compilar(){
 echo "$VERDE"Compilando ..."$CIERRE"
-make DESTDIR=$PKG FIRMWAREDIR=/lib/firmware install-zst
+ZSTD_CLEVEL=19 make DESTDIR=$PKG FIRMWAREDIR=/lib/firmware install-zst
 # Vamos a ahorrar espacio
 rm -rf $PKG/lib/firmware/{bnx2x,libertas,liquidio,mellanox,mrvl,mwl8k,mwlwifi,netronome,qcom,qed,qlogic}
 rm -rf $PKG/lib/firmware/{a300_*,bnx2x*,cbfw*,ct2fw*,ctfw*,ql2*,ti-connectivity,mediatek,vpu*.bin*}
@@ -58,6 +64,8 @@ f_comprobarUpdates
 f_arquitectura noarch
 #Comprobamos version instalada del script
 f_versionInstalada
+# Comprobar dependencias
+F_dependencias
 #Descarga los firmwares mas nuevos disponibles
 f_download
 #Cd a ruta
