@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-FUNCIONES_VERSION=20230705
+FUNCIONES_VERSION=20231118
 # Colores
 CIERRE=${CIERRE:-"[0m"}
 ROJO=${ROJO:-"[1;31m"}
@@ -15,7 +15,7 @@ ROSA=${ROSA:-"[1;35m"}
 # Variables globales
 PRGNAM=funciones
 VERSION=$FUNCIONES_VERSION
-DESKTOP=$(cat '/root/.config/user-dirs.dirs' |grep DESKTOP|cut -d '"' -f2|cut -d/ -f2)
+ESCRITORIO=$(cat '/root/.config/user-dirs.dirs' |grep DESKTOP|cut -d '"' -f2|cut -d/ -f2)
 BUILD=${BUILD:-1}
 TAG=${TAG:-wifislax}
 CWD=$(pwd)
@@ -178,8 +178,8 @@ PACKDIR=$(echo $(find /usr/src/slapt-src/ -name "${D}-*.txz"))
 XZMPACK=$(echo $(find /usr/src/slapt-src/ -name "${D}-*.txz"|rev|cut -d / -f-1|rev|sed 's/.txz/.xzm/g'))
 GROUP=$(echo $(find /usr/src/slapt-src/ -name "${D}-*.txz"|rev|cut -d / -f3|rev))
 if [ ! "${PACKAGETYPE}" = disable ]; then
-if [ ! -d ${HOME}/$DESKTOP/${PRGNAM}_depends/$GROUP ]; then
-mkdir -p ${HOME}/$DESKTOP/${PRGNAM}_depends/$GROUP
+if [ ! -d ${HOME}/$ESCRITORIO/${PRGNAM}_depends/$GROUP ]; then
+mkdir -p ${HOME}/$ESCRITORIO/${PRGNAM}_depends/$GROUP
 fi
 fi
 VERIFICAR=$(echo "$(ls /var/lib/pkgtools/packages|rev|cut -d '-' -f4-|rev|grep -x $D)")
@@ -190,10 +190,10 @@ echo ""
 exit 1
 else
 if [ "${PACKAGETYPE}" = txz ]; then
-mv -f "${PACKDIR}" "${HOME}/$DESKTOP/${PRGNAM}_depends/$GROUP"
+mv -f "${PACKDIR}" "${HOME}/$ESCRITORIO/${PRGNAM}_depends/$GROUP"
 fi
 if [ "${PACKAGETYPE}" = xzm ]; then
-xterm -e sh -c "txz2xzm "${PACKDIR}" "${HOME}/$DESKTOP/${PRGNAM}_depends/$GROUP/$XZMPACK""
+xterm -e sh -c "txz2xzm "${PACKDIR}" "${HOME}/$ESCRITORIO/${PRGNAM}_depends/$GROUP/$XZMPACK""
 fi
 echo "${BLANCO}Dependencia ${AMARILLO}${D} ${CYAN}RESUELTA${CIERRE}."
 fi
@@ -307,8 +307,8 @@ f_categoria(){
    # Guardamos los modulos en carpetas por categoria
    cd ..
    CATEGORIA=$(echo "$(find /opt/wifislax-updaters/* -name ${PRGNAM}_updater| cut -d "/" -f4)")
-   if [ ! -d $HOME/$DESKTOP/$CATEGORIA ]; then
-   mkdir -p $HOME/$DESKTOP/$CATEGORIA
+   if [ ! -d $HOME/$ESCRITORIO/$CATEGORIA ]; then
+   mkdir -p $HOME/$ESCRITORIO/$CATEGORIA
    fi
 }
 
@@ -323,8 +323,8 @@ f_xzm(){
    
    #Creamos paquete
    cleandir $PKG &>/dev/null
-   dir2xzm $PKG $HOME/$DESKTOP/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm
-   xzm2dir $HOME/$DESKTOP/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm /
+   dir2xzm $PKG $HOME/$ESCRITORIO/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm
+   xzm2dir $HOME/$ESCRITORIO/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm /
    fi
 }
  
@@ -354,8 +354,8 @@ f_txz(){
    #Creamos paquete
    cd $PKG
    cleandir $PKG &>/dev/null
-   /sbin/makepkg -l y -c n $HOME/$DESKTOP/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
-   installpkg $HOME/$DESKTOP/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
+   /sbin/makepkg -l y -c n $HOME/$ESCRITORIO/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
+   installpkg $HOME/$ESCRITORIO/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
    fi
 }
 
