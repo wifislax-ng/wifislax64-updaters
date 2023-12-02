@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20231026
+SCRIPT_VERSION=20231202
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -31,6 +31,7 @@ F_variables() {
 # Comprobar dependencias
 F_dependencias(){
 DEPENDENCIAS="
+lua
 live555
 libdc1394
 libavc1394
@@ -56,7 +57,6 @@ srt
 libdaemon
 avahi
 libupnp
-libplacebo
 "
 f_dependencias
 }
@@ -106,7 +106,7 @@ dq2+dysAAAAAAO14UyrorglAAAGVD4BAAAAH/22RscRn+wIAAAAABFla"|base64 -d > $TMP/patch
 
 tar xvf $TMP/patches.txz &>/dev/null
 patch -p0 < ./patches/patch_vlc_cache_gen.patch||exit 1
-patch -p1 < ./patches/libplacebo-5.patch||exit 1
+#patch -p1 < ./patches/libplacebo-5.patch||exit 1
 
 # libva no esta activado en ffmpeg5 y falla al compilar
 vaapi=$(ffmpeg -version |head -1| cut -d ' ' -f3|cut -d . -f1)
@@ -212,13 +212,13 @@ LDFLAGS="$SLKLDFLAGS" \
     --enable-secret \
     --enable-kwallet \
     --enable-notify \
-    --enable-libplacebo \
     --enable-vlc \
     --enable-aribsub \
     --enable-aribcam \
     --enable-aom \
     --enable-srt \
     --enable-dav1d \
+    --disable-libplacebo \
     $libva \
     --build=$ARCH-slackware-linux
   
