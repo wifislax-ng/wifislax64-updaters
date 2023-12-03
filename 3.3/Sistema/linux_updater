@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20231118
+SCRIPT_VERSION=20231203
 
 # Colores
 CIERRE=${CIERRE:-"[0m"}
@@ -167,6 +167,10 @@ make mrproper
 ###################################
 ### Generamos parche wireless  ####
 ###################################
+# Si la rama es menor a 6.2 se aplicara el parche
+# Se quitan los puntos para convertir el numero a entero
+# y poder manejarlo mejor.
+if [ $(echo $RAMA_ELEGIDO|sed 's/\.//g') -lt 62 ] ; then
 PARCHE=Negative-channel-multi.patch
 cat > $PARCHE << "EOF"
 --- a/net/wireless/chan.c	2013-08-29 18:47:51.000000000 +0200
@@ -208,6 +212,7 @@ echo ""
 echo ""$VERDE"Aplicando parche wireless para channel -1 "$BLANCO"..."$CIERRE""
 sleep 1
 patch -f -p1 < $PARCHE||exit 1
+fi
 
 # Ponemos nuestro logo
 LOGO=/usr/share/pixmaps/wifislax_logo_blue.png
