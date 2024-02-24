@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20240131
+SCRIPT_VERSION=20240224
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -53,8 +53,6 @@ jack
 soxr
 protobuf3
 srt
-libdaemon
-avahi
 libupnp
 "
 f_dependencias
