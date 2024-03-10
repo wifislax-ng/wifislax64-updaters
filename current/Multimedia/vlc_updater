@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20240224
+SCRIPT_VERSION=20240310
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -31,6 +31,7 @@ F_variables() {
 # Comprobar dependencias
 F_dependencias(){
 DEPENDENCIAS="
+abseil-cpp
 live555
 libdc1394
 libavc1394
