@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20240311
+SCRIPT_VERSION=20240317
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -60,6 +60,7 @@ pcsc-lite
 aribb24
 aribb25
 protobuf3
+lirc
 "
 f_dependencias
 }
