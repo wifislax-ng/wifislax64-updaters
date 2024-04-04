@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20240319
+SCRIPT_VERSION=20240404
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -43,8 +43,6 @@ libshout
 libebml
 libmatroska
 libmodplug
-aom
-dav1d
 twolame
 libdca
 libmpeg2
