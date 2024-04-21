@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20240310
+SCRIPT_VERSION=20240421
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -95,7 +95,7 @@ fi
 autoreconf -fiv
 
 CFLAGS="$SLKCFLAGS  -I/usr/include/samba-4.0" \
-CXXFLAGS="$SLKCFLAGS -std=c++11" \
+CXXFLAGS="$SLKCFLAGS -std=c++17" \
 LDFLAGS="$SLKLDFLAGS" \
 ./configure \
     --prefix=/usr \
