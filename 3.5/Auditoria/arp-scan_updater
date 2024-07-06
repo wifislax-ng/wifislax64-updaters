@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20230215
+SCRIPT_VERSION=20240706
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -29,25 +29,42 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libpcap
-perl-net-http
-perl-www-robotrules
+DEPENDENCIAS="
 perl-http-date
 perl-file-listing
-perl-IO-HTML
 perl-encode-locale
+perl-Try-Tiny
+perl-Test-Fatal
 perl-lwp-mediatypes
+perl-IO-HTML
+perl-B-COW 
+perl-Clone
+perl-Test-Needs
+perl-http-message
+perl-http-cookies 
+perl-Test-Harness
+perl-ExtUtils-Config
+perl-ExtUtils-InstallPaths 
+perl-ExtUtils-Helpers
+perl-JSON
+perl-Meta-Requirements-Range 
+perl-CPAN-Requirements-Dynamic
+perl-Module-Build-Tiny
+perl-http-daemon 
+perl-http-negotiate
+perl-net-http
+perl-www-robotrules
+perl-Test-NoWarnings 
+perl-Test-Deep
+perl-Test-Requires
+perl-HTTP-CookieJar 
+perl-Test-RequiresInternet
 perl-html-tagset
 perl-html-parser
-perl-http-message
-perl-http-negotiate
-perl-http-cookies
-perl-http-daemon 
 libwww-perl
 perl-Mozilla-CA
-perl-Net-LibIDN
-perl-Test-RequiresInternet
-perl-LWP-Protocol-https"
+perl-LWP-Protocol-https
+perl-Text-CSV"
 f_dependencias
 }
 
