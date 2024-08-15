@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20240814
+SCRIPT_VERSION=20240815
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -360,6 +360,7 @@ LDFLAGS="$SLKLDFLAGS" \
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
+sed -i -e '/^#define _FORTIFY_SOURCE/d' config.h
 make || exit 1
 make install DESTDIR=$PKG || exit 1
 
