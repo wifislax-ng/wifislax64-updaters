@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20240404
+SCRIPT_VERSION=20240913
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -57,6 +57,34 @@ libxml++3
 libffado
 jack
 srt
+zeromq
+DevIL
+AviSynthPlus
+gflags
+gperftools
+graphviz
+gtest
+highway
+libjxl
+onevpl
+zita-alsa-pcmi
+zita-resampler
+jack
+portaudio
+libopenmpt
+cargo-c
+rav1e
+ladspa_sdk
+vamp-plugin-sdk
+rubberband
+svt-av1
+python3-pyproject-metadata
+python3-mesonpy
+python3-numpy
+OpenBLAS
+vmaf
+zimg
+vapoursynth
 "
 f_dependencias
 }
@@ -86,39 +114,53 @@ CXXFLAGS="$SLKCFLAGS" \
     --disable-debug \
     --disable-static \
     --disable-stripping \
+    --enable-avisynth \
+    --enable-lto \
     --enable-fontconfig \
     --enable-frei0r \
     --enable-gmp \
     --enable-gnutls \
     --enable-gpl \
     --enable-ladspa \
-    --enable-lcms2 \
     --enable-libaom \
     --enable-libass \
     --enable-libbluray \
+    --enable-libbs2b \
     --enable-libdav1d \
     --enable-libdrm \
+    --enable-libdvdnav \
+    --enable-libdvdread \
     --enable-libfreetype \
     --enable-libfribidi \
     --enable-libgsm \
+    --enable-libharfbuzz \
     --enable-libiec61883 \
     --enable-libjack \
+    --enable-libjxl \
     --enable-libmodplug \
     --enable-libmp3lame \
     --enable-libopencore_amrnb \
     --enable-libopencore_amrwb \
     --enable-libopenjpeg \
+    --enable-libopenmpt \
     --enable-libopus \
     --enable-libplacebo \
     --enable-libpulse \
+    --enable-librav1e \
+    --enable-librsvg \
+    --enable-librubberband \
+    --enable-libsnappy \
     --enable-libsoxr \
     --enable-libspeex \
     --enable-libsrt \
     --enable-libssh \
+    --enable-libsvtav1 \
     --enable-libtheora \
     --enable-libv4l2 \
     --enable-libvidstab \
+    --enable-libvmaf \
     --enable-libvorbis \
+    --enable-libvpl \
     --enable-libvpx \
     --enable-libwebp \
     --enable-libx264 \
@@ -126,10 +168,14 @@ CXXFLAGS="$SLKCFLAGS" \
     --enable-libxcb \
     --enable-libxml2 \
     --enable-libxvid \
+    --enable-libzimg \
+    --enable-libzmq \
     --enable-nvdec \
     --enable-nvenc \
     --enable-opencl \
+    --enable-opengl \
     --enable-shared \
+    --enable-vapoursynth \
     --enable-version3 \
     --enable-vulkan \
     --arch=$ARCH
