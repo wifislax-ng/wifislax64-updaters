@@ -35,7 +35,11 @@ echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
 ./bootstrap.sh
-./configure --prefix=/usr --program-suffix=-ng
+
+./configure \
+  --prefix=/usr \
+  --program-suffix=-ng \
+  --mandir=/usr/man
 
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
