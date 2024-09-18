@@ -45,7 +45,7 @@ echo
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 make || exit 1
-make install DESTDIR=$PKG
+make install DESTDIR=$PKG || exit 1
 }
 
 ###################################
