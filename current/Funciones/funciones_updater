@@ -412,7 +412,7 @@ f_tareasFinales() {
    fi
    
    # Iniciar algun servicio si existe
-   if [ $PRGNAM = teamviewer ]; then
+   if [ $PRGNAM = teamviewer -a -f /etc/rc.d/rc.teamviewerd ]; then
    /etc/rc.d/rc.teamviewerd start &>/dev/null
    fi
    
