@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20230717
+SCRIPT_VERSION=20240927
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -17,15 +17,15 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 	PRGNAM=jdk
-	SRCNAM=jdk-17_linux-x64_bin
+	SRCNAM=jdk-21_linux-x64_bin
 	EXTENSION=tar.gz
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://www.oracle.com/java/technologies/downloads/#java17
-	VERSION=$(curl -s $WEB|grep "Kit 17"|cut -d ' ' -f5)
+	WEB=https://www.oracle.com/java/technologies/downloads/#java21
+	VERSION=$(curl -s $WEB|grep "Kit 21"|cut -d ' ' -f5)
 	SOURCES=$SRCNAM.$EXTENSION
 	CD=$PRGNAM-$VERSION
-	DOWNLOAD=https://download.oracle.com/java/17/latest/$SOURCES
+	DOWNLOAD=https://download.oracle.com/java/21/latest/$SOURCES
 }
 
 # Descomprimimos el fichero descargado y compilamos
