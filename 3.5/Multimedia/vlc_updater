@@ -21,11 +21,11 @@ F_variables() {
 	EXTENSION=tar.xz
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://www.videolan.org/vlc/download-sources.html
-	VERSION=$(curl -s $WEB|grep Latest|cut -d "(" -f2|cut -d ")" -f1)
+	WEB=https://github.com/videolan/vlc
+	VERSION=$(curl -s $WEB/tags|grep [0-9].tar.gz|cut -d/ -f7|grep -v '\$\|-'|head -1|cut -dt -f-1|sed 's/.$//g')
 	CD=$PRGNAM-$VERSION
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	DOWNLOAD=https://get.videolan.org/$PRGNAM/$VERSION/$SOURCES
+	DOWNLOAD=https://download.videolan.org/pub/videolan/$PRGNAM/$VERSION/$SOURCES
 }
 
 # Comprobar dependencias
