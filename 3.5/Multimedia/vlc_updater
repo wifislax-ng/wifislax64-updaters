@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20240421
+SCRIPT_VERSION=20241010
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -53,6 +53,7 @@ x264
 libkate
 jack
 soxr
+abseil-cpp
 protobuf3
 srt
 libdaemon
