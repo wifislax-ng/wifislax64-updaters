@@ -1,0 +1,111 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20241019
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=cewl
+	SRCNAM=CeWL
+	EXTENSION=tar.gz
+	GESTOR=wget
+	echo -ne "\033]2;${SRCNAM}_updater\007"
+	WEB=https://github.com/digininja/$SRCNAM
+	VERSION=$(curl -s $WEB/tags|grep $EXTENSION|head -1|cut -d/ -f7|sed 's/v//g'|cut -dt -f-1|sed 's/.$//g')
+	SOURCES=$VERSION.$EXTENSION
+	CD=$SRCNAM-$VERSION
+	DOWNLOAD=$WEB/archive/refs/tags/$SOURCES
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
+sleep 1
+
+rm -fv Gemfile.lock
+bundle config set --local path vendor/bundle
+bundle config set --local without development test
+bundle config build.nokogiri --use-system-libraries
+
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
+sleep 1
+
+bundle install -j$(nproc)
+install -d $PKG/opt/$SRCNAM
+cp -ra --no-preserve=owner . "$PKG/opt/$SRCNAM"
+rm -r $PKG/opt/$SRCNAM/.github
+rm -r $PKG/opt/$SRCNAM/.gitignore
+rm -r $PKG/opt/$SRCNAM/.dockerignore
+install -d $PKG/usr/bin
+
+cat > "$PKG/usr/bin/$PRGNAM" << EOF
+#!/bin/sh
+BUNDLE_GEMFILE=/opt/$SRCNAM/Gemfile bundle exec /opt/$SRCNAM/$PRGNAM.rb "\$@"
+EOF
+
+chmod 755 "$PKG/usr/bin/$PRGNAM"
+
+cat > "$PKG/usr/bin/$PRGNAM-fab" << EOF
+#!/bin/sh
+BUNDLE_GEMFILE=/opt/$SRCNAM/Gemfile bundle exec /opt/$SRCNAM/fab.rb "\$@"
+EOF
+
+chmod 755 $PKG/usr/bin/$PRGNAM-fab
+    
+cd $PKG/opt/$SRCNAM/vendor/bundle/ruby/*
+rm -rf cache extensions/*/*/*/{mkmf.log,gem_make.out}
+
+# Fix gem warnings
+echo -n "
+gem 'getoptlong'
+gem 'ostruct'
+gem 'pstore'">> $PKG/opt/$SRCNAM/Gemfile
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Comprobamos version instalada del paquete
+f_versionInstalada
+#Si no existe el fichero se descargara
+f_download
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales
