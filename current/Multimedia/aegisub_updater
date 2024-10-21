@@ -1,0 +1,130 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20241020
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=aegisub
+	SRCNAM=Aegisub
+	EXTENSION=tar.gz
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://github.com/wangqr/$SRCNAM
+	VERSION=$(curl -s $WEB/tags|grep $EXTENSION|head -1|cut -d/ -f7|sed 's/v//g'|cut -dt -f-1|sed 's/.$//g')
+	SOURCES=v$VERSION.$EXTENSION
+	CD=$SRCNAM-$VERSION
+	DOWNLOAD=$WEB/archive/refs/tags/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="
+unifdef
+libwpe
+wpebackend-fdo
+bubblewrap
+geoclue2
+xdg-dbus-proxy
+webkit2gtk
+nanosvg
+wxWidgets
+ffms2
+libass
+libuchardet"
+f_dependencias
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
+sleep 1
+
+echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4A//BBRdADEb7OZ3nRK+EF6IKQKvv2paGfaiwaEogu+4
+IkHBeLxNINEQit7lpvwDOtggoZQ4I6mYj2QbO8fYELsVzRcEL0CPoLyJQg95z0J9HMtvhfyNEnIR
+iKUqwYRqJIQI5+Ewfyma3Ug0R/msNBz2hcaXi9ge+siND99R8jjZBbM5ibRCdRIv90TX6qohEcvX
+NP1fDUoGIqC1Hu/tGG0UocNNZ0nIfGl1vm3+iY4TCgZdYQ/3ca2JLTvJArzTYv3lDtuftQL46POc
+io3Mh9gpwtIZMaLAumNtCDJiqwEl4VNtgk6Z6NGyik4MNn8PU3pt+lJV1lYdw3mP5b7y20AqGKMg
+mIdPANdwQL+vIAaYOorFz7iDn3Hvqx/1mdvKhY5GE+y+RlYSxbQ7LLKL6TMBcvh1zcpGeRBSQEts
+3j10kQOturXsLOv0L0bCfMKVkLX3akn8drWw6MJ8XUL9pIj/IIXDLmzSQnh7Syz0xyG5iQW4JRhT
+JwQBQCZiJVT/BcCJZxFBEGjzTx9GvkaTY4LI29VkqIReMm5mNxHO1nVfuJXk3ATexvGUHj9Ej4hU
+aEgIgumid9ySMBc29d8ldPQATjm27X6wpLOtcbfvC00y9PHxfexa7MXiS2oO6qSBs9IDB5q9Hs2D
+EjsZKekJWqF4xxUnE8pxglDTVdmLVU/EoS6cggUc989fkusKT3AmhXJ1UWfRvNC8tcpBrceScmzP
+hKIheaQKBRfrHkvF/WSoDnldczGxaZbw3gWfTPIfXfvH17bM2G1fxNesV+XJzOSSnqlcTceh0+zf
+3mSjBhTTHnH8LSpvDw8NtqNw9xVdu2LDzS0z5oiRfU+bTqvFzh6iHM0i3wCU8z7glNFi7v9gVi91
+5tCNHT3HuBgqdOoPWV/R+HYngwlzbvtUqbaDaLazKNEzTpYIwNTaF6irfJgw6jrxbzI4VISHPE8D
+Tw/aZ9GJpDzsnaFBTUQOtARp9sINf8rDOto/ll2Re/M7fuRRx9Bo09TI51X1ycoHDT0PiLDwBcVa
+elj6nQ1O8RbzBDu8+W0vtjCvPKAQgMrXyqHuBzI9+3RPfGGsqUFyaF8nS02TMq9pIZ7m4ycY/KiM
+LCF+E+OVl/vzoVkCEPzmhBY5roFb3gwm6D/XxkAfC2fXSNly+Igm9UbuwlfjaTubkxMyaNmUI1w8
+8H/5USdbaCxecbW3bimIyI681vgmeW2+CVi6Wzjn8EgMJRu15sydou5rtAAritEHtIlu9hqNkTzc
+MHwng79q+DfqqXMZvm7ihVLgM0R3jd1xodjMcFELFzNLS1aC9zwxfdcnmflMD8bLpaFyWNK5S7Fx
+wJBFWCuloD3aBN3dJKhXf2FdmVKTO2uf5791mNg4o/k9ir8A7eX7EbGDAibOO7UNlwCk2rdSymux
+RwABsAiAIAAAsnz7PLHEZ/sCAAAAAARZWg=="|base64 -d > $TMP/patches.txz
+tar xvf $TMP/patches.txz &>/dev/null
+patch -p1 < ./boost-1.81.0.patch || exit 1
+
+export FORCE_GIT_VERSION="TRUE"
+
+  cmake . \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_MANDIR=/usr/man \
+    -DCMAKE_INSTALL_DOCDIR=/usr/doc \
+    -DWITH_OSS=OFF \
+    -DCMAKE_BUILD_TYPE=None ..
+
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
+sleep 1
+
+make || exit 1
+make install DESTDIR=$PKG || exit 1
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Comprobamos version instalada del paquete
+f_versionInstalada
+#Compronar dependencias
+F_dependencias
+#Si no existe el fichero se descargara
+f_download
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales
