@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20210307
+SCRIPT_VERSION=20241229
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -33,8 +33,7 @@ F_variables() {
 F_dependencias(){
 DEPENDENCIAS="
 gsound
-gcab
-appstream-glib"
+"
 f_dependencias
 }
 
