@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20240325
+SCRIPT_VERSION=20250123
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -34,6 +34,14 @@ ZSTD_CLEVEL=19 make DESTDIR=$PKG FIRMWAREDIR=/lib/firmware install-zst
 # Vamos a ahorrar espacio
 rm -rf $PKG/lib/firmware/{bnx2x,libertas,liquidio,mellanox,netronome,qcom,qed,qlogic}
 rm -rf $PKG/lib/firmware/{a300_*,bnx2x*,cbfw*,ct2fw*,ctfw*,ql2*,ti-connectivity,vpu*.bin*}
+# Incluimos AMD microcodiigo
+  mkdir -p $PKG/boot/tmp
+  pushd $PKG/boot/tmp
+    mkdir -p kernel/x86/microcode
+    find $PKG/lib/firmware/amd-ucode -type f -name "*.bin" | sort | xargs cat > kernel/x86/microcode/AuthenticAMD.bin
+    find . | cpio --no-absolute-filenames -H newc -o -F $PKG/boot/amd-ucode.img
+  popd
+  rm -rf $PKG/boot/tmp
 }
 
 ###################################
