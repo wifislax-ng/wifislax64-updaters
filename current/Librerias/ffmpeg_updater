@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20240913
+SCRIPT_VERSION=20250203
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -114,6 +114,7 @@ CXXFLAGS="$SLKCFLAGS" \
     --disable-debug \
     --disable-static \
     --disable-stripping \
+    --enable-amf \
     --enable-avisynth \
     --enable-lto \
     --enable-fontconfig \
