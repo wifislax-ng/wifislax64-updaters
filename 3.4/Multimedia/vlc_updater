@@ -1,0 +1,248 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20241012
+CATEGORIA="Reproductores multimedia"
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=vlc
+	EXTENSION=tar.xz
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://github.com/videolan/vlc
+	VERSION=$(curl -s $WEB/tags|grep [0-9].tar.gz|cut -d/ -f7|grep -v '\$\|-'|head -1|cut -dt -f-1|sed 's/.$//g')
+	CD=$PRGNAM-$VERSION
+	SOURCES=$PRGNAM-$VERSION.$EXTENSION
+	DOWNLOAD=https://download.videolan.org/pub/videolan/$PRGNAM/$VERSION/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="
+abseil-cpp
+lua53
+live555
+libdc1394
+libavc1394
+libnfs
+libdvbpsi
+libgme
+libshout
+libebml
+libmatroska
+libmodplug
+aom
+dav1d
+twolame
+libdca
+libmpeg2
+x265
+x264
+libkate
+jack
+soxr
+abseil-cpp
+protobuf3
+srt
+libdaemon
+avahi
+libupnp
+"
+f_dependencias
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
+sleep 1
+
+echo "
+/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Av/Ag9dADgYSu7FL5n6pvg745dpgzgztyjlznaup/J2
+3UgeUcZfugixPbEmam6grOoMaKni+KKocQLWMp3L3QCIlbGogPTUdkl2J4qOKfJjuF7U2E0Zrve2
+qGJeX0UXGpQc5vgcv+kHsxy+5kItwfW3a5OyGdqZ5zP7OJsqGraPorQ+9Otlv8nU0SKrFYJfdEQs
+dhv51wUXfKCH3DlevYjhH7vFwZgH0cdqLsuwyo12zWtpbMGYDr0TFW+bO6UUAdSPb4voFRWauVr4
+evdvukROtIOEz6kdpoExpUioac75tSfTqVEN5TyGahfywB3n4d/SyH+UFh0zRel4zlNIn+Om8C4F
+qRiWRRcFHhSFDltD8403PI6Lrsi8Z1SAbm8RTmiYNjMkfi8jsROIRjb19tvRGQD79HHJYdIFMb8v
+KrIhH+GSidMZOBzBYOogBdx+dDgG6+lDkeQUJ8piEM8B/I/3HoNmleAZFylMEosNPa51bN3MqiHI
++4GXCj98qWTfODFGKeE7nDlXT5mfzL0NQ8siHP36PzEh9+c0TJdbt0xhZ0WzzRVF6kPZw5C7Yq48
+/MJWxToEdlcbnlcHbnroWRFesoTqaHCeD/BB3oayZ02iq0gKXuI9i+Ac6fcTYTRfEOk953qT/dQI
+cmxflxDuPKe0lDVbRRkHzdCIWw+aOXBy/jx48uS1pY6RMBIhtuatcSTB/EcAAAC4MhbPxNg2gwAB
+qwSAGAAAw9diurHEZ/sCAAAAAARZWg=="|base64 -d > $TMP/patches.txz
+
+tar xvf $TMP/patches.txz &>/dev/null
+patch -p0 < ./patches/patch_vlc_cache_gen.patch||exit 1
+
+# libva no esta activado en ffmpeg5 y falla al compilar
+vaapi=$(ffmpeg -version |head -1| cut -d ' ' -f3|cut -d . -f1)
+if [ $vaapi = 5 ] ; then
+libva="--disable-libva"
+else
+libva="--enable-libva"
+fi
+
+autoreconf -fiv
+
+CFLAGS="$SLKCFLAGS  -I/usr/include/samba-4.0" \
+CXXFLAGS="$SLKCFLAGS -std=c++17" \
+LDFLAGS="$SLKLDFLAGS" \
+./configure \
+    --prefix=/usr \
+    --libdir=/usr/lib${LIBDIRSUFFIX} \
+    --sysconfdir=/etc \
+    --mandir=/usr/man \
+    --docdir=/usr/doc/vlc-$VERSION \
+    --localstatedir=/var \
+    --disable-update-check \
+    --enable-run-as-root \
+    --with-kde-solid=/usr/share/solid/actions/ \
+    --disable-rpath \
+    --enable-nls \
+    --enable-archive \
+    --enable-live555 \
+    --enable-dc1394 \
+    --enable-dv1394 \
+    --enable-dvdread \
+    --enable-dvdnav \
+    --enable-bluray \
+    --disable-opencv \
+    --enable-smbclient \
+    --enable-sftp \
+    --enable-nfs \
+    --enable-realrtsp \
+    --enable-dvbpsi \
+    --enable-gme \
+    --enable-ogg \
+    --enable-shout \
+    --enable-matroska \
+    --enable-mod \
+    --enable-mpc \
+    --enable-mad \
+    --enable-mpg123 \
+    --enable-gst-decode \
+    --enable-avcodec \
+    --enable-avformat \
+    --enable-postproc \
+    --enable-faad \
+    --enable-vpx \
+    --enable-twolame \
+    --disable-fdkaac \
+    --enable-a52 \
+    --enable-dca \
+    --enable-flac \
+    --enable-libmpeg2 \
+    --enable-vorbis \
+    --enable-speex \
+    --enable-opus \
+    --enable-oggspots \
+    --disable-schroedinger \
+    --enable-png \
+    --enable-jpeg \
+    --enable-x264 \
+    --enable-x265 \
+    --enable-zvbi \
+    --enable-libass \
+    --enable-kate \
+    --enable-vdpau \
+    --enable-wayland \
+    --enable-sdl-image \
+    --enable-freetype \
+    --enable-fribidi \
+    --enable-harfbuzz \
+    --enable-fontconfig \
+    --enable-svg \
+    --enable-svgdec \
+    --enable-aa \
+    --enable-caca \
+    --enable-pulse \
+    --enable-alsa \
+    --enable-jack \
+    --enable-samplerate \
+    --enable-soxr \
+    --disable-chromaprint \
+    --enable-chromecast \
+    --enable-qt \
+    --enable-skins2 \
+    --enable-libtar \
+    --enable-ncurses \
+    --enable-lirc \
+    --enable-projectm \
+    --enable-avahi \
+    --enable-mtp \
+    --enable-upnp \
+    --enable-libxml2 \
+    --disable-libgcrypt \
+    --enable-gnutls \
+    --enable-taglib \
+    --enable-secret \
+    --enable-kwallet \
+    --enable-notify \
+    --enable-vlc \
+    --enable-aribsub \
+    --enable-aribcam \
+    --enable-aom \
+    --enable-srt \
+    --enable-dav1d \
+    --disable-libplacebo \
+    $libva \
+    --build=$ARCH-slackware-linux
+  
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
+sleep 1
+make || exit 1
+make install DESTDIR=$PKG || exit 1
+
+install -D -m0644 extras/analyser/vlc.vim $PKG/usr/share/vim/vimfiles/syntax/vlc.vim
+rm -rf $PKG/usr/lib${LIBDIRSUFFIX}/vlc/plugins/plugins.dat
+rm -rf $PKG/usr/lib${LIBDIRSUFFIX}/*.la
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Comprobamos version instalada del script
+f_versionInstalada
+# Comprobar dependencias
+F_dependencias
+#Si no existe el fichero se descargara
+f_download
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales

@@ -1,0 +1,440 @@
+#!/bin/bash
+
+# Script by www.seguridadwireless.net
+
+FUNCIONES_VERSION=20231118
+# Colores
+CIERRE=${CIERRE:-"[0m"}
+ROJO=${ROJO:-"[1;31m"}
+VERDE=${VERDE:-"[1;32m"}
+CYAN=${CYAN:-"[1;36m"}
+AMARILLO=${AMARILLO:-"[1;33m"}
+BLANCO=${BLANCO:-"[1;37m"}
+ROSA=${ROSA:-"[1;35m"}
+
+# Variables globales
+PRGNAM=funciones
+VERSION=$FUNCIONES_VERSION
+ESCRITORIO=$(cat '/root/.config/user-dirs.dirs' |grep DESKTOP|cut -d '"' -f2|cut -d/ -f2)
+BUILD=${BUILD:-1}
+TAG=${TAG:-wifislax}
+CWD=$(pwd)
+WIFISLAX=$(cat /etc/wifislax-version|cut -d ' ' -f2|cut -d_ -f1)
+
+# Miramos config de empaquetado
+CONFIG=/etc/wifislax-updaters/wifislax-updaters.conf
+PACKAGETYPE=${PACKAGETYPE:-$(cat $CONFIG|grep PACKAGETYPE|cut -d = -f2)}
+
+# Si el equipo tiene mas de un nucleo usamos todos
+export MAKEFLAGS=-j$(nproc)
+# Se exporta variable para que slapt-src compile los plugins python3
+export PYTHON3=yes
+# Se define idioma de sistema
+IDIOMA=$(echo $LANG|cut -d_ -f1)
+export IDIOMA
+
+# Eliminamos posibles ficheros viejos de modificaciones de scripts	
+rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
+
+# Funcion que limpia
+f_exitmode() {
+   rm -Rf $TMP &>/dev/null
+   exit 1
+}
+
+# Funcion que muestra Presentacion
+f_presentacion() {
+clear
+	sleep 0.1 | echo ""
+	sleep 0.1 | echo ""
+	sleep 0.1 | echo "$BLANCO"  "       ******************************"   
+	sleep 0.1 | echo "$VERDE"   "          Actualizador/Instalador    "   
+	sleep 0.1 | echo "$VERDE"   "          Paquete: "$AMARILLO"$PRGNAM"                                                 
+	sleep 0.1 | echo "$VERDE"   "                                   "
+	sleep 0.1 | echo "$VERDE"   "          www.seguridadwireless.net  "
+	sleep 0.1 | echo "$BLANCO"  "       ******************************"
+	sleep 0.1 | echo "$CERRAR"
+}
+
+# Comprobar conexion by geminis_demon
+f_comprobarConexion() {
+   if [ ! "$(ping google.com -c1 2>/dev/null)" ]; then
+      echo "No tengo internet ... el script se cerrara."
+      echo ""
+      exit 1
+   fi
+}
+
+# Comprobacion de updates para el script
+f_comprobarUpdates() {
+   SERVIDOR_WEB="https://raw.githubusercontent.com/wifislax-ng/wifislax64-updaters/master/$WIFISLAX"
+   DIRECTORIO=$(find /opt/wifislax-updaters -type f -name ${PRGNAM}_updater| rev | cut -d/ -f2- | rev)
+   SERVIDOR_VERSION=$(timeout -s SIGTERM 10 curl -sk $SERVIDOR_WEB/${DIRECTORIO##*/}/${PRGNAM}_updater | grep "SCRIPT_VERSION=" | head -1 |cut -d "=" -f2)
+
+   echo ${CYAN}Version Script$CIERRE: $ROJO${SCRIPT_VERSION:6}$BLANCO/$AMARILLO${SCRIPT_VERSION:4:2}$BLANCO/$ROJO${SCRIPT_VERSION:0:4}$CIERRE
+
+   if [ "$(ping github.com -c1 2>/dev/null)" ]; then
+      if [[ $SCRIPT_VERSION -lt $SERVIDOR_VERSION ]]; then
+         echo
+         echo "$ROSA"Comprobando si hay actualizaciones para el script..."$CIERRE."
+         echo ${ROJO}NUEVA VERSION$CIERRE
+         echo
+         echo ${ROSA}Version Server$CIERRE: $ROJO${SERVIDOR_VERSION:6}$BLANCO/$AMARILLO${SERVIDOR_VERSION:4:2}$BLANCO/$ROJO${SERVIDOR_VERSION:0:4}$CIERRE
+         echo
+         echo ${CYAN}Actualizando ${PRGNAM}_updater
+         curl -sk $SERVIDOR_WEB/${DIRECTORIO##*/}/${PRGNAM}_updater -o $DIRECTORIO/${PRGNAM}_updater
+         echo ${ROJO}LISTO$CIERRE
+         $0
+         exit
+      fi
+   fi
+}
+
+# Definimos arquitectura del sistema. Se le pasa la arquitectura como parametro o la calcula automaticamente si no se indica nada
+f_arquitectura() {
+   ARCH=$1
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+set -e
+}
+
+# Detecta la version instalada en el sistema
+f_versionInstalada() {
+   INSTALADA="$(ls /var/lib/pkgtools/packages|rev|cut -d'-' -f3-|sed 's/-/ /'|rev|grep "^$PRGNAM "|cut -d' ' -f2|tail -1)"
+   if [ -z $INSTALADA ];then
+   INSTALADA="NO INSTALADA"
+   VERSIONLOCAL=$INSTALADA
+   else
+   VERSIONLOCAL=$PRGNAM-$INSTALADA
+   fi
+   echo ""
+   echo ""$AMARILLO"La version del sistema es..."$CYAN"$VERSIONLOCAL"$CIERRE""
+   echo ""
+   echo "__________________________________________"
+   echo ""
+   echo ""$AMARILLO"La version mas nueva en su pagina web es..."$CYAN"$PRGNAM-$VERSION"$CIERRE""
+   echo ""
+   if [ $PRGNAM = x265 ]; then
+      echo "${ROJO}ADVERTENCIA:"
+      echo "${BLANCO}Actualizar este paquete puede romper ${AMARILLO}ffmpeg"
+      echo "${BLANCO}Es posible que necesites recompilar ${AMARILLO}ffmpeg"
+      echo
+   fi
+   echo ""$BLANCO"Pulsa $ROJO"ENTER" $BLANCO"si deseas actualizarla""
+   read junk
+   echo ""
+
+# Si el paquete esta instalado y es el mismo se sube el numero de build
+if [ "$INSTALADA" = $VERSION ]; then
+BUILDLOCAL="$(ls /var/lib/pkgtools/packages/$PRGNAM-$INSTALADA-*|rev|cut -d'-' -f1|grep -o "[0-9]*"|rev|tail -1)"
+BUILD=$(expr $BUILDLOCAL + 1)
+fi
+
+# Variables para calcular tiempo de inicio
+COMIENZO=$(date +%s)
+}
+
+f_dependencias(){
+echo "$ROSA"Comprobando dependencias ..."$CIERRE"
+echo ""
+for D in $DEPENDENCIAS; do
+BUSCAR=$(echo "$(ls /var/lib/pkgtools/packages|rev|cut -d '-' -f4-|rev|grep -x $D)")
+if [ -z "$BUSCAR" ]; then
+echo "${BLANCO}Dependencia ${AMARILLO}${D} ${ROJO}NO INSTALADA${BLANCO} ...resolviendo${CIERRE}."
+UPDATER=$(echo "$(find /opt/wifislax-updaters/* -name ${D}_updater)")
+if [ -z "$UPDATER" ]; then
+if [ "$(ping www.slackbuilds.org -c1 2>/dev/null)" ]; then
+slapt-src -u &>/dev/null
+else
+echo ${ROJO}
+echo "Parece que slackbuilds.org no responde ... intentalo mas tarde"
+echo ${CIERRE}
+exit 1
+fi
+if [ ${D} = pylast ]; then
+xterm -e sh -c "TAG=slackbuilds PYTHON3=no slapt-src -y -i ${D}"
+else
+xterm -e sh -c "TAG=slackbuilds slapt-src -y -i ${D}"
+fi
+PACKDIR=$(echo $(find /usr/src/slapt-src/ -name "${D}-*.txz"))
+XZMPACK=$(echo $(find /usr/src/slapt-src/ -name "${D}-*.txz"|rev|cut -d / -f-1|rev|sed 's/.txz/.xzm/g'))
+GROUP=$(echo $(find /usr/src/slapt-src/ -name "${D}-*.txz"|rev|cut -d / -f3|rev))
+if [ ! "${PACKAGETYPE}" = disable ]; then
+if [ ! -d ${HOME}/$ESCRITORIO/${PRGNAM}_depends/$GROUP ]; then
+mkdir -p ${HOME}/$ESCRITORIO/${PRGNAM}_depends/$GROUP
+fi
+fi
+VERIFICAR=$(echo "$(ls /var/lib/pkgtools/packages|rev|cut -d '-' -f4-|rev|grep -x $D)")
+if [ -z "$VERIFICAR" ]; then
+echo ""
+echo "${ROJO}No se puedo resolver la dependencia ${AMARILLO}${D}${CIERRE}."
+echo ""
+exit 1
+else
+if [ "${PACKAGETYPE}" = txz ]; then
+mv -f "${PACKDIR}" "${HOME}/$ESCRITORIO/${PRGNAM}_depends/$GROUP"
+fi
+if [ "${PACKAGETYPE}" = xzm ]; then
+xterm -e sh -c "txz2xzm "${PACKDIR}" "${HOME}/$ESCRITORIO/${PRGNAM}_depends/$GROUP/$XZMPACK""
+fi
+echo "${BLANCO}Dependencia ${AMARILLO}${D} ${CYAN}RESUELTA${CIERRE}."
+fi
+rm -rf /usr/src/slapt-src/${GROUP}/${D}
+find /usr/src/slapt-src -empty -type d -delete
+else
+xterm -e sh -c "yes y | $UPDATER"
+VERIFICAR=`echo "$(ls /var/lib/pkgtools/packages|rev|cut -d '-' -f4-|rev|grep -x $D)"`
+if [ -z "$VERIFICAR" ]; then
+echo ""
+echo "${ROJO}No se puedo resolver la dependencia ${AMARILLO}${D}${CIERRE}."
+echo ""
+exit 1
+else
+echo "${BLANCO}Dependencia ${AMARILLO}${D} ${CYAN}RESUELTA${CIERRE}."
+fi
+fi
+else
+echo "${BLANCO}Dependencia ${AMARILLO}${D} ${VERDE}INSTALADA${CIERRE}."
+fi
+done
+}
+
+# Elimina una version anterior
+f_elimina() {
+   if [ $PRGNAM = xampp ]; then
+   if [ -f /opt/lampp/lampp ]; then
+   /opt/lampp/lampp stop &>/dev/null
+   fi
+   fi
+   
+   if [ $PRGNAM = teamviewer ]; then
+   if [ -f /etc/rc.d/rc.teamviewerd ]; then
+   /etc/rc.d/rc.teamviewerd stop &>/dev/null
+   fi
+   fi
+
+   echo ""
+   echo "$ROJO"Eliminando la version del sistema..."$CIERRE"
+   removepkg $(ls /var/lib/pkgtools/packages|rev|cut -d'-' -f3-|sed 's/-/ /'|rev|grep "^$PRGNAM "|cut -d' ' -f1)
+}
+
+# Crea el directorio temporal de trabajo
+f_directorioTemporal() {
+   TMP=${TMP:-/tmp/build/$PRGNAM}
+   PKG=$TMP/package-$PRGNAM
+   OUTPUT=${OUTPUT:-/tmp}
+   if [ $GESTOR = git ]; then
+   rm -rf $TMP > /dev/null
+   fi
+   rm -rf $PKG
+   mkdir -p $TMP $PKG $OUTPUT
+   cd $TMP
+}
+
+# Hace strip al paquete
+f_strip() {
+   cd $PKG
+   stripdir $PKG 2>/dev/null
+}
+
+# Descargar sources
+f_download(){
+if [ $GESTOR = wget ]; then
+ARGS="-N -L -c -q --show-progress --no-passive-ftp"
+fi
+
+if [ $GESTOR = git ]; then
+ARGS=clone
+fi
+
+if [ ! -f $SOURCES ]; then
+echo 
+echo "$CYAN"Descargando sources de $PRGNAM-$VERSION"$CIERRE"
+echo "${ROSA}"
+$GESTOR $ARGS $DOWNLOAD
+echo "${CIERRE}"
+fi
+}
+
+#Preparamos entorno
+f_descomprimir(){
+	echo
+	echo "$VERDE"Descomprimiendo ..."$CIERRE"
+	echo
+	sleep 1
+	rm -rf $PRGNAM-$VERSION
+	if [ $EXTENSION = zip ]; then
+	unzip $SOURCES
+	else
+	tar xvf $SOURCES||tar xvf $SRCNAM-$VERSION.$EXTENSION||tar xvf $PRGNAM-src-$VERSION.$EXTENSION
+	fi
+}
+
+f_cd(){
+	if [ -z $CD ]; then
+	echo
+	echo "${ROJO}La funcion CD no existe o esta vacia.${CIERRE}"
+	echo
+	fi
+	cd $TMP/$CD||echo "${ROJO}Error en funcion CD.${CIERRE}"
+	chown -R root:root .
+	find -L . \
+	\( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+	  -o -perm 511 \) -exec chmod 755 {} \; -o \
+	\( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+	-o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+}
+
+f_categoria(){
+   # Guardamos los modulos en carpetas por categoria
+   cd ..
+   CATEGORIA=$(echo "$(find /opt/wifislax-updaters/* -name ${PRGNAM}_updater| cut -d "/" -f4)")
+   if [ ! -d $HOME/$ESCRITORIO/$CATEGORIA ]; then
+   mkdir -p $HOME/$ESCRITORIO/$CATEGORIA
+   fi
+}
+
+f_xzm(){
+   ### Package xzm ###
+   if [ $PACKAGETYPE = xzm ]; then
+   echo ""
+   echo "$VERDE"Instalando y creando modulo ${AMARILLO}xzm ..."$CIERRE"
+   sleep 1
+
+   f_categoria
+   
+   #Creamos paquete
+   cleandir $PKG &>/dev/null
+   dir2xzm $PKG $HOME/$ESCRITORIO/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm
+   xzm2dir $HOME/$ESCRITORIO/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.xzm /
+   fi
+}
+ 
+f_txz(){
+   ### Package txz ###
+   if [ $PACKAGETYPE = txz ]; then
+   echo ""
+   echo "$VERDE"Instalando y creando paquete ${AMARILLO}txz ..."$CIERRE"
+   sleep 1
+   
+   f_categoria
+   
+   #Variables de busqueda para slack-desk
+   if [ "$(ping www.slackbuilds.org -c1 2>/dev/null)" ]; then
+   BUSQUEDA=$(echo $PRGNAM|rev)
+   SLACKWEB=https://slackbuilds.org
+   SLACKVER=$(curl -s $SLACKWEB/|grep repository/[0-9]|cut -d / -f3)
+   SECTION=$(cat /etc/wifislax-updaters/SLACKBUILDS.TXT|grep LOCATION|rev|grep "^$BUSQUEDA/"|cut -d / -f2|rev)
+   DESC=$(curl -s $SLACKWEB/slackbuilds/$SLACKVER/$SECTION/${PRGNAM}/slack-desc)
+   #Incluir slack-desk
+   if [ ! -z "$SECTION" ]; then
+   mkdir -p $PKG/install
+   echo "$DESC" > $PKG/install/slack-desc
+   fi
+   fi
+   
+   #Creamos paquete
+   cd $PKG
+   cleandir $PKG &>/dev/null
+   /sbin/makepkg -l y -c n $HOME/$ESCRITORIO/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
+   installpkg $HOME/$ESCRITORIO/$CATEGORIA/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
+   fi
+}
+
+f_disable(){
+   ### Package disabled ###
+   if [ $PACKAGETYPE = disable ]; then
+   echo ""
+   echo "$VERDE"Instalando ..."$CIERRE"
+   sleep 1
+   
+   #Creamos paquete
+   cd $PKG
+   cleandir $PKG &>/dev/null
+   /sbin/makepkg -l y -c n /tmp/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
+   installpkg /tmp/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
+   rm -rf /tmp/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.txz
+   fi
+}
+
+# Creamos xzm , instalamos y salimos
+f_tareasFinales() {
+
+   # Si el sistema tiene una version anterior se eliminara
+   if [ "$INSTALADA" != "NO INSTALADA" ]; then
+      f_elimina
+   fi
+   
+   #Ejecutamos funcion segun config
+   if [ $PACKAGETYPE = xzm ]; then
+   f_xzm
+   elif [ $PACKAGETYPE = txz ]; then
+   f_txz
+   else
+   f_disable
+   fi  
+
+   rm -Rf $TMP &>/dev/null
+   clear
+   
+   # Actualizar sistema mimetypes schemas etc
+   echo ""$VERDE"Actualizando sistema$BLANCO...$CIERRE"
+
+   # Comandos de sistema
+   /usr/bin/update-mime-database /usr/share/mime &>/dev/null &
+   /usr/bin/gtk-update-icon-cache /usr/share/icons/hicolor &>/dev/null &
+   /usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas &>/dev/null &
+   /usr/bin/update-desktop-database -q /usr/share/applications &>/dev/null &
+   /usr/bin/fc-cache -f &>/dev/null &
+   ldconfig &>/dev/null
+   
+   # Si es un driver actualizamos lista de drivers
+   if [ $CATEGORIA = Drivers ]; then
+   depmod -a &>/dev/null
+   fi
+   
+   # Iniciar algun servicio si existe
+   if [ $PRGNAM = teamviewer -a -f /etc/rc.d/rc.teamviewerd ]; then
+   /etc/rc.d/rc.teamviewerd start &>/dev/null
+   fi
+   
+   # Informe final
+   clear
+   if [ $PACKAGETYPE = disable ]; then
+   echo ""$VERDE"Instalado paquete "$AMARILLO"$PRGNAM-$VERSION"$CIERRE""
+   echo ""
+   else
+   echo ""$VERDE"Instalado y Creado paquete "$AMARILLO"$PRGNAM-$VERSION"$CIERRE""
+   echo ""
+   fi
+   # Variables para calcular tiempo de acabado
+   AHORA=$(($(date +%s)-3600));
+   TIEMPO="$(date --date=@$(($AHORA-$COMIENZO)) +%X)"
+   
+   # Informe de acabado
+   echo "${AMARILLO}Tiempo empleado${BLANCO}: $TIEMPO"
+   echo ""
+   echo "$VERDE"Bye Bye"$CIERRE"
+   echo ""
+   
+   # Salimos del script
+   exit 0
+}
