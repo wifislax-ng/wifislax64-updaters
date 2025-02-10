@@ -1,0 +1,284 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20250203
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=ffmpeg
+	SRCNAM=FFmpeg
+	EXTENSION=tar.gz
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://github.com/$SRCNAM/$SRCNAM
+	VERSION=$(ls /var/log/packages|grep ffmpeg-|cut -d- -f2|grep -v compat)
+	SOURCES=n$VERSION.$EXTENSION
+	CD=$SRCNAM-n$VERSION
+	DOWNLOAD=$WEB/archive/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="
+celt
+ladspa_sdk
+libavc1394
+libiec61883
+recode
+perl-Cstools
+perl-Unicode-Map
+perl-Unicode-String
+perl-Unicode-Map8
+enca
+libaacs
+libbdplus
+gsm
+libmodplug
+opencore-amr
+soxr
+x264
+x265
+xvidcore
+libdbus-c++
+libconfig
+mm-common
+libxml++3
+libffado
+srt
+zeromq
+DevIL
+AviSynthPlus
+gflags
+gperftools
+graphviz
+highway
+libjxl
+onevpl
+zita-alsa-pcmi
+zita-resampler
+jack
+portaudio
+libopenmpt
+cargo-c
+rav1e
+ladspa_sdk
+vamp-plugin-sdk
+rubberband
+svt-av1
+python3-pyproject-metadata
+python3-mesonpy
+python3-numpy
+OpenBLAS
+vmaf
+zimg
+vapoursynth
+"
+f_dependencias
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
+sleep 1
+
+echo "
+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
+"|base64 -d > $TMP/patches.txz
+
+tar xvf $TMP/patches.txz &>/dev/null
+# Restore missing function needed by Chromium and qt-webengine:
+patch -p1 < ./patches/add-av_stream_get_first_dts-for-chromium.patch||exit 1
+# Fix for texinfo-7.2:
+patch -p1 < ./patches/FFmpeg-devel-doc-t2h-Support-texinfo-7.1-and-7.2-pretest.diff||exit 1
+
+# GCC 14 "fix":
+SLKCFLAGS="$SLKCFLAGS -Wno-error=int-conversion -Wno-error=incompatible-pointer-types"
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+    --prefix=/usr \
+    --libdir=/usr/lib${LIBDIRSUFFIX} \
+    --shlibdir=/usr/lib${LIBDIRSUFFIX} \
+    --disable-doc \
+    --disable-htmlpages \
+    --disable-manpages \
+    --disable-podpages \
+    --disable-txtpages \
+    --disable-debug \
+    --disable-static \
+    --disable-stripping \
+    --enable-amf \
+    --enable-avisynth \
+    --enable-lto \
+    --enable-fontconfig \
+    --enable-frei0r \
+    --enable-gmp \
+    --enable-gnutls \
+    --enable-gpl \
+    --enable-ladspa \
+    --enable-libaom \
+    --enable-libass \
+    --enable-libbluray \
+    --enable-libbs2b \
+    --enable-libdav1d \
+    --enable-libdrm \
+    --enable-libdvdnav \
+    --enable-libdvdread \
+    --enable-libfreetype \
+    --enable-libfribidi \
+    --enable-libgsm \
+    --enable-libharfbuzz \
+    --enable-libiec61883 \
+    --enable-libjack \
+    --enable-libjxl \
+    --enable-libmodplug \
+    --enable-libmp3lame \
+    --enable-libopencore_amrnb \
+    --enable-libopencore_amrwb \
+    --enable-libopenjpeg \
+    --enable-libopenmpt \
+    --enable-libopus \
+    --enable-libplacebo \
+    --enable-libpulse \
+    --enable-librav1e \
+    --enable-librsvg \
+    --enable-librubberband \
+    --enable-libsnappy \
+    --enable-libsoxr \
+    --enable-libspeex \
+    --enable-libsrt \
+    --enable-libssh \
+    --enable-libsvtav1 \
+    --enable-libtheora \
+    --enable-libv4l2 \
+    --enable-libvidstab \
+    --enable-libvmaf \
+    --enable-libvorbis \
+    --enable-libvpl \
+    --enable-libvpx \
+    --enable-libwebp \
+    --enable-libx264 \
+    --enable-libx265 \
+    --enable-libxcb \
+    --enable-libxml2 \
+    --enable-libxvid \
+    --enable-libzimg \
+    --enable-libzmq \
+    --enable-nvdec \
+    --enable-nvenc \
+    --enable-opencl \
+    --enable-opengl \
+    --enable-shared \
+    --enable-vapoursynth \
+    --enable-version3 \
+    --enable-vulkan \
+    --arch=$ARCH
+  
+make || exit 1
+make install DESTDIR=$PKG
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos version instalada del script
+f_versionInstalada
+#Compronar dependencias
+F_dependencias
+#Si no existe el fichero se descargara
+f_download
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales
