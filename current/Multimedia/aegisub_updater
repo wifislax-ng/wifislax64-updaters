@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20241020
+SCRIPT_VERSION=20250212
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -21,7 +21,7 @@ F_variables() {
 	EXTENSION=tar.gz
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/wangqr/$SRCNAM
+	WEB=https://github.com/TypesettingTools/$SRCNAM
 	VERSION=$(curl -s $WEB/tags|grep $EXTENSION|head -1|cut -d/ -f7|sed 's/v//g'|cut -dt -f-1|sed 's/.$//g')
 	SOURCES=v$VERSION.$EXTENSION
 	CD=$SRCNAM-$VERSION
@@ -41,7 +41,6 @@ webkit2gtk
 nanosvg
 wxWidgets
 ffms2
-libass
 libuchardet"
 f_dependencias
 }
@@ -52,44 +51,76 @@ echo
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
-echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4A//BBRdADEb7OZ3nRK+EF6IKQKvv2paGfaiwaEogu+4
-IkHBeLxNINEQit7lpvwDOtggoZQ4I6mYj2QbO8fYELsVzRcEL0CPoLyJQg95z0J9HMtvhfyNEnIR
-iKUqwYRqJIQI5+Ewfyma3Ug0R/msNBz2hcaXi9ge+siND99R8jjZBbM5ibRCdRIv90TX6qohEcvX
-NP1fDUoGIqC1Hu/tGG0UocNNZ0nIfGl1vm3+iY4TCgZdYQ/3ca2JLTvJArzTYv3lDtuftQL46POc
-io3Mh9gpwtIZMaLAumNtCDJiqwEl4VNtgk6Z6NGyik4MNn8PU3pt+lJV1lYdw3mP5b7y20AqGKMg
-mIdPANdwQL+vIAaYOorFz7iDn3Hvqx/1mdvKhY5GE+y+RlYSxbQ7LLKL6TMBcvh1zcpGeRBSQEts
-3j10kQOturXsLOv0L0bCfMKVkLX3akn8drWw6MJ8XUL9pIj/IIXDLmzSQnh7Syz0xyG5iQW4JRhT
-JwQBQCZiJVT/BcCJZxFBEGjzTx9GvkaTY4LI29VkqIReMm5mNxHO1nVfuJXk3ATexvGUHj9Ej4hU
-aEgIgumid9ySMBc29d8ldPQATjm27X6wpLOtcbfvC00y9PHxfexa7MXiS2oO6qSBs9IDB5q9Hs2D
-EjsZKekJWqF4xxUnE8pxglDTVdmLVU/EoS6cggUc989fkusKT3AmhXJ1UWfRvNC8tcpBrceScmzP
-hKIheaQKBRfrHkvF/WSoDnldczGxaZbw3gWfTPIfXfvH17bM2G1fxNesV+XJzOSSnqlcTceh0+zf
-3mSjBhTTHnH8LSpvDw8NtqNw9xVdu2LDzS0z5oiRfU+bTqvFzh6iHM0i3wCU8z7glNFi7v9gVi91
-5tCNHT3HuBgqdOoPWV/R+HYngwlzbvtUqbaDaLazKNEzTpYIwNTaF6irfJgw6jrxbzI4VISHPE8D
-Tw/aZ9GJpDzsnaFBTUQOtARp9sINf8rDOto/ll2Re/M7fuRRx9Bo09TI51X1ycoHDT0PiLDwBcVa
-elj6nQ1O8RbzBDu8+W0vtjCvPKAQgMrXyqHuBzI9+3RPfGGsqUFyaF8nS02TMq9pIZ7m4ycY/KiM
-LCF+E+OVl/vzoVkCEPzmhBY5roFb3gwm6D/XxkAfC2fXSNly+Igm9UbuwlfjaTubkxMyaNmUI1w8
-8H/5USdbaCxecbW3bimIyI681vgmeW2+CVi6Wzjn8EgMJRu15sydou5rtAAritEHtIlu9hqNkTzc
-MHwng79q+DfqqXMZvm7ihVLgM0R3jd1xodjMcFELFzNLS1aC9zwxfdcnmflMD8bLpaFyWNK5S7Fx
-wJBFWCuloD3aBN3dJKhXf2FdmVKTO2uf5791mNg4o/k9ir8A7eX7EbGDAibOO7UNlwCk2rdSymux
-RwABsAiAIAAAsnz7PLHEZ/sCAAAAAARZWg=="|base64 -d > $TMP/patches.txz
+echo "
+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
+xGf7AgAAAAAEWVo=
+"|base64 -d > $TMP/patches.txz
 tar xvf $TMP/patches.txz &>/dev/null
-patch -p1 < ./boost-1.81.0.patch || exit 1
+patch -p1 < ./Fix-build-without-pch.patch || exit 1
+cp ./git_version.h $TMP/$SOURCES || exit 1
 
-export FORCE_GIT_VERSION="TRUE"
-
-  cmake . \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DCMAKE_INSTALL_MANDIR=/usr/man \
-    -DCMAKE_INSTALL_DOCDIR=/usr/doc \
-    -DWITH_OSS=OFF \
-    -DCMAKE_BUILD_TYPE=None ..
+# Disable test to avoid downloading gtest
+sed -i "s|subdir('tests')||g" meson.build
 
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
-sleep 1
 
-make || exit 1
-make install DESTDIR=$PKG || exit 1
+mkdir build
+cd build
+  CFLAGS="$SLKCFLAGS" \
+  CXXFLAGS="$SLKCFLAGS -fpermissive" \
+  meson .. \
+    --buildtype=release \
+    --infodir=/usr/info \
+    --libdir=/usr/lib${LIBDIRSUFFIX} \
+    --localstatedir=/var \
+    --mandir=/usr/man \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    -Dopenal=disabled \
+    -Dportaudio=disabled \
+    -Dsystem_luajit=true \
+    -Denable_update_checker=false \
+    -Dstrip=true
+  "${NINJA:=ninja}"
+  DESTDIR=$PKG $NINJA install
+cd ..
 }
 
 ###################################
