@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220311
+SCRIPT_VERSION=20250221
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -29,12 +29,71 @@ F_variables() {
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
+
+echo "
+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"|base64 -d > $TMP/patches.txz
+
+tar xvf $TMP/patches.txz &>/dev/null
+patch -p1 < $TMP/$CD/makefile_osdep_parallel_build_fix.patch || exit 1
+patch -p1 < $TMP/$CD/fix-x-mode-bug.patch || exit 1
+patch -p1 < $TMP/$CD/Declare-functions-before-using-it.patch || exit 1
+patch -p1 < $TMP/$CD/ftbfs-with-gcc-14.patch || exit 1
+
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 sed 's/\/local//g' -i Makefile
 sed 's/sbin/bin/g' -i Makefile||exit 1
-make -j1 || exit 1
+make || exit 1
 install -Dm 755 src/mdk4 -t $PKG/usr/bin/
 }
 
