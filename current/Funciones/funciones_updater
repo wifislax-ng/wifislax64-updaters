@@ -1,8 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 
 # Script by www.seguridadwireless.net
 
-FUNCIONES_VERSION=20250406
+FUNCIONES_VERSION=20250301
+# Colores
+CIERRE=${CIERRE:-"[0m"}
+ROJO=${ROJO:-"[1;31m"}
+VERDE=${VERDE:-"[1;32m"}
+CYAN=${CYAN:-"[1;36m"}
+AMARILLO=${AMARILLO:-"[1;33m"}
+BLANCO=${BLANCO:-"[1;37m"}
+ROSA=${ROSA:-"[1;35m"}
 
 # Variables globales
 PRGNAM=funciones
@@ -37,16 +45,22 @@ f_exitmode() {
 # Funcion que muestra Presentacion
 f_presentacion() {
 clear
-   sleep 0.1 | echo -e "${BLANCO}\n\n         ******************************"   
-   sleep 0.1 | echo -e "${VERDE}            Actualizador/Instalador \n            Paquete:${AMARILLO} $PRGNAM\n"                         
-   sleep 0.1 | echo -e "${VERDE}            www.seguridadwireless.net"
-   sleep 0.1 | echo -e "${BLANCO}         ******************************\n"
+	sleep 0.1 | echo ""
+	sleep 0.1 | echo ""
+	sleep 0.1 | echo "$BLANCO"  "       ******************************"   
+	sleep 0.1 | echo "$VERDE"   "          Actualizador/Instalador    "   
+	sleep 0.1 | echo "$VERDE"   "          Paquete: "$AMARILLO"$PRGNAM"                                                 
+	sleep 0.1 | echo "$VERDE"   "                                   "
+	sleep 0.1 | echo "$VERDE"   "          www.seguridadwireless.net  "
+	sleep 0.1 | echo "$BLANCO"  "       ******************************"
+	sleep 0.1 | echo "$CERRAR"
 }
 
 # Comprobar conexion by geminis_demon
 f_comprobarConexion() {
    if [ ! "$(ping google.com -c1 2>/dev/null)" ]; then
-      echo -e "${BLANCO}No tengo internet ... el script se cerrara.${RESET}\n"
+      echo "No tengo internet ... el script se cerrara."
+      echo ""
       exit 1
    fi
 }
@@ -57,16 +71,19 @@ f_comprobarUpdates() {
    DIRECTORIO=$(find /opt/wifislax-updaters -type f -name ${PRGNAM}_updater| rev | cut -d/ -f2- | rev)
    SERVIDOR_VERSION=$(timeout -s SIGTERM 10 curl -sk $SERVIDOR_WEB/${DIRECTORIO##*/}/${PRGNAM}_updater | grep "SCRIPT_VERSION=" | head -1 |cut -d "=" -f2)
 
-   echo -e "${CYAN}Version Script${RESET}: ${ROJO}${SCRIPT_VERSION:6}${BLANCO}/${AMARILLO}${SCRIPT_VERSION:4:2}${BLANCO}/${ROJO}${SCRIPT_VERSION:0:4}${RESET}\n"
+   echo ${CYAN}Version Script$CIERRE: $ROJO${SCRIPT_VERSION:6}$BLANCO/$AMARILLO${SCRIPT_VERSION:4:2}$BLANCO/$ROJO${SCRIPT_VERSION:0:4}$CIERRE
 
    if [ "$(ping github.com -c1 2>/dev/null)" ]; then
       if [[ $SCRIPT_VERSION -lt $SERVIDOR_VERSION ]]; then
-         echo -e "${ROSA}"Comprobando si hay actualizaciones para el script..."${RESET}.\n"
-         echo -e "${ROJO}NUEVA VERSION${RESET}\n"
-         echo -e "${ROSA}Version Server${RESET}: ${ROJO}${SERVIDOR_VERSION:6}${BLANCO}/${AMARILLO}${SERVIDOR_VERSION:4:2}${BLANCO}/${ROJO}${SERVIDOR_VERSION:0:4}${RESET}\n"
-         echo -e "${CYAN}Actualizando ${PRGNAM}_updater"
+         echo
+         echo "$ROSA"Comprobando si hay actualizaciones para el script..."$CIERRE."
+         echo ${ROJO}NUEVA VERSION$CIERRE
+         echo
+         echo ${ROSA}Version Server$CIERRE: $ROJO${SERVIDOR_VERSION:6}$BLANCO/$AMARILLO${SERVIDOR_VERSION:4:2}$BLANCO/$ROJO${SERVIDOR_VERSION:0:4}$CIERRE
+         echo
+         echo ${CYAN}Actualizando ${PRGNAM}_updater
          curl -sk $SERVIDOR_WEB/${DIRECTORIO##*/}/${PRGNAM}_updater -o $DIRECTORIO/${PRGNAM}_updater
-         echo -e "${ROJO}LISTO${RESET}\n"
+         echo ${ROJO}LISTO$CIERRE
          $0
          exit
       fi
@@ -108,16 +125,22 @@ f_versionInstalada() {
    else
    VERSIONLOCAL=$PRGNAM-$INSTALADA
    fi
-   echo -e "${AMARILLO}"La version del sistema es..."${CYAN}"$VERSIONLOCAL"${RESET}\n"
-   echo -e "__________________________________________\n"
-   echo -e "${AMARILLO}"La version mas nueva en su pagina web es..."${CYAN}"$PRGNAM-$VERSION"${RESET}\n"
+   echo ""
+   echo ""$AMARILLO"La version del sistema es..."$CYAN"$VERSIONLOCAL"$CIERRE""
+   echo ""
+   echo "__________________________________________"
+   echo ""
+   echo ""$AMARILLO"La version mas nueva en su pagina web es..."$CYAN"$PRGNAM-$VERSION"$CIERRE""
+   echo ""
    if [ $PRGNAM = x265 ]; then
-      echo -e "${ROJO}ADVERTENCIA:"
-      echo -e "${BLANCO}Actualizar este paquete puede romper ${AMARILLO}ffmpeg"
-      echo -e "${BLANCO}Es posible que necesites recompilar ${AMARILLO}ffmpeg\n"
+      echo "${ROJO}ADVERTENCIA:"
+      echo "${BLANCO}Actualizar este paquete puede romper ${AMARILLO}ffmpeg"
+      echo "${BLANCO}Es posible que necesites recompilar ${AMARILLO}ffmpeg"
+      echo
    fi
-   echo -e "${BLANCO}Pulsa ${ROJO}ENTER ${BLANCO}si deseas actualizarla ${RESET}\n"
+   echo ""$BLANCO"Pulsa $ROJO"ENTER" $BLANCO"si deseas actualizarla""
    read junk
+   echo ""
 
 # Si el paquete esta instalado y es el mismo se sube el numero de build
 if [ "$INSTALADA" = $VERSION ]; then
@@ -130,17 +153,20 @@ COMIENZO=$(date +%s)
 }
 
 f_dependencias(){
-echo -e "${ROSA}Comprobando dependencias ...${RESET}\n"
+echo "$ROSA"Comprobando dependencias ..."$CIERRE"
+echo ""
 for D in $DEPENDENCIAS; do
 BUSCAR=$(echo "$(ls /var/lib/pkgtools/packages|rev|cut -d '-' -f4-|rev|grep -x $D)")
 if [ -z "$BUSCAR" ]; then
-echo -e "${BLANCO}Dependencia ${AMARILLO}${D} ${ROJO}NO INSTALADA${BLANCO} ...resolviendo. ${RESET}\n"
+echo "${BLANCO}Dependencia ${AMARILLO}${D} ${ROJO}NO INSTALADA${BLANCO} ...resolviendo${CIERRE}."
 UPDATER=$(echo "$(find /opt/wifislax-updaters/* -name ${D}_updater)")
 if [ -z "$UPDATER" ]; then
 if [ "$(ping www.slackbuilds.org -c1 2>/dev/null)" ]; then
 slapt-src -u &>/dev/null
 else
-echo -e "${ROJO}Parece que slackbuilds.org no responde ... intentalo mas tarde ${RESET}\n"
+echo ${ROJO}
+echo "Parece que slackbuilds.org no responde ... intentalo mas tarde"
+echo ${CIERRE}
 exit 1
 fi
 if [ ${D} = pylast ]; then
@@ -158,7 +184,9 @@ fi
 fi
 VERIFICAR=$(echo "$(ls /var/lib/pkgtools/packages|rev|cut -d '-' -f4-|rev|grep -x $D)")
 if [ -z "$VERIFICAR" ]; then
-echo -e "${ROJO}No se puedo resolver la dependencia ${AMARILLO}${D}${BLANCO}.${RESET}\n"
+echo ""
+echo "${ROJO}No se puedo resolver la dependencia ${AMARILLO}${D}${CIERRE}."
+echo ""
 exit 1
 else
 if [ "${PACKAGETYPE}" = txz ]; then
@@ -167,7 +195,7 @@ fi
 if [ "${PACKAGETYPE}" = xzm ]; then
 xterm -e sh -c "txz2xzm "${PACKDIR}" "${HOME}/$ESCRITORIO/${PRGNAM}_depends/$GROUP/$XZMPACK""
 fi
-echo -e "${BLANCO}Dependencia ${AMARILLO}${D} ${CYAN}RESUELTA${BLANCO}.${RESET}\n"
+echo "${BLANCO}Dependencia ${AMARILLO}${D} ${CYAN}RESUELTA${CIERRE}."
 fi
 rm -rf /usr/src/slapt-src/${GROUP}/${D}
 find /usr/src/slapt-src -empty -type d -delete
@@ -175,14 +203,16 @@ else
 xterm -e sh -c "yes y | $UPDATER"
 VERIFICAR=`echo "$(ls /var/lib/pkgtools/packages|rev|cut -d '-' -f4-|rev|grep -x $D)"`
 if [ -z "$VERIFICAR" ]; then
-echo -e "${ROJO}No se puedo resolver la dependencia ${AMARILLO}${D}${BLANCO}.${RESET}\n"
+echo ""
+echo "${ROJO}No se puedo resolver la dependencia ${AMARILLO}${D}${CIERRE}."
+echo ""
 exit 1
 else
-echo -e "${BLANCO}Dependencia ${AMARILLO}${D} ${CYAN}RESUELTA${BLANCO}.${RESET}\n"
+echo "${BLANCO}Dependencia ${AMARILLO}${D} ${CYAN}RESUELTA${CIERRE}."
 fi
 fi
 else
-echo -e "${BLANCO}Dependencia ${AMARILLO}${D} ${VERDE}INSTALADA${BLANCO}.${RESET}\n"
+echo "${BLANCO}Dependencia ${AMARILLO}${D} ${VERDE}INSTALADA${CIERRE}."
 fi
 done
 }
@@ -194,7 +224,9 @@ f_elimina() {
    /opt/lampp/lampp stop &>/dev/null
    fi
    fi
-   echo -e "${ROJO}Eliminando la version del sistema... ${RESET}\n"
+
+   echo ""
+   echo "$ROJO"Eliminando la version del sistema..."$CIERRE"
    removepkg $(ls /var/lib/pkgtools/packages|rev|cut -d'-' -f3-|sed 's/-/ /'|rev|grep "^$PRGNAM "|cut -d' ' -f1)
 }
 
@@ -228,15 +260,19 @@ ARGS=clone
 fi
 
 if [ ! -f $SOURCES ]; then
-echo -e "${CYAN}Descargando sources de $PRGNAM-$VERSION ${ROSA}\n"
+echo 
+echo "$CYAN"Descargando sources de $PRGNAM-$VERSION"$CIERRE"
+echo "${ROSA}"
 $GESTOR $ARGS $DOWNLOAD
+echo "${CIERRE}"
 fi
-echo -e $RESET
 }
 
 #Preparamos entorno
 f_descomprimir(){
-	echo -e "${VERDE}Descomprimiendo ...${RESET}\n"
+	echo
+	echo "$VERDE"Descomprimiendo ..."$CIERRE"
+	echo
 	sleep 1
 	rm -rf $PRGNAM-$VERSION
 	if [ $EXTENSION = zip ]; then
@@ -248,9 +284,11 @@ f_descomprimir(){
 
 f_cd(){
 	if [ -z $CD ]; then
-	echo -e "${ROJO}La funcion CD no existe o esta vacia. ${RESET}\n"
+	echo
+	echo "${ROJO}La funcion CD no existe o esta vacia.${CIERRE}"
+	echo
 	fi
-	cd $TMP/$CD||echo -e "${ROJO}Error en funcion CD. ${RESET}\n"
+	cd $TMP/$CD||echo "${ROJO}Error en funcion CD.${CIERRE}"
 	chown -R root:root .
 	find -L . \
 	\( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
@@ -271,7 +309,8 @@ f_categoria(){
 f_xzm(){
    ### Package xzm ###
    if [ $PACKAGETYPE = xzm ]; then
-   echo -e "\n${VERDE}Instalando y creando modulo ${AMARILLO}xzm ...${RESET}\n"
+   echo ""
+   echo "$VERDE"Instalando y creando modulo ${AMARILLO}xzm ..."$CIERRE"
    sleep 1
 
    f_categoria
@@ -286,7 +325,8 @@ f_xzm(){
 f_txz(){
    ### Package txz ###
    if [ $PACKAGETYPE = txz ]; then
-   echo -e "\n${VERDE}Instalando y creando paquete ${AMARILLO}txz ...${RESET}\n"
+   echo ""
+   echo "$VERDE"Instalando y creando paquete ${AMARILLO}txz ..."$CIERRE"
    sleep 1
    
    f_categoria
@@ -316,7 +356,8 @@ f_txz(){
 f_disable(){
    ### Package disabled ###
    if [ $PACKAGETYPE = disable ]; then
-   echo -e "${VERDE}"Instalando ..."${RESET}\n"
+   echo ""
+   echo "$VERDE"Instalando ..."$CIERRE"
    sleep 1
    
    #Creamos paquete
@@ -349,7 +390,7 @@ f_tareasFinales() {
    clear
    
    # Actualizar sistema mimetypes schemas etc
-   echo -e "${VERDE}Actualizando sistema${BLANCO}...${RESET}\n"
+   echo ""$VERDE"Actualizando sistema$BLANCO...$CIERRE"
 
    # Comandos de sistema
    cacheupdater
@@ -362,16 +403,21 @@ f_tareasFinales() {
    # Informe final
    clear
    if [ $PACKAGETYPE = disable ]; then
-   echo -e "\n${VERDE}Instalado paquete${AMARILLO} $PRGNAM-$VERSION ${RESET}|n"
+   echo ""$VERDE"Instalado paquete "$AMARILLO"$PRGNAM-$VERSION"$CIERRE""
+   echo ""
    else
-   echo -e "\n${VERDE}Instalado y Creado paquete${AMARILLO} $PRGNAM-$VERSION ${RESET}\n"
+   echo ""$VERDE"Instalado y Creado paquete "$AMARILLO"$PRGNAM-$VERSION"$CIERRE""
+   echo ""
    fi
    # Variables para calcular tiempo de acabado
    AHORA=$(($(date +%s)-3600));
    TIEMPO="$(date --date=@$(($AHORA-$COMIENZO)) +%X)"
    
    # Informe de acabado
-   echo -e "${AMARILLO}Tiempo empleado${BLANCO}: $TIEMPO ${RESET}\n\n${VERDE}Bye Bye${RESET}\n"
+   echo "${AMARILLO}Tiempo empleado${BLANCO}: $TIEMPO"
+   echo ""
+   echo "$VERDE"Bye Bye"$CIERRE"
+   echo ""
    
    # Salimos del script
    exit 0

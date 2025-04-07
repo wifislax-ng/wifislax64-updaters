@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250407
+SCRIPT_VERSION=20250129
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -20,7 +20,7 @@ F_variables() {
 	SRCNAM=jdk-21_linux-x64_bin
 	EXTENSION=tar.gz
 	GESTOR=wget
-	echo -e "\033]2;${PRGNAM}_updater\007"
+	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://www.oracle.com/java/technologies/downloads/#java21
 	VERSION=$(curl -s $WEB|grep "Kit 21"|cut -d ' ' -f6)
 	SOURCES=$SRCNAM.$EXTENSION
@@ -30,11 +30,18 @@ F_variables() {
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-echo -e "\n${VERDE}Empaquetando ...${RESET}"
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
 mkdir -p $PKG/{etc/profile.d,usr/lib${LIBDIRSUFFIX}/$PRGNAM-$VERSION}
+
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
+sleep 1
+
 cp -rf {bin,conf,include,jmods,lib} $PKG/usr/lib${LIBDIRSUFFIX}/$PRGNAM-$VERSION/
+
 cd $PKG/usr/lib$LIBDIRSUFFIX
 
 ln -sf $PRGNAM-$VERSION/lib/libjawt.so

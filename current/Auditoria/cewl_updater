@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250407
+SCRIPT_VERSION=20241228
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -20,7 +20,7 @@ F_variables() {
 	SRCNAM=CeWL
 	EXTENSION=tar.gz
 	GESTOR=wget
-	echo -e "\033]2;${SRCNAM}_updater\007"
+	echo -ne "\033]2;${SRCNAM}_updater\007"
 	WEB=https://github.com/digininja/$SRCNAM
 	VERSION=$(curl -s $WEB/tags|grep $EXTENSION|head -1|cut -d/ -f7|sed 's/v//g'|cut -dt -f-1|sed 's/.$//g')
 	SOURCES=$VERSION.$EXTENSION
@@ -30,7 +30,8 @@ F_variables() {
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-echo -e "\n${VERDE}Configurando ...${RESET}"
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
 rm -fv Gemfile.lock
@@ -38,7 +39,8 @@ bundle config set --local path vendor/bundle
 bundle config set --local without development test
 bundle config build.nokogiri --use-system-libraries
 
-echo -e "\n${VERDE}Compilando ...${RESET}"
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 
 bundle install -j$(nproc)

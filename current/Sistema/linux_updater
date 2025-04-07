@@ -5,7 +5,16 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20250407
+SCRIPT_VERSION=20231203
+
+# Colores
+CIERRE=${CIERRE:-"[0m"}
+ROJO=${ROJO:-"[1;31m"}
+VERDE=${VERDE:-"[1;32m"}
+CYAN=${CYAN:-"[1;36m"}
+AMARILLO=${AMARILLO:-"[1;33m"}
+BLANCO=${BLANCO:-"[1;37m"}
+ROSA=${ROSA:-"[1;35m"}
 
 # Variables globales
 # El PRGNAM2 se usa en la creacion del xzm ,NO BORRAR
@@ -28,23 +37,25 @@ WEB=https://www.kernel.org
 
 export MAKEFLAGS=-j$(nproc)
 
-echo -e "\033]2;${PRGNAM}_updater\007"
+echo -ne "\033]2;${PRGNAM}_updater\007"
 
 # Bienvenida
 clear
-echo -e "\n$ROSA
+echo $ROSA
+echo "
       __ __                 __  _____                _ __       
      / // /__ _______  ___ / / / ___/__  __ _  ___  (_) /__ ____
     / ,< / -_) __/ _ \/ -_) / / /__/ _ \/  ' \/ _ \/ / / -_) __/
    /_/|_|\__/_/ /_//_/\__/_/  \___/\___/_/_/_/ .__/_/_/\__/_/   
-                                            /_/                  \n"
-                                       
-echo -e "\n${AMARILLO}   ##### By USUARIONUEVO @ www.seguridadwireless.net ##### ${RESET}"
-
+                                            /_/                  "
+echo ""                                         
+echo ""$AMARILLO"   ##### By USUARIONUEVO @ www.seguridadwireless.net #####"$CIERRE""
+echo ""
+sleep 1
 
 # Sin internet el script no continua.
 if [ ! "$(ping google.com -c1 2>/dev/null)" ]; then
-echo "$ROJO"No tengo internet"${RESET} ... $BLANCO"el script se cerrara...${RESET}"
+echo "$ROJO"No tengo internet"$CIERRE ... $BLANCO"el script se cerrara..."$CIERRE"
 echo ""
 sleep 1
 exit 0
@@ -56,19 +67,19 @@ DIRECTORIO=$(find /opt/wifislax-updaters -type f -name ${SCRIPTNAME} | rev | cut
 SERVIDOR_VERSION=$(timeout -s SIGTERM 3 curl -s $SERVIDOR_WEB/${DIRECTORIO##*/}/${SCRIPTNAME} | grep "SCRIPT_VERSION=" | head -1 |cut -d "=" -f2)
 
 
-echo ${CYAN}Version Script${RESET}: $ROJO${SCRIPT_VERSION:6}$BLANCO/${AMARILLO}${SCRIPT_VERSION:4:2}$BLANCO/$ROJO${SCRIPT_VERSION:0:4}${RESET}
+echo ${CYAN}Version Script$CIERRE: $ROJO${SCRIPT_VERSION:6}$BLANCO/$AMARILLO${SCRIPT_VERSION:4:2}$BLANCO/$ROJO${SCRIPT_VERSION:0:4}$CIERRE
 
 if [ "$(ping github.com -c1 2>/dev/null)" ]; then
 if [[ $SCRIPT_VERSION -lt $SERVIDOR_VERSION ]]; then
 echo
-echo "$ROSAComprobando si hay actualizaciones para el script..."${RESET}."
-echo ${ROJO}NUEVA VERSION${RESET}
+echo "$ROSA"Comprobando si hay actualizaciones para el script..."$CIERRE."
+echo ${ROJO}NUEVA VERSION$CIERRE
 echo 
-echo ${ROSA}Version Server${RESET}: $ROJO${SERVIDOR_VERSION:6}$BLANCO/${AMARILLO}${SERVIDOR_VERSION:4:2}$BLANCO/$ROJO${SERVIDOR_VERSION:0:4}${RESET}
+echo ${ROSA}Version Server$CIERRE: $ROJO${SERVIDOR_VERSION:6}$BLANCO/$AMARILLO${SERVIDOR_VERSION:4:2}$BLANCO/$ROJO${SERVIDOR_VERSION:0:4}$CIERRE
 echo
 echo ${CYAN}Actualizando ${SCRIPTNAME}
 curl -s $SERVIDOR_WEB/${DIRECTORIO##*/}/${SCRIPTNAME} -o $DIRECTORIO/${SCRIPTNAME}
-echo ${ROJO}LISTO${RESET}
+echo ${ROJO}LISTO$CIERRE
 sleep 1
 $0
 exit
@@ -83,11 +94,11 @@ fi
 # Menu de opciones
 echo ""
 PS3='Selecciona una opcion: '
-OPCIONES=("${{VERDE}}Seguir rama del sistema ${{AMARILLO}}(recomendado)${{RESET}}" "${{VERDE}}Ultimo disponible como estable${{RESET}}" "${{VERDE}}Elegir uno custom${{RESET}}" "${{VERDE}}El ultimo disponible rcX${{RESET}}")
+OPCIONES=("${VERDE}Seguir rama del sistema ${AMARILLO}(recomendado)${CIERRE}" "${VERDE}Ultimo disponible como estable${CIERRE}" "${VERDE}Elegir uno custom${CIERRE}" "${VERDE}El ultimo disponible rcX${CIERRE}")
 select OPT in "${OPCIONES[@]}"
 do
     case $OPT in
-        "${{VERDE}}Seguir rama del sistema ${{AMARILLO}}(recomendado)${{RESET}}")
+        "${VERDE}Seguir rama del sistema ${AMARILLO}(recomendado)${CIERRE}")
             RAMA=$(echo $(uname -r|cut -d . -f-2))
             KERNEL_ELEGIDO=$(curl -s $WEB/|grep linux-$RAMA.*|head -1 |cut -d 'x' -f 4|cut -d '-' -f 2|cut -d " " -f 2|cut -d "t" -f1|sed 's/.$//g')
             RAMA_ELEGIDO=$(echo $KERNEL_ELEGIDO |cut -d "." -f-2 |sed 's/ //g')
@@ -95,16 +106,16 @@ do
             DESCARGA=https://cdn.kernel.org/pub/linux/kernel/v$FAMILIA.x/linux-$KERNEL_ELEGIDO.tar.xz
                      
             break;;
-        "${{VERDE}}Ultimo disponible como estable${{RESET}}")
+        "${VERDE}Ultimo disponible como estable${CIERRE}")
             KERNEL_ELEGIDO=$(curl -s $WEB/|grep .tar.xz|head -1|cut -d "-" -f2|cut -d "t" -f-1|sed "s/.$//g")
             RAMA_ELEGIDO=$(echo $KERNEL_ELEGIDO|cut -d "." -f-2|sed 's/ //g')
             FAMILIA=$(echo $KERNEL_ELEGIDO|cut -d. -f1)
             DESCARGA=https://cdn.kernel.org/pub/linux/kernel/v$FAMILIA.x/linux-$KERNEL_ELEGIDO.tar.xz
             break;;
-        "${{VERDE}}Elegir uno custom${{RESET}}")
+        "${VERDE}Elegir uno custom${CIERRE}")
             CUSTOM="TRUE"
             break;;
-        "${{VERDE}}El ultimo disponible rcX${{RESET}}")
+        "${VERDE}El ultimo disponible rcX${CIERRE}")
             KERNEL_ELEGIDO=$(curl -s $WEB/|grep rc[0-9]|tail -1|cut -d v -f3|cut -d '"' -f-1)
             RAMA_ELEGIDO=$(echo $KERNEL_ELEGIDO|cut -d "-" -f-1|sed 's/ //g')
             FAMILIA=$(echo $KERNEL_ELEGIDO|cut -d. -f1)
@@ -116,14 +127,14 @@ done
 
 if [ ! -z $CUSTOM ]; then
 # Numero de Kernel completo que queremos compilar
-echo "${VERDE}"
+echo "$VERDE"
 echo "Escribe el numero de kernel exacto que te gustaria compilar y pulsa ${BLANCO}ENTER"
 echo "$ROSA"
 read KERNEL_ELEGIDO
 RAMA_ELEGIDO=$(echo $KERNEL_ELEGIDO|cut -d "." -f-2|sed 's/ //g')
 FAMILIA=$(echo $KERNEL_ELEGIDO|cut -d. -f1)
 DESCARGA=https://cdn.kernel.org/pub/linux/kernel/v$FAMILIA.x/linux-$KERNEL_ELEGIDO.tar.xz
-echo ${RESET}"
+echo "$CIERRE"
 fi
 
 # Entramos a la ruta de trabajo
@@ -132,11 +143,11 @@ cd /usr/src/
 # Si el paquete no existe se descargara de internet
 if [ ! -f linux-$KERNEL_ELEGIDO.tar.* ]; then
 echo ""
-echo "$CYAN"Descargando sources de $PRGNAM-$KERNEL_ELEGIDO ${RESET}"
+echo "$CYAN"Descargando sources de $PRGNAM-$KERNEL_ELEGIDO "$CIERRE"
 sleep 1
 echo $ROSA
 wget -N -L -c -q --show-progress $DESCARGA
-echo ${RESET}
+echo $CIERRE
 fi
 
 # Si existen restos de una prueba anterior seeliminaran
@@ -144,7 +155,7 @@ rm -rf /usr/src/$PRGNAM-$KERNEL_ELEGIDO &>/dev/null
 
 # Descomprimir fichero
 echo ""
-echo "${VERDE}"Descomprimiendo ...${RESET}"
+echo "$VERDE"Descomprimiendo ..."$CIERRE"
 sleep 1
 tar xvf $PRGNAM-$KERNEL_ELEGIDO.tar.xz||tar xvf $PRGNAM-$KERNEL_ELEGIDO.tar.gz
 
@@ -198,7 +209,7 @@ EOF
 
 # Aplicamos parche si hay error se parara el proceso ( exit 1 )
 echo ""
-echo ""${VERDE}"Aplicando parche wireless para channel -1 "$BLANCO"...${RESET}""
+echo ""$VERDE"Aplicando parche wireless para channel -1 "$BLANCO"..."$CIERRE""
 sleep 1
 patch -f -p1 < $PARCHE||exit 1
 fi
@@ -208,7 +219,7 @@ LOGO=/usr/share/pixmaps/wifislax_logo_blue.png
 LOGONEW=/usr/src/$PRGNAM-$KERNEL_ELEGIDO/drivers/video/logo/logo_linux_clut224.ppm
 if [ -f $LOGO ]; then
 echo ""
-echo ""${VERDE}Convirtiendo logo ..."$BLANCO"...${RESET}""
+echo ""$VERDE"Convirtiendo logo ..."$BLANCO"..."$CIERRE""
 sleep 1
 pngtopnm $LOGO|ppmquant 224|pnmtoplainpnm > $LOGONEW||exit 1
 echo ""
@@ -217,12 +228,12 @@ fi
 # Parte1 avisamos por si quieres poner un config
 if [ ! -f /usr/src/$PRGNAM-$KERNEL_ELEGIDO/.config ]; then
 echo ""
-echo ""$CYAN"No se detecto fichero config ...${RESET}""
+echo ""$CYAN"No se detecto fichero config ..."$CIERRE""
 echo ""
-echo ""$CYAN"Si quieres añadir uno hazlo en /usr/src/$PRGNAM-$KERNEL_ELEGIDO/.config ...${RESET}""
-echo ""$CYAN"Si no añades un config se usara la config del kernel actual.${RESET}""
+echo ""$CYAN"Si quieres añadir uno hazlo en /usr/src/$PRGNAM-$KERNEL_ELEGIDO/.config ..."$CIERRE""
+echo ""$CYAN"Si no añades un config se usara la config del kernel actual."$CIERRE""
 echo ""
-echo ""$CYANCuando pulses "${AMARILLO}"ENTER "$CYAN"el proceso continuara${RESET}""
+echo ""$CYAN"Cuando pulses "$AMARILLO"ENTER "$CYAN"el proceso continuara"$CIERRE""
 echo ""
 read junk
 fi
@@ -230,11 +241,11 @@ fi
 # Parte2 sino hay config generamos una en base al kernel actual
 if [ -f /usr/src/$PRGNAM-$KERNEL_ELEGIDO/.config ]; then
 echo ""
-echo ""${VERDE}"Usando config añadida por el usuario ...${RESET}""
+echo ""$VERDE"Usando config añadida por el usuario ..."$CIERRE""
 echo ""
 else
 echo ""
-echo ""${VERDE}"Generamos fichero .config ...${RESET}""
+echo ""$VERDE"Generamos fichero .config ..."$CIERRE""
 echo ""
 modprobe configs && zcat /proc/config.gz > /usr/src/$PRGNAM-$KERNEL_ELEGIDO/.config
 fi
@@ -275,7 +286,7 @@ ls -1d include/*|grep asm- |grep -v $KARCH|grep -v generic|xargs rm -Rf
 cp include/generated/* include/linux &>/dev/null
 
 # Preparamos creacion de xzm
-VMLINUZNAME=$(grep  CONFIG_LOCALVERSION=" .config|cut -d = -f2|sed 's/"//g')
+VMLINUZNAME=$(grep  "CONFIG_LOCALVERSION=" .config|cut -d = -f2|sed 's/"//g')
 mkdir -p $CONTAINER/usr/src
 cp -r /usr/src/$PRGNAM-$KERNEL_ELEGIDO $CONTAINER/usr/src
 
@@ -295,29 +306,29 @@ rm -Rf $CONTAINER
 AHORA=$(($(date +%s)-3600));
 TIEMPO="$(date --date=@$(($AHORA-$COMIENZO)) +%X)"
 echo ""
-echo "${{AMARILLO}}Tiempo empleado${BLANCO}: $TIEMPO"
+echo "${AMARILLO}Tiempo empleado${BLANCO}: $TIEMPO"
 echo ""
 # Si no es wifislax ya hemos acabado aqui.
 if [ ! -f /etc/wifislax-version ]; then
 echo ""
-echo ""${AMARILLO}"Bye Bye${RESET}""
+echo ""$AMARILLO"Bye Bye"$CIERRE""
 exit 0
 fi
 # En modo live es absurdo ofrecer instarlo
 if [ -d /mnt/live ]; then
 echo ""
-echo ""${AMARILLO}"Bye Bye${RESET}""
+echo ""$AMARILLO"Bye Bye"$CIERRE""
 exit 0
 fi
 # Si se trata de wifislax en HDD puedo instalar el kernel.
-echo ""${AMARILLO}"Pulsa ENTER si quieres instalar el kernel,si no te interesa cierra el scipt.${RESET}""
+echo ""$AMARILLO"Pulsa ENTER si quieres instalar el kernel,si no te interesa cierra el scipt."$CIERRE""
 read junk
 echo ""
-echo ""${VERDE}"Instalando Kernel $KERNEL_VERSION en sistema ...${RESET}""
+echo ""$VERDE"Instalando Kernel $KERNEL_VERSION en sistema ..."$CIERRE""
 xzm2dir $HOME/$ESCRITORIO/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm /
 cp -r $HOME/$ESCRITORIO/$VMLINUZ /boot/vmlinuz-${KERNEL_VERSION}${VMLINUZNAME}
 update-grub
 echo ""
-echo ""$CYAN"Instalacion completada ...${RESET}""
+echo ""$CYAN"Instalacion completada ..."$CIERRE""
 echo ""
-echo ""${AMARILLO}"Bye Bye${RESET}""
+echo ""$AMARILLO"Bye Bye"$CIERRE""

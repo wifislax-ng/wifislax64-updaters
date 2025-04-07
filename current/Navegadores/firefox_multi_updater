@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250407
+SCRIPT_VERSION=20250206
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -17,22 +17,29 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 		
-	echo -e "\n${VERDE}Please write the languaje you want for your firefox:\n"
-	echo -e "Some options are:\n"
-	echo -e "\n${AMARILLO} English -->${VERDE} en-US" 
-	echo -e "${AMARILLO} rumania -->${VERDE} ro" 
-	echo -e "${AMARILLO} italian -->${VERDE} it" 
-	echo -e "${AMARILLO} french  -->${VERDE} fr" 
-	echo -e "${AMARILLO} deutsch -->${VERDE} de"
-	echo -e "\n${CYAN}If you dont kwon what letters write to your lang \nVisit firefox homepage to see."
-	echo -e "\n${AMARILLO}Now write letters for your lang and press ENTER to continue ... $ROSA\n"
+	echo $VERDE
+	echo "Please write the languaje you want for your firefox:"
+	echo
+	echo "Some options are:"
+	echo 
+	echo "$AMARILLO English -->$VERDE en-US" 
+	echo "$AMARILLO rumania -->$VERDE ro" 
+	echo "$AMARILLO italian -->$VERDE it" 
+	echo "$AMARILLO french  -->$VERDE fr" 
+	echo "$AMARILLO deutsch -->$VERDE de"
+	echo "$CYAN"
+	echo "If you dont kwon what letters write to your lang"
+	echo "Visit firefox homepage to see."
+	echo "$AMARILLO"
+	echo "Now write letters for your lang and press ENTER to continue ..."
+	echo "$ROSA"
 	read LANGUAGE
-	echo -e "\n$RESET"
+	echo "$BLANCO"
 	PRGNAM=firefox_multi
 	SRCNAM=firefox
 	EXTENSION=tar.xz
 	GESTOR=wget
-	echo -e "\033]2;${PRGNAM}_updater\007"
+	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://download.mozilla.org/?product=firefox-latest\&os=linux\&lang=$LANGUAGE
 	VERSION=$(curl -s $WEB|grep .$EXTENSION|tail -1|rev|cut -d- -f1|rev|cut -d t -f-1|sed 's/.$//g')
 	SOURCES=$SRCNAM-$VERSION.$EXTENSION
@@ -42,7 +49,6 @@ F_variables() {
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-echo -e "\n${VERDE}Empaquetando ...${RESET}"
 mkdir -p $PKG/usr/{lib${LIBDIRSUFFIX},bin,share/pixmaps,share/applications}
 cp -r $TMP/$SRCNAM $PKG/usr/lib${LIBDIRSUFFIX}
 cd $PKG

@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250407
+SCRIPT_VERSION=20241004
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,7 +19,7 @@ F_variables() {
 	PRGNAM=steam
 	EXTENSION=tar.gz
 	GESTOR=wget
-	echo -e "\033]2;${PRGNAM}_updater\007"
+	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://repo.steampowered.com/steam/archive/precise
 	VERSION=$(curl -s $WEB/|grep steam_[0-9]|grep .$EXTENSION|tail -1|cut -d_ -f2|cut -dt -f-1|sed 's/.$//g')
 	SOURCES=${PRGNAM}_${VERSION}.$EXTENSION
@@ -30,7 +30,7 @@ F_variables() {
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 echo 
-echo -e "${VERDE}Compilamos ...${RESET}"
+echo "$VERDE"Compilamos ..."$CIERRE"
 sleep 1
 
 # apply roundups for udev rules

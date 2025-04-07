@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250407
+SCRIPT_VERSION=20250207
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -20,7 +20,7 @@ F_variables() {
 	PRGNAM=vlc
 	EXTENSION=tar.xz
 	GESTOR=wget
-	echo -e "\033]2;${PRGNAM}_updater\007"
+	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/videolan/vlc
 	VERSION=$(curl -s $WEB/tags|grep [0-9].tar.gz|cut -d/ -f7|grep -v '\$\|-'|head -1|cut -dt -f-1|sed 's/.$//g')
 	CD=$PRGNAM-$VERSION
@@ -63,7 +63,8 @@ f_dependencias
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-echo -e "\n${VERDE}Configurando ...${RESET}"
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
 echo "
@@ -355,11 +356,13 @@ LDFLAGS="$SLKLDFLAGS" \
     --enable-fluidsynth \
     --build=$ARCH-slackware-linux
   
-echo -e "\n${VERDE}Compilando ...${RESET}"
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 sed -i -e '/^#define _FORTIFY_SOURCE/d' config.h
 make || exit 1
 make install DESTDIR=$PKG || exit 1
+
 install -D -m0644 extras/analyser/vlc.vim $PKG/usr/share/vim/vimfiles/syntax/vlc.vim
 rm -rf $PKG/usr/lib${LIBDIRSUFFIX}/vlc/plugins/plugins.dat
 rm -rf $PKG/usr/lib${LIBDIRSUFFIX}/*.la

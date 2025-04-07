@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250407
+SCRIPT_VERSION=20250331
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,7 +19,7 @@ F_variables() {
 	PRGNAM=ettercap
 	EXTENSION=tar.gz
 	GESTOR=wget
-	echo -e "\033]2;${PRGNAM}_updater\007"
+	echo -ne "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/Ettercap/$PRGNAM
 	VERSION=$(curl -s $WEB/tags|grep .$EXTENSION|head -1|cut -dv -f3|cut -dt -f1|sed 's/.$//g')
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
@@ -43,7 +43,8 @@ UlNJT05fTUFKT1IgPT0gNyAmJiBMSUJDVVJMX1ZFUlNJT05fTUlOT1IgPCAyNikKICNlcnJvciBs
 aWJjdXJsIDcuMjYuMCBvciB1cCBpcyBuZWVkZWQKICNlbmRpZgogCg==" |base64 -d > $TMP/curl8.patch
 patch -p1 -i $TMP/curl8.patch||exit 1
 
-echo -e "\n${VERDE}Configurando ...${RESET}"
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
 mkdir -p build
@@ -59,7 +60,8 @@ cd build
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
     -DCMAKE_BUILD_TYPE=Release ..
     
-echo -e "\n${VERDE}Compilando ...${RESET}"
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 
   make || exit 1
