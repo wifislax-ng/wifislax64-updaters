@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250204
+SCRIPT_VERSION=20250407
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,7 +19,7 @@ F_variables() {
 	PRGNAM=firefox
 	EXTENSION=tar.xz
 	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
+	echo -e "\033]2;${PRGNAM}_updater\007"
 	WEB=https://download.mozilla.org/?product=firefox-latest\&os=linux\&lang=es-ES
 	VERSION=$(curl -s $WEB|grep .$EXTENSION|tail -1|rev|cut -d- -f1|rev|cut -d t -f-1|sed 's/.$//g')
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
@@ -28,6 +28,7 @@ F_variables() {
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
+echo -e "\n${VERDE}Empaquetando ...${RESET}"
 mkdir -p $PKG/usr/{lib${LIBDIRSUFFIX},bin,share/pixmaps,share/applications}
 cp -r $TMP/$PRGNAM $PKG/usr/lib${LIBDIRSUFFIX}
 cd $PKG

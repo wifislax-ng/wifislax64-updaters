@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250315
+SCRIPT_VERSION=20250407
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,7 +19,7 @@ F_variables() {
 	PRGNAM=wine
 	EXTENSION=tar.xz
 	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
+	echo -e "\033]2;${PRGNAM}_updater\007"
 	WEB=https://gitlab.winehq.org/wine/wine/-/tags/
 	VERSION=$(curl -s $WEB|grep wine-[0-9]|head -1|cut -d- -f5|cut -d '"' -f1)
 	RAMA=$(echo $VERSION|cut -d. -f1)
@@ -35,10 +35,8 @@ f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
-F_compilar(){
-echo 
-echo "$VERDE"Configurando ..."$CIERRE"
-sleep 1
+F_compilar(){o 
+echo -e "\n${VERDE}Configurando ... ${RESET}"
 
 echo "
 /Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4BH/A6ldADgYSu7FL5n6pvg745dpgzgztyjlznaup/J3
@@ -67,11 +65,10 @@ patch -p1 < ./patches/writecopy.patch||exit 1
 # Fix path of opencl headers.
 sed 's|OpenCL/opencl.h|CL/opencl.h|g' -i configure*
 
-echo 
-echo "$VERDE"Compilando ..."$CIERRE"
+echo -e "\n${VERDE}Compilando ... ${RESET}"
 sleep 1
 
-echo "Building wine64 ..."
+echo -e "\n${VERDE}Building wine64 ... ${RESET}"
 
   mkdir wine64
   cd wine64
@@ -98,7 +95,7 @@ echo "Building wine64 ..."
   make install DESTDIR=$PKG
   cd ..
 
-  echo "Building wine32 ..." 
+  echo -e "\n${VERDE}Building wine32 ... ${RESET}" 
   
   mkdir wine32
   cd wine32

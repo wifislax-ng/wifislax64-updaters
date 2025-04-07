@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20201128
+SCRIPT_VERSION=20250407
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -19,7 +19,7 @@ f_variables(){
 F_variables() {
 	PRGNAM=bluray-keys
 	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
+	echo -e "\033]2;${PRGNAM}_updater\007"
 	WEB=https://vlc-bluray.whoknowsmy.name/files/KEYDB.cfg
 	VERSION=$(curl -k -s $WEB|grep VUK|head -1|cut -d ' ' -f5)
 	SOURCES=KEYDB.cfg
@@ -28,8 +28,7 @@ F_variables() {
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-echo 
-echo "$VERDE"Creando paquete ..."$CIERRE"
+echo -e "\n${VERDE}Creando paquete ...${RESET}"
 sleep 2
 mkdir -p $PKG/root/.config/aacs/
 cp -rf $TMP/KEYDB.cfg $PKG/root/.config/aacs/

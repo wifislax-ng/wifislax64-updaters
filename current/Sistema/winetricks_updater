@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220122
+SCRIPT_VERSION=20250407
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,7 +19,7 @@ F_variables() {
 	PRGNAM=winetricks
 	EXTENSION=tar.gz
 	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
+	echo -e "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/Winetricks/winetricks
 	VERSION=$(curl -s $WEB/releases/|grep tag/|grep -v test|head -1|cut -d / -f6|cut -d '"' -f-1)
 	SOURCES=$VERSION.$EXTENSION
@@ -35,8 +35,7 @@ f_dependencias
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-echo 
-echo "$VERDE"Compilando ..."$CIERRE"
+echo -e "\n${VERDE}Compilando ... ${RESET}"
 sleep 1
 mkdir -p $PKG/{usr/bin,usr/share/pixmaps,usr/share/applications}
 make DESTDIR=$PKG install
@@ -99,7 +98,6 @@ XmMT+Dmg99sCOpc5QD+wCXgF+3x/htoBLRoKOACs/rpfdD0kFFkZ25Q+BY4BZ6ldD9NABiunW4A1
 wD8q/9ORXetG1cpSWKksB4aAlVjg38Um9FlgN7CXFg+wWtk3RSCyJNb7PcBi7LGlD1uRJrGPEds6
 hUb2TROIWzI2IhwhHfaG/wMP69FzuY1cpwAAAABJRU5ErkJggg==
 " | base64 -d > $PKG/usr/share/pixmaps/$PRGNAM.png
-
 }
 
 ###################################

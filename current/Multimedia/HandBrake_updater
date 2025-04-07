@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250401
+SCRIPT_VERSION=20250407
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -20,7 +20,7 @@ F_variables() {
 	PRGNAM=HandBrake
 	EXTENSION=tar.bz2
 	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
+	echo -e "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/$PRGNAM/$PRGNAM
 	VERSION=$(curl -s $WEB/releases|grep .$EXTENSION|head -1|cut -d/ -f6)
 	SOURCES=$PRGNAM-$VERSION-source.$EXTENSION
@@ -53,6 +53,9 @@ AAAAACvUwWVFWb8RAAGpBYAYAAB4X8rKscRn+wIAAAAABFla"|base64 -d > $TMP/A08-cmake4.tx
 tar xvf $TMP/A08-cmake4.txz &>/dev/null
 cp A08-cmake4.patch contrib/x265/
 
+echo -e "\n${VERDE}Configurando ...${RESET}"
+sleep 1
+
 export CMAKE_POLICY_VERSION_MINIMUM=3.5
 
 CFLAGS="$SLKCFLAGS " \
@@ -60,6 +63,8 @@ CXXFLAGS="$SLKCFLAGS" \
 ./configure \
     --prefix=/usr
 
+echo -e "\n${VERDE}Compilando ...${RESET}"
+sleep 1    
   make -C build
   make -C build DESTDIR=$PKG install
 }

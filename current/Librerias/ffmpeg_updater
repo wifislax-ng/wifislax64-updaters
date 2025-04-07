@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250215
+SCRIPT_VERSION=20250407
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -20,7 +20,7 @@ F_variables() {
 	SRCNAM=FFmpeg
 	EXTENSION=tar.gz
 	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
+	echo -e "\033]2;${PRGNAM}_updater\007"
 	WEB=https://github.com/$SRCNAM/$SRCNAM
 	VERSION=$(ls /var/log/packages|grep ffmpeg-|cut -d- -f2|grep -v compat)
 	SOURCES=n$VERSION.$EXTENSION
@@ -87,9 +87,7 @@ f_dependencias
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-
-echo 
-echo "$VERDE"Configurando ..."$CIERRE"
+echo -e "\n${VERDE}Configurando ...${RESET}"
 sleep 1
 
 echo "
@@ -239,7 +237,9 @@ CXXFLAGS="$SLKCFLAGS" \
     --enable-version3 \
     --enable-vulkan \
     --arch=$ARCH
-  
+    
+echo -e "\n${VERDE}Compilando ...${RESET}"
+sleep 1  
 make || exit 1
 make install DESTDIR=$PKG
 }

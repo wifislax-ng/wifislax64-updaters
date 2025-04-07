@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20221001
+SCRIPT_VERSION=20250407
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -18,7 +18,7 @@ f_variables(){
 F_variables() {
 	PRGNAM=xampp
 	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
+	echo -e "\033]2;${PRGNAM}_updater\007"
 	WEB=https://sourceforge.net/projects/xampp/files/XAMPP%20Linux
 	VERSION=$(curl -s $WEB/|grep Linux/[0-9]|head -1|cut -d/ -f6)
 	SOURCES=$(curl -s $WEB/$VERSION/|grep class=\"file|grep -Po 'title="\K.*(?=" )'|head -1|grep x64)
@@ -34,22 +34,17 @@ f_dependencias
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 mkdir -p $PKG/{opt,usr/bin} $PKG/usr/share/{pixmaps,applications/wifislax/Servidores}
-echo ""
-echo "$VERDE"Descomprimiendo ..."$CIERRE"
+echo -e "\n${VERDE}Descomprimiendo ...${RESET}"
 sleep 1
 rm -rf $PRGNAM-$VERSION
 mkdir -p $PKG/opt $PKG/usr/share/applications/
 chmod +x $SOURCES
 # Creamos xzm , instalamos y salimos
-echo ""
-sleep 1
 rm -rf /tmp/bitrock*.log &
 $TMP/$SOURCES --debuglevel 4 --mode unattended
-echo $AMARILLO
-echo "Detenemos el servicio xampp y movemos ficheros ..."
+echo -e "\n${AMARILLO}Detenemos el servicio xampp y movemos ficheros ..."
 /opt/lampp/lampp stop
-echo $AMARILLO
-echo "Moviendo /opt/lampp -->>  $PKG/opt/lampp..."
+echo -e "\n${AMARILLO}Moviendo /opt/lampp -->>  $PKG/opt/lampp..."
 mv -f /opt/lampp $PKG/opt/lampp
 
 # Generamos pequeño script de inicio para xampp

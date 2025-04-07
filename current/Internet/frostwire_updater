@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20230402
+SCRIPT_VERSION=20250407
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,7 +19,7 @@ F_variables() {
 	PRGNAM=frostwire
 	EXTENSION=tar.gz
 	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
+	echo -e "\033]2;${PRGNAM}_updater\007"
 	WEB=https://sourceforge.net/projects/frostwire/files
 	VERSION=$(curl -s ${WEB}/|grep frostwire-desktop|head -1|cut -d- -f7)
 	RAMA=$(curl -s $WEB/|grep frostwire-desktop|head -1|cut -d/ -f7)
@@ -35,6 +35,7 @@ f_dependencias
 
 #Configurando
 F_compilar() {
+echo -e "\n${VERDE}Empaquetando ...${RESET}"
 mkdir -p $PKG/{opt,usr/bin,usr/share/pixmaps}
 mv -f $TMP/$PRGNAM-$VERSION.amd64 $PKG/opt/$PRGNAM-$VERSION
 # Creamos el paquete

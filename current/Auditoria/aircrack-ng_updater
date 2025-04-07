@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20230320
+SCRIPT_VERSION=20250407
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,7 +19,7 @@ F_variables() {
 	PRGNAM=aircrack-ng
 	EXTENSION=tar.gz
 	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
+	echo -e "\033]2;${PRGNAM}_updater\007"
 	WEB=https://www.aircrack-ng.org
 	VERSION=$(curl -s $WEB/|grep Sources|grep $EXTENSION|cut -d- -f4|cut -d t -f-1|sed 's/.$//g')
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
@@ -29,8 +29,7 @@ F_variables() {
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-echo 
-echo "$VERDE"Configurando ..."$CIERRE"
+echo -e "\n${VERDE}Configurando ...${RESET}"
 sleep 1
 
 autoreconf -fiv
@@ -51,20 +50,18 @@ PYTHON="/usr/bin/python3" \
   --with-ext-scripts \
   --build=$ARCH-slackware-linux
 
-echo 
-echo "$VERDE"Compilando ..."$CIERRE"
+echo -e "\n${VERDE}Compilando ...${RESET}"
 sleep 1
 
 make DESTDIR=$PKG install
 
 # Creamos el fichero oui
-echo $VERDE
-echo "Actualizando aircrack oui.list ...."
-echo $AMARILLO
+echo -e "\n${VERDE}Actualizando aircrack oui.list ....${AMARILLO}"
 cp -rf $PKG/usr/bin/airodump-ng-oui-update /usr/bin
 airodump-ng-oui-update
 mkdir -p $PKG/etc/aircrack-ng/
 cp /etc/aircrack-ng/airodump-ng-oui.txt $PKG/etc/aircrack-ng/airodump-ng-oui.txt
+echo -e "${RESET}"
 }
 
 ###################################
