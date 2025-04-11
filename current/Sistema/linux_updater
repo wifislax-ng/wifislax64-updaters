@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20250408
+SCRIPT_VERSION=20250411
 
 # Colores
 CIERRE=$(tput init)
@@ -61,15 +61,15 @@ DIRECTORIO=$(find /opt/wifislax-updaters -type f -name ${SCRIPTNAME} | rev | cut
 SERVIDOR_VERSION=$(timeout -s SIGTERM 3 curl -s $SERVIDOR_WEB/${DIRECTORIO##*/}/${SCRIPTNAME} | grep "SCRIPT_VERSION=" | head -1 |cut -d "=" -f2)
 
 
-echo "${CYAN}Version Script$CIERRE: $ROJO${SCRIPT_VERSION:6}$BLANCO/$AMARILLO${SCRIPT_VERSION:4:2}$BLANCO/$ROJO${SCRIPT_VERSION:0:4}$CIERRE"
+echo -e "${CYAN}Version Script${CIERRE}: ${ROJO}${SCRIPT_VERSION:6}${BLANCO}/${AMARILLO}${SCRIPT_VERSION:4:2}${BLANCO}/${ROJO}${SCRIPT_VERSION:0:4}${CIERRE}\n"
 
 if [ "$(ping github.com -c1 2>/dev/null)" ]; then
 if [[ $SCRIPT_VERSION -lt $SERVIDOR_VERSION ]]; then
-echo -e "\n${ROSA}Comprobando si hay actualizaciones para el script...\n${ROJO}NUEVA VERSION$CIERRE"
-echo -e "\n${ROSA}Version Server$CIERRE:${ROJO}r$CIERRE:${ROJO} ${SERVIDOR_VERSION:6}$BLANCO/$AMARILLO${SERVIDOR_VERSION:4:2}$BLANCO/$ROJO${SERVIDOR_VERSION:0:4}$CIERRE\n"
+echo -e "\n${ROSA}Comprobando si hay actualizaciones para el script...\n${ROJO}NUEVA VERSION${CIERRE}"
+echo -e "\n${ROSA}Version Server${CIERRE}:${ROJO}r${CIERRE}:${ROJO} ${SERVIDOR_VERSION:6}${BLANCO}/${AMARILLO}${SERVIDOR_VERSION:4:2}${BLANCO}/${ROJO}${SERVIDOR_VERSION:0:4}${CIERRE}\n"
 echo -e "\n${CYAN}Actualizando ${SCRIPTNAME}\n"
 curl -s $SERVIDOR_WEB/${DIRECTORIO##*/}/${SCRIPTNAME} -o $DIRECTORIO/${SCRIPTNAME}
-echo -e "\n${ROJO}LISTO$CIERRE\n"
+echo -e "\n${ROJO}LISTO${CIERRE}\n"
 $0
 exit
 fi
@@ -109,7 +109,7 @@ do
             FAMILIA=$(echo $KERNEL_ELEGIDO|cut -d. -f1)
             DESCARGA=https://git.kernel.org/torvalds/t/linux-$KERNEL_ELEGIDO.tar.gz
             break;;
-        *)  echo opcion invalida;;
+        *)  echo -e Opcion invalida;;
     esac
 done
 
