@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250401
+SCRIPT_VERSION=20250712
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -30,7 +30,7 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="perl-Cstools perl-Unicode-Map perl-Unicode-String perl-Unicode-Map8 enca x264 numactl" 
+DEPENDENCIAS="recode enca x264 numactl"
 f_dependencias
 }
 
