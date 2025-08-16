@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250712
+SCRIPT_VERSION=20250816
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -30,35 +30,17 @@ F_variables() {
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="recode enca x264 numactl"
+DEPENDENCIAS="x264 numactl"
 f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-echo "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Av/Ao1dACCMAwLwIl/+NWImCSBrt9a6tVlp0Hf7x8oM
-PiC5C4L+VsEQb7FPy8J5AOXzUuOUqqWxZ7/jssfjF7vMOiO97/6vpW6KuygraoLj/2ODwR49PQN4
-DhtpsLAG9asu4/FfuJIKnAsyBo9dY6dtcVCFOXAz68VYzvQUeE2jX7EGjAPh96sLMZwbMyAjWwdn
-l0vg7VjVbtdLjohp928/tCB7WqOQMdV0XOtHx3VihXZmI8LxyY1sfxTiUhR0GA112AI6iiQl8eFC
-t2P0JrGl5mMC7J9mcAfsOcj6RdTbCa6xMIxI4QRq6NKp71tLORemMY5/tcFdqllzRpyOMx+r8y8W
-1DqR1TCOctzj4Va41YKK0fQGb7TZdvk1VXjWPc1G73vDUzeap9gU4fnf8WnrVi738bE9f0LvMu2+
-sRHxurfAb/jJehQId2BydEGPTGS/i3ZAtgKfGd1WTjIxqLQWP0+CZPhlBqfcONnhFAIrfzw17gvD
-84E04i9867k2hxDlpwa9S3/GDPJzu5VOeCXcivaAVzGDYnkTGGLLo6/luqoe6sQGOes1N5sGWekU
-9y4dLy2lHFSHGmV/HgozJILVybIQu4cN3rW9p17L9PdbbiC8ehdlLjZdsjHc8+yZTCSlvo5cM9Wr
-T9ocl81svfIMGzys/kcBwE1LY4ffxK41Gb/bfgm/ZgmY7962CHNr98LjguVxyAAeB7mU7Q99fnrR
-A13vSA5V/vTlDWzQcSjR3ixhcE/AvitvpL3Ef7VSgqW1O3WEl76+lOZLr/LO8FrQibeJQ885WDAX
-iUOFt38tklDZmzNy4ITEC5zMChywEbwWrQavLuXx6k/4ICVKkardNBPZB3vrnSm+5bxdb366tmYA
-AAAAACvUwWVFWb8RAAGpBYAYAAB4X8rKscRn+wIAAAAABFla"|base64 -d > $TMP/A08-cmake4.txz
-
-tar xvf $TMP/A08-cmake4.txz &>/dev/null
-cp A08-cmake4.patch contrib/x265/
-
-export CMAKE_POLICY_VERSION_MINIMUM=3.5
-
 CFLAGS="$SLKCFLAGS " \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
-    --prefix=/usr
+    --prefix=/usr \
+    --enable-qsv
 
   make -C build
   make -C build DESTDIR=$PKG install
