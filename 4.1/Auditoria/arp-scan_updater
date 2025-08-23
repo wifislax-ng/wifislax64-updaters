@@ -1,0 +1,130 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20250712
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=arp-scan
+	EXTENSION=tar.gz
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://github.com/royhills/arp-scan
+	VERSION=$(curl -s $WEB/tags|grep $EXTENSION|head -1|rev|cut -d/ -f1|rev|cut -dt -f-1|sed 's/.$//g')
+	SOURCES=$VERSION.$EXTENSION
+	CD=$PRGNAM-$VERSION
+	DOWNLOAD=$WEB/archive/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="
+perl-Test-Pod
+perl-Text-CSV
+perl-encode-locale
+perl-http-date
+perl-file-listing
+perl-Test-Needs
+perl-Try-Tiny
+perl-Test-Fatal
+perl-Test-RequiresInternet
+perl-html-tagset
+perl-lwp-mediatypes
+perl-IO-HTML
+perl-B-COW
+perl-Clone
+perl-http-message
+perl-http-cookies
+perl-Test-Harness
+perl-ExtUtils-Config
+perl-ExtUtils-InstallPaths
+perl-ExtUtils-Helpers
+perl-JSON
+perl-Meta-Requirements-Range
+perl-CPAN-Requirements-Dynamic
+perl-Module-Build-Tiny
+perl-http-daemon
+perl-http-negotiate
+perl-net-http 
+perl-www-robotrules
+perl-Test-NoWarnings
+perl-Test-Deep
+perl-Test-Requires 
+perl-HTTP-CookieJar
+perl-html-parser
+libwww-perl
+perl-Mozilla-CA
+perl-LWP-Protocol-https
+"
+f_dependencias
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
+sleep 1
+
+autoreconf -fiv
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --mandir=/usr/man \
+  --sysconfdir=/etc \
+  --build=$ARCH-slackware-linux
+
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
+sleep 1
+make||exit 1
+make DESTDIR="$PKG" install||exit 1
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Comprobamos version instalada del paquete
+f_versionInstalada
+# Comprobar dependencias
+F_dependencias
+#Si no existe el fichero se descargara
+f_download
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales

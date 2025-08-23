@@ -1,0 +1,105 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20250719
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=jdk
+	SRCNAM=jdk-21_linux-x64_bin
+	EXTENSION=tar.gz
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://www.oracle.com/java/technologies/downloads/#java21
+	VERSION=$(curl -s $WEB|grep "Kit 21"|cut -d ' ' -f6)
+	SOURCES=$SRCNAM.$EXTENSION
+	CD=$PRGNAM-$VERSION
+	DOWNLOAD=https://download.oracle.com/java/21/latest/$SOURCES
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+echo 
+echo "$VERDE"Configurando ..."$CIERRE"
+sleep 1
+
+mkdir -p $PKG/{etc/profile.d,usr/lib${LIBDIRSUFFIX}/$PRGNAM-$VERSION}
+
+echo 
+echo "$VERDE"Compilando ..."$CIERRE"
+sleep 1
+
+cp -rf {bin,conf,include,jmods,lib} $PKG/usr/lib${LIBDIRSUFFIX}/$PRGNAM-$VERSION/
+
+cd $PKG/usr/lib$LIBDIRSUFFIX
+
+ln -sf $PRGNAM-$VERSION/lib/libjawt.so
+ln -sf $PRGNAM-$VERSION/lib/server/libjvm.so
+ln -sf $PRGNAM-$VERSION/lib/libjava.so
+ln -sf $PRGNAM-$VERSION/lib/libawt.so
+ln -sf $PRGNAM-$VERSION/lib/libawt_xawt.so
+ln -sf $PRGNAM-$VERSION/lib/libverify.so
+
+cd $PKG
+cat > etc/profile.d/$PRGNAM.sh << EOF
+#!/bin/sh
+export JAVA_HOME=/usr/lib${LIBDIRSUFFIX}/$PRGNAM-$VERSION
+export MANPATH=\${MANPATH}:\${JAVA_HOME}/man
+export PATH=\${PATH}:\${JAVA_HOME}/bin
+EOF
+
+cat > etc/profile.d/$PRGNAM.csh << EOF
+#!/bin/csh
+setenv JAVA_HOME /usr/lib${LIBDIRSUFFIX}/$PRGNAM-$VERSION
+setenv MANPATH \${MANPATH}:\${JAVA_HOME}/man
+setenv PATH \${PATH}:\${JAVA_HOME}/bin
+EOF
+
+chmod 755 etc/profile.d/*
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Comprobamos version instalada del paquete
+f_versionInstalada
+#Si no existe el fichero se descargara
+f_download
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales

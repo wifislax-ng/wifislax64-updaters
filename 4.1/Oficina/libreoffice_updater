@@ -1,0 +1,128 @@
+#!/bin/sh
+
+# Script by www.seguridadwireless.net
+
+SCRIPT_VERSION=20240224
+
+############################################################
+## Funciones comunes. Su nombre empieza por f_ ##
+############################################################
+f_variables(){
+	. /opt/wifislax-updaters/Funciones/funciones_updater
+}
+
+############################################################
+## Funciones propias del script. Su nombre empieza por F_ ##
+############################################################
+# Definicion de variables
+F_variables() {
+	PRGNAM=libreoffice
+	SRCNAM=LibreOffice
+	EXTENSION=tar.gz
+	GESTOR=wget
+	echo -ne "\033]2;${PRGNAM}_updater\007"
+	WEB=https://es.libreoffice.org/descarga/libreoffice
+	VERSION=$(curl -s $WEB/|grep ${SRCNAM}_|head -1|cut -d "/" -f 9|cut -d "_" -f2)
+	SOURCES=${SRCNAM}_${VERSION}_Linux_x86-64_rpm.$EXTENSION
+	CD=${SRCNAM}_${VERSION}*_Linux_x86-64_rpm/RPMS/
+	DOWNLOAD=http://download.documentfoundation.org/$PRGNAM/stable/$VERSION/rpm/$ARCH/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="jdk libreoffice-langpack libreoffice-helppack"
+f_dependencias
+}
+
+# Descomprimimos el fichero descargado y compilamos
+F_compilar(){
+SRCSHORT=$(echo $VERSION | cut -f1-2 -d.)
+rm -f *onlineupdate*.rpm
+
+for FILE in *.rpm ; do rpm2cpio < $FILE | cpio -imdv ; done
+rm -rf desktop-integration *.rpm
+mv opt usr $PKG
+cd $PKG
+
+# Create symlinks in /usr/bin to actual binaries
+cd $PKG/usr/bin
+  for FILE in \
+    sbase scalc sdraw simpress smath soffice swriter unopkg ; do
+      rm -f $FILE
+      ln -sf ../../opt/libreoffice$SRCSHORT/program/$FILE $FILE ;
+  done
+  
+# The symlinks below are required to (directly) open documents
+# supported by libreoffice with Xfe file manager.
+ln -sf ../../opt/libreoffice$SRCSHORT/program/sbase    lobase
+ln -sf ../../opt/libreoffice$SRCSHORT/program/scalc    localc
+ln -sf ../../opt/libreoffice$SRCSHORT/program/sdraw    lodraw
+ln -sf ../../opt/libreoffice$SRCSHORT/program/simpress loimpress
+ln -sf ../../opt/libreoffice$SRCSHORT/program/smath    lomath
+ln -sf ../../opt/libreoffice$SRCSHORT/program/swriter  lowriter
+
+cd -
+
+cd $PKG/usr/share/applications
+  for APP in base calc draw impress math startcenter writer xsltfilter ; do
+    rm -f $PRGNAM$SRCSHORT-$APP.desktop
+    ln -sf ../../../opt/libreoffice$SRCSHORT/share/xdg/$APP.desktop $PRGNAM-$APP.desktop
+  done
+cd -
+
+# Remove DejaVu and Liberation fonts - these are included in other packages
+rm -f opt/libreoffice$SRCSHORT/share/fonts/truetype/{DejaVu,Liberation}*.ttf
+
+# Fix Exec commands in the desktop files
+# See http://bugzilla.xfce.org/show_bug.cgi?id=2430
+cd $PKG/opt/libreoffice$SRCSHORT/share/xdg/
+  for APP in base calc draw impress math writer; do
+    sed -i "s%Exec=libreoffice -%Exec=/opt/libreoffice$SRCSHORT/program/s%" $APP.desktop ;
+  done
+cd -
+
+# Eliminamos de los desktop la categoria education
+cd $PKG/opt/libreoffice*/share/xdg/
+  for MENU in $(find -type f); do
+  cat $MENU | sed 's/Cate.*/Categories=Office;/g' >${MENU}2
+  rm $MENU
+  mv ${MENU}2 ${MENU}
+  done
+}
+
+###################################
+## BLOQUE PRINCIPAL DE EJECUCION ##
+###################################
+# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
+trap f_exitmode SIGHUP SIGINT
+
+#Inicializamos las variables globales
+f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
+#Comprobamos conexion a Internet
+f_comprobarConexion
+#Inicializamos las variables del script
+F_variables
+#Creamos directorio de trabajo
+f_directorioTemporal
+#Mostramos el mensaje de presentacion
+f_presentacion
+#Comprobamos updates del script
+f_comprobarUpdates
+#Comprobamos version instalada del paquete
+f_versionInstalada
+#Compronar dependencias
+F_dependencias
+#Si no existe el fichero se descargara
+f_download
+#Descomprimir sources
+f_descomprimir
+#Cd a ruta
+f_cd
+#Descomprimir fichero descargado y compilamos
+F_compilar
+#Hacemos strip sobre el paquete
+f_strip
+#Creamos xzm , instalamos y salimos
+f_tareasFinales
