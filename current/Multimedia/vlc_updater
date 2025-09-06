@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250517
+SCRIPT_VERSION=20250906
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -55,7 +55,6 @@ srt
 libupnp
 aribb24
 aribb25
-lirc
 portaudio
 schroedinger
 chromaprint
@@ -267,7 +266,6 @@ LDFLAGS="$SLKLDFLAGS" \
     --localstatedir=/var \
     --with-kde-solid=/usr/share/solid/actions/ \
     --disable-fdkaac \
-    --enable-libgcrypt \
     --disable-libplacebo \
     --disable-opencv \
     --disable-rpath \
@@ -307,10 +305,10 @@ LDFLAGS="$SLKLDFLAGS" \
     --enable-kate \
     --enable-kwallet \
     --enable-libass \
+    --enable-libgcrypt \
     --enable-libmpeg2 \
     --enable-libtar \
     --enable-libxml2 \
-    --enable-lirc \
     --enable-live555 \
     --enable-mad \
     --enable-matroska \
