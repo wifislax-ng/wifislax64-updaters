@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250712
+SCRIPT_VERSION=20250913
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -63,7 +63,7 @@ echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
  
 sed -i 's|0.19|1.0|' avidemux_plugins/ADM_videoFilters6/ass/CMakeLists.txt || exit 1
-bash bootStrap.bash --with-core --with-cli --with-plugins
+bash bootStrap.bash --with-core --with-cli --with-plugins --enable-qt5
 make -C buildCli DESTDIR="$PKG" install
 make -C buildCore DESTDIR="$PKG" install
 make -C buildPluginsCLI DESTDIR="$PKG" install
