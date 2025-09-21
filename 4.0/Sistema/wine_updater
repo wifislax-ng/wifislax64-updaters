@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250814
+SCRIPT_VERSION=20250920
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -89,8 +89,6 @@ echo "Building wine64 ..."
      --with-x \
      --with-gnutls \
      --with-opengl \
-     --program-prefix= \
-     --program-suffix= \
      --disable-tests \
      --build=$ARCH-slackware-linux
   make depend
