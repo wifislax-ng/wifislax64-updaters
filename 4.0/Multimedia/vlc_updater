@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250920
+SCRIPT_VERSION=20251117
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -58,6 +58,7 @@ aribb25
 portaudio
 schroedinger
 chromaprint
+faad2
 "
 f_dependencias
 }
