@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20241108
+SCRIPT_VERSION=20251130
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -20,11 +20,11 @@ F_variables() {
 	EXTENSION=tar.xz
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://www.wireshark.org
-	VERSION=$(lynx -dump -width=256 $WEB/download.html|grep $EXTENSION|head -1|cut -d- -f2|cut -dt -f1|sed 's/.$//g')
+	WEB=https://1.eu.dl.wireshark.org/src
+	VERSION=$(lynx -dump -width=256 $WEB|grep wireshark-[0-9]|sort|tail -1|cut -d- -f2|cut -dt -f1|sed 's/.$//g')
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
 	CD=$PRGNAM-$VERSION
-	DOWNLOAD=https://1.eu.dl.wireshark.org/src/$SOURCES
+	DOWNLOAD=$WEB/$SOURCES
 }
 
 # Comprobar dependencias
@@ -36,32 +36,12 @@ snappy
 libminizip
 libilbc
 opencore-amr
-spandsp
-"
+spandsp"
 f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-
-if [ $VERSION = 4.4.1 ] ; then
-echo "
-/Td6WFoAAATm1rRGAgAhARwAAAAQz1jM4A3/Am1dADgYSu7FL5n6pvg745dpgzgztyjlznaup/J3
-K7y7ObJX2/8T/aZsBr1OtsBenOUeFG9pS/Dx/Jtz0BVu17uiP9tgP1XebQiLtGzN7IZJlipLDxXZ
-pdqfZqhwSl3XYYyGkufBD0wn/OIvYqtKlcag1ZRab853fwCbxP5D0GR592qMPmF/0Ra9+U3BTVGe
-rFThlVpB2d1j540rXWg4yVHRjZ63rn8Nal1eLHvf5Dfp8SXoYwBtJKA6JVBU/vY2+4mrFg425bAq
-uQiEHy5Hn6hMexL5BQjryivqP1CQnjuLxToqSrNxVz7/I2m6XqE3ybyRor/BkzbAs+dP8PcZ55MN
-o4QmCPNBNsTospSNVJiXpG5+y0+xgw9pBjBvO0gXm0bj84NTF9rm4i8LvKlyCrx3pBPvY6V7o+gz
-QQQ8UCbrhnDCyu5bXCzTP/TMCsfCRZRVTSv8PCxvAZpcBmEL2Xkp30lN5mXzlyJJ8Uoc52WXp0Jn
-75hDxs4n92BH7elBx/Yryii0E1Sl8yIY2Xt3sJVHt+t7XYdXq3sD81cS9Nbp4Xr2mVi9IcYJsThB
-sICM3jC9uirXMnhc0SVMpOjK0AfotwslMbPk3w8U3dmSI4JGcnMHKU7/46n3oY8obz+saBbVCEA3
-hp2/vrIkWnd+7PzAu2BA1ZQFmW26z9HI1OMPo8weE0U2bjAytBCVt2O+7UyX7w0M55kOOMnBONdH
-MHit5IK0jIyRdLQ31z1OzS+6rM+MB0RLsV1vyRi4PjkJhrImM6vRwcH12SUqWoXXnHuN3MFV/HSj
-Yye8uQF9HyG64lQPLy96xAHcGN1tQAGhAAAAAABUOsPzIxWIUwABiQWAHAAAkvJvyrHEZ/sCAAAA
-AARZWg=="|base64 -d > $TMP/patches.txz
-tar xvf $TMP/patches.txz &>/dev/null
-patch -p1 < ./patches/cares.patch || exit 1
-fi
 
 echo ""
 echo "$VERDE"Configurando ..."$CIERRE"
