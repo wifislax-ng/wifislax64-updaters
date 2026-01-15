@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20251207
+SCRIPT_VERSION=20260115
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -25,7 +25,7 @@ F_variables() {
 	RAMA=$(echo $VERSION|cut -d. -f1)
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
 	CD=$PRGNAM-$VERSION
-	DOWNLOAD=https://dl.winehq.org/wine/source/$RAMA.x/$SOURCES
+	DOWNLOAD=https://dl.winehq.org/wine/source/$RAMA.0/$SOURCES
 }
 
 # Comprobar dependencias
@@ -40,89 +40,21 @@ echo
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
-echo "
-/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4BH/A6ldADgYSu7FL5n6pvg745dpgzgztyjlznaup/J3
-GNQzu68j4N3KZwOLh7V//qRT46pZ6LqhKDKkbOgQQkpD3DPcn68q8fxF7dOlAFrS7GNGcDwOKxyY
-kgmQwQ6v6Sgf+EGyIGSbLqV0bR8pJEH3BfQ4j6bWzTHoIzRFePW+EzgGsqGODY0Fvw5RGnSgoHEt
-LM18OGkxA37NgU83Fl5/ZnvGHrGL5+JTrGmveOGX1Nd+ihqWIc5nrO8+/EFdF7jTNYdD8v5K2BrV
-lW5RdmfhYbMc/jPg63/DbrTyGB9ChgtGhzYaf0kKK/Cp9/1ncJ/sY7FuTIh7A4DAB7inbyFbxwWv
-TMUCZnKsOzQHQp4INStsgqzv/7xdUv+BjxX6N5l3V0p0V6eHYg4pMvbEPj0Qg7SxdXeFPMdlU1Zs
-G/1d1n09fx4HR58dYnVlUNiTrAmusDGqYPldTx/bI3atkvrD8heWLaHl0mt+Y3+id6UsVdNXmwCQ
-HMvmdHZ5M/0uipynI0V42Yc8/4bcIs306m468Lmw3evVgnc48Hi3U6kD/ENHkK2lE5b33lUg4C0s
-uYjMVvAoR4H37G4byji3Zq96LDy23XdpiyF3iFJa/K+OVsemOSJhG0ZIqN4HMFQWyLqrhU0lcswO
-tzvIA8XEb72/VjtDtyLdX0DvsqLphYfQH148PNWLhVniqWkXJhJufRHVRICezn8HEcLThEPnTXD+
-RkkR7TNzmtOjua291LdMMaXpyBlfsZ16Ero044UH1amk1zFRCJgtx1z3OahoC5NgIxeEl4UVAlE3
-j9l1Xj1cAdGtsfXrJrLCWEEOgMyJPUNrKXQMYOP+qOFSDl5eYqJ29xHfrIGid/2Dujzx3AcDWVWi
-EMf1NkKY+xQOl0Z4UGkF4HHGqpqe8UiWXbF2W0EQlnNl62qE4Lfxudh+JrtZPWpNqT5Y59tRFY4m
-dw1bL63dfj5mU40gGoIknBFWwZV3wD+m3lAZ5OzXkFWMw7/Dn01UESDuvxv7Fr0xAFfGZJifX8bx
-Ln5ZnFe2d3SJ79n/woxEIcekYVFqV0sspLxGK9i1tmL7V5a2q3HEB9xTht4UBQrJ5BVGL78pOF9Y
-1xZRZglR1AxjtoxJWSZKkU1aiiCnD0JB4f7IA2x3wnhxMBV6U0uVvDfDFL7FUMpSGC4HXe6sG6Kg
-Z5CpKAO6KqQkQ4MHawJHGuVVNykJJJutgIi1B5auL+e+ivKBtvHmtUiOqFXPG2Pe9jFzFnFy2AAA
-AAAA7uOfCsKYKFEAAcUHgCQAAM3fTeKxxGf7AgAAAAAEWVo="|base64 -d > $TMP/patches.txz
-
-tar xvf $TMP/patches.txz &>/dev/null
-patch -p1 < ./patches/flex.patch||exit 1
-patch -p1 < ./patches/writecopy.patch||exit 1
-
-# Fix path of opencl headers.
-sed 's|OpenCL/opencl.h|CL/opencl.h|g' -i configure*
+    ./configure \
+    --prefix=/usr \
+    --libdir=/usr/lib$LIBDIRSUFFIX \
+    --disable-tests \
+    --enable-archs=x86_64,i386 \
+    --enable-build-id
 
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 
-echo "Building wine64 ..."
-
-  mkdir wine64
-  cd wine64
-
-  LDFLAGS="-L/usr/lib64 -ldl" \
-  CFLAGS="$SLKCFLAGS" \
-  CXXFLAGS="$SLKCFLAGS" \
-    ../configure \
-     --prefix=/usr \
-     --libdir=/usr/lib$LIBDIRSUFFIX \
-     --localstatedir=/var \
-     --sysconfdir=/etc \
-     --mandir=/usr/man \
-     --enable-win64 \
-     --with-x \
-     --with-gnutls \
-     --with-opengl \
-     --disable-tests \
-     --build=$ARCH-slackware-linux
-  make depend
-  make
-  make install DESTDIR=$PKG
-  cd ..
-
-  echo "Building wine32 ..." 
-  
-  mkdir wine32
-  cd wine32
-  export PKG_CONFIG_PATH="/usr/lib/pkgconfig:$PKG_CONFIG_PATH"
-
-  LDFLAGS="-L/usr/lib -ldl" \
-  CFLAGS="$SLKCFLAGS" \
-  CXXFLAGS="$SLKCFLAGS" \
-    ../configure \
-     --with-wine64=../wine64 \
-     --prefix=/usr \
-     --libdir=/usr/lib$LIBDIRSUFFIX \
-     --localstatedir=/var \
-     --sysconfdir=/etc \
-     --mandir=/usr/man \
-     --with-x \
-     --with-gnutls \
-     --with-opengl \
-     --program-prefix=testpre32 \
-     --program-suffix=testsuf32 \
-     --disable-tests \
-     --build=$ARCH-slackware-linux
-  make depend
-  make
-  make install DESTDIR=$PKG
-  cd ..
+   make||exit 1
+   make prefix="$PKG/usr" \
+        libdir="$PKG/usr/lib$LIBDIRSUFFIX" \
+        dlldir="$PKG/usr/lib$LIBDIRSUFFIX/wine" install
   
 # Add font configuration:
 # Make dirs
@@ -382,7 +314,7 @@ uOl+AAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDI1LTAzLTE1VDAxOjQxOjM5KzAwOjAwpm4bpAAA
 AABJRU5ErkJggg=='|base64 -d > $PKG/usr/share/pixmaps/winecfg.png
 
 # Some converts and copy
-convert $PKG/usr/share/icons/hicolor/scalable/apps/wine.svg -scale 64 $PKG/usr/share/pixmaps/wine.png
+rsvg-convert --width=64px --height=64px $PKG/usr/share/icons/hicolor/scalable/apps/wine.svg > $PKG/usr/share/pixmaps/wine.png
 cp -rf $PKG/usr/share/pixmaps/winecfg.png $PKG/usr/share/pixmaps/folder-wine.png 
 cp -rf $PKG/usr/share/pixmaps/winecfg.png $PKG/usr/share/pixmaps/wine-uninstaller.png
 cp programs/winecfg/winecfg.svg $PKG/usr/share/icons/hicolor/scalable/apps/
