@@ -25,7 +25,7 @@ F_variables() {
 	RAMA=$(echo $VERSION|cut -d. -f1)
 	SOURCES=$PRGNAM-$VERSION.$EXTENSION
 	CD=$PRGNAM-$VERSION
-	DOWNLOAD=https://dl.winehq.org/wine/source/$RAMA.0/$SOURCES
+	DOWNLOAD=https://dl.winehq.org/wine/source/$RAMA.x/$SOURCES
 }
 
 # Comprobar dependencias
