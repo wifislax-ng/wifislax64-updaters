@@ -35,20 +35,22 @@ sleep 1
 mkdir -p build
 cd build
   cmake \
+	-GNinja \
+	-Bbuild \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
     -DKERNELLIB_HOST_CPU_VARIANTS=distro \
+	-DINSTALL_OPENCL_HEADERS=OFF \
     -DCMAKE_BUILD_TYPE=Release ..
     
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
 
-  make || exit 1
-  make install DESTDIR=$PKG || exit 1
-cd ..
+ninja -C build || exit 1
+ninja -C build check  || exit 1
+DESTDIR=$PKG ninja -C build install
 }
-
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
