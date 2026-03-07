@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20260115
+SCRIPT_VERSION=20260308
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -131,7 +131,7 @@ LDFLAGS="$SLKLDFLAGS" \
     --enable-fribidi \
     --enable-gme \
     --enable-gnutls \
-    --enable-gst-decode \
+    --disable-gst-decode \
     --enable-harfbuzz \
     --enable-jack \
     --enable-jpeg \
