@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20260308
+SCRIPT_VERSION=20260310
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -85,6 +85,9 @@ qwSAGAAAw9diurHEZ/sCAAAAAARZWg=="|base64 -d > $TMP/patches.txz
 tar xvf $TMP/patches.txz &>/dev/null
 patch -p0 < ./patches/patch_vlc_cache_gen.patch||exit 1
 
+# Fix gst-plugins-base 1.28.1
+sed -i 's/gstvideopool.h/video.h/' modules/codec/gstreamer/gstvlcvideopool.h
+
 autoreconf -fiv
 
 CFLAGS="$SLKCFLAGS" \
@@ -131,7 +134,7 @@ LDFLAGS="$SLKLDFLAGS" \
     --enable-fribidi \
     --enable-gme \
     --enable-gnutls \
-    --disable-gst-decode \
+    --enable-gst-decode \
     --enable-harfbuzz \
     --enable-jack \
     --enable-jpeg \
