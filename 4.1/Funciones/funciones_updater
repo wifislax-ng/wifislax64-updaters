@@ -170,9 +170,9 @@ echo ${CIERRE}
 exit 1
 fi
 if [ ${D} = pylast ]; then
-xterm -e sh -c "TAG=slackbuilds PYTHON3=no slapt-src -y -i ${D}"
+xterm -e sh -c "TAG=slackbuilds PYTHON3=no slapt-src -y -n -i ${D}"
 else
-xterm -e sh -c "TAG=slackbuilds slapt-src -y -i ${D}"
+xterm -e sh -c "TAG=slackbuilds slapt-src -y -n -i ${D}"
 fi
 PACKDIR=$(echo $(find /usr/src/slapt-src/ -name "${D}-*.txz"))
 XZMPACK=$(echo $(find /usr/src/slapt-src/ -name "${D}-*.txz"|rev|cut -d / -f-1|rev|sed 's/.txz/.xzm/g'))
