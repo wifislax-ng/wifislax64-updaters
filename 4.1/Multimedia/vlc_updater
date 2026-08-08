@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20260310
+SCRIPT_VERSION=20260808
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
@@ -49,7 +49,6 @@ libmpeg2
 x265
 x264
 libkate
-jack
 soxr
 srt
 libupnp

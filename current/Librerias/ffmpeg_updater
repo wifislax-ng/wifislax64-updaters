@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20260710
+SCRIPT_VERSION=20260808
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -31,45 +31,31 @@ F_variables() {
 # Comprobar dependencias
 F_dependencias(){
 DEPENDENCIAS="
-celt
+AviSynthPlus
 ladspa_sdk
 libavc1394
 libiec61883
-recode
-enca
-libaacs
-libbdplus
+libbs2b
 gsm
-libmodplug
-opencore-amr
-soxr
-x264
-x265
-xvidcore
-libdbus-c++
-libconfig
-mm-common
-libxml++3
-libffado
-srt
-zeromq
-DevIL
-AviSynthPlus
-gflags
-gperftools
 highway
 libjxl
 onevpl
-zita-alsa-pcmi
-zita-resampler
-jack
+libmodplug
+opencore-amr
 portaudio
 libopenmpt
-ladspa_sdk
+rav1e
 vamp-plugin-sdk
 rubberband
+snappy
+soxr
+srt
 svt-av1
 vmaf
+x264
+x265
+xvidcore
+zeromq
 zimg
 vapoursynth
 "
@@ -78,6 +64,24 @@ f_dependencias
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
+
+echo "/Td6WFoAAATm1rRGBMC8BYAYIQEWAAAAAAAAABMLS9rgC/8CtF0AGGgIRaRUITKFfHexlCj+MSEj
+enCC8OSAUBOpIhqj0c11Mj7LzWbYJPk85jkME9w/U4r7Usc+ranu71IjTWX5Wt+A58z2IBBXMYTM
+h6QYqKXpaiA21RCXcrv+SbsFWly69VroEzjkZxRWldd4Hg4xoulYc9SajEcQMkUgENWS4AT/bcO1
+LzwfHZrWXG15/3kG2cL9saBCs1uSnYhZJLKrqb070gj2okBQ23Sqf1D7MjU//LkyndkW/yvvjGhg
+se79LluffTJJ3vEHbu3PxyfwJtgYK8JfWF//4dVZBpWoM0jfpkNuMui0BeQu2WFum+r3pO0PjNO/
+7NSg7roO0Cpl+ZcAIE4LfQ/CRvGM48lNwAtFNdsErT+Q9ur8zMvVpDR3JdpnjWsoVxxtRI0Q0zW5
+Ci7q/KTEciSAP84zSwTdy2x5mnCXy/Ge+QuGjvTZMEIFMO3zqwEs/tKcJJtcYm/FjJZyoMHn1UcL
+psAoA2+vcgIkjtqvZdGbP+C7HWcXl6fTa7VkYh3WEBaSVbaEYoy4Xt7Au1ZoVTJJb9Ah6GMa1FDl
+SjavatXRDCxcNk4Dwvt1jnWaXkGMOVJrDTE/86yas/B31A4V/xjs8cjYq73qMPDedxfCmlz9mwgF
+JIGU3tFjDW6YoKTBSa0YWfZu7z8ouVrQgKtql2LuEVHAGyOrIUA8BeWP8pNZ0tf+Rgg4K3MWn3tj
+Oah/UYkvReA0kwLATSvf/zi7y1W9Dkl885HQvWSw10Y9C9ZPNPz7otFf97EPUkn9SoMnAueJtQqo
+84HSky6fYC3YLLuEUbo/QrSjkLF+JrZ8pCB56/d0pNAlymghD4HSAd3W+Knu7fUKbvGFAg9k/4u0
+1zLt+DC6GjRTeqXBpcdEqlSvqeky+qk0EKz7ffBQcFzukXm4iT10HTssnY1uqAAA5Xetz1XPdt4A
+AdgFgBgAAByBtAqxxGf7AgAAAAAEWVo="|base64 -d > $TMP/patches.txz
+
+tar xvf $TMP/patches.txz &>/dev/null
+patch -p1 < ./0001-Add-av_stream_get_first_dts-for-Chromium.patch||exit 1
 
 echo 
 echo "$VERDE"Configurando ..."$CIERRE"
@@ -106,6 +110,7 @@ CXXFLAGS="$SLKCFLAGS" \
     --enable-gnutls \
     --enable-gpl \
     --enable-ladspa \
+    --enable-lcms2 \
     --enable-libaom \
     --enable-libass \
     --enable-libbluray \
@@ -130,6 +135,7 @@ CXXFLAGS="$SLKCFLAGS" \
     --enable-libopus \
     --enable-libplacebo \
     --enable-libpulse \
+    --enable-librav1e \
     --enable-librsvg \
     --enable-librubberband \
     --enable-libsnappy \
@@ -151,7 +157,6 @@ CXXFLAGS="$SLKCFLAGS" \
     --enable-libxcb \
     --enable-libxml2 \
     --enable-libxvid \
-    --enable-libzimg \
     --enable-libzmq \
     --enable-nvdec \
     --enable-nvenc \
@@ -161,7 +166,7 @@ CXXFLAGS="$SLKCFLAGS" \
     --enable-vapoursynth \
     --enable-version3 \
     --enable-vulkan \
-    --arch=$ARCH
+    --disable-decoder=magicyuv
   
 make || exit 1
 make install DESTDIR=$PKG
