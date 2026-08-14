@@ -5,7 +5,7 @@
 # Eliminamos posibles ficheros viejos de modificaciones de scripts	
 rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
 
-SCRIPT_VERSION=20250411
+SCRIPT_VERSION=20260813
 
 # Colores
 CIERRE=$(tput init)
@@ -123,6 +123,9 @@ DESCARGA=https://cdn.kernel.org/pub/linux/kernel/v$FAMILIA.x/linux-$KERNEL_ELEGI
 echo "${CIERRE}"
 fi
 
+# Definimos carpeta de las fuentes
+FUENTES=/usr/src/$PRGNAM-$KERNEL_ELEGIDO
+
 # Entramos a la ruta de trabajo
 cd /usr/src/
 
@@ -133,7 +136,7 @@ wget -N -L -c -q --show-progress $DESCARGA
 fi
 
 # Si existen restos de una prueba anterior seeliminaran
-rm -rf /usr/src/$PRGNAM-$KERNEL_ELEGIDO &>/dev/null
+rm -rf $FUENTES &>/dev/null
 
 # Descomprimir fichero
 echo -e "\n${VERDE}Descomprimiendo ...${CIERRE}"
@@ -144,77 +147,29 @@ cd $PRGNAM-$KERNEL_ELEGIDO
 # Se limpia por si los de kernel.org se dejaron algun fichero que no es de kernel
 make mrproper
 
-###################################
-### Generamos parche wireless  ####
-###################################
-# Si la rama es menor a 6.2 se aplicara el parche
-# Se quitan los puntos para convertir el numero a entero
-# y poder manejarlo mejor.
-if [ $(echo $RAMA_ELEGIDO|sed 's/\.//g') -lt 62 ] ; then
-PARCHE=Negative-channel-multi.patch
-cat > $PARCHE << "EOF"
---- a/net/wireless/chan.c	2013-08-29 18:47:51.000000000 +0200
-+++ b/net/wireless/chan.c	2013-08-31 22:20:45.014734447 +0200
-@@ -441,4 +441,2 @@
- 		return -EOPNOTSUPP;
--	if (!cfg80211_has_monitors_only(rdev))
--		return -EBUSY;
-
---- a/net/mac80211/cfg.c	Tue May 28 16:57:23 2013 -0400
-+++ b/net/mac80211/cfg.c	Tue May 28 17:16:15 2013 -0400
-@@ -801,3 +801,4 @@
- 		}
--	} else if (local->open_count == local->monitors) {
-+	// Patch: Always allow channel change, even if a normal virtual interface is present
-+	} else /*if (local->open_count == local->monitors)*/ {
- 		local->_oper_channel = chandef->chan;
-
-
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3588,9 +3589,9 @@ static int ieee80211_cfg_get_channel
- 	if (chanctx_conf) {
- 		*chandef = chanctx_conf->def;
- 		ret = 0;
--	} else if (local->open_count > 0 &&
-+	} else /*if (local->open_count > 0 &&
- 		   local->open_count == local->monitors &&
--		   sdata->vif.type == NL80211_IFTYPE_MONITOR) {
-+		   sdata->vif.type == NL80211_IFTYPE_MONITOR)*/ {
- 		if (local->use_chanctx)
- 			*chandef = local->monitor_chandef;
- 		else
-
-EOF
-
-# Aplicamos parche si hay error se parara el proceso ( exit 1 )
-echo -e "\n${VERDE}Aplicando parche wireless para channel -1 ${BLANCO}...${CIERRE}"
-patch -f -p1 < $PARCHE||exit 1
-fi
-
 # Ponemos nuestro logo
 LOGO=/usr/share/pixmaps/wifislax_logo_blue.png
-LOGONEW=/usr/src/$PRGNAM-$KERNEL_ELEGIDO/drivers/video/logo/logo_linux_clut224.ppm
+LOGONEW=$FUENTES/drivers/video/logo/logo_linux_clut224.ppm
 if [ -f $LOGO ]; then
 echo -e "\n${VERDE}Convirtiendo logo ...${BLANCO}...${CIERRE}"
 pngtopnm $LOGO|ppmquant 224|pnmtoplainpnm > $LOGONEW||exit 1
 fi
 
 # Parte1 avisamos por si quieres poner un config
-if [ ! -f /usr/src/$PRGNAM-$KERNEL_ELEGIDO/.config ]; then
+if [ ! -f $FUENTES/.config ]; then
 echo -e "\n${CYAN}No se detecto fichero config ..."
-echo -e "Si quieres añadir uno hazlo en /usr/src/$PRGNAM-$KERNEL_ELEGIDO/.config ..."
+echo -e "Si quieres añadir uno hazlo en $FUENTES/.config ..."
 echo -e "Si no añades un config se usara la config del kernel actual."
 echo -e "Cuando pulses ${AMARILLO}ENTER ${CYAN}el proceso continuara. ${CIERRE}\n"
 read junk
 fi
 
 # Parte2 sino hay config generamos una en base al kernel actual
-if [ -f /usr/src/$PRGNAM-$KERNEL_ELEGIDO/.config ]; then
+if [ -f $FUENTES/.config ]; then
 echo -e "\n${VERDE}Usando config añadida por el usuario ...${CIERRE}\n"
 else
 echo -e "\n${VERDE}Generamos fichero .config ...${CIERRE}\n"
-modprobe configs && zcat /proc/config.gz > /usr/src/$PRGNAM-$KERNEL_ELEGIDO/.config
+modprobe configs && zcat /proc/config.gz > $FUENTES/.config
 fi
 
 # Compilamos el kernel
@@ -239,30 +194,24 @@ ZSTD_CLEVEL=19 make modules_install INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH=$CONTAI
 make INSTALL_HDR_PATH=$CONTAINER/usr headers_install || exit 1
 
 # Copiamos el vmlinuz (este con nombre generico para el modo live)
-cp /usr/src/$PRGNAM-$KERNEL_ELEGIDO/arch/$KARCH/boot/bzImage $HOME/$ESCRITORIO/$VMLINUZ &>/dev/null
+cp $FUENTES/arch/$KARCH/boot/bzImage $HOME/$ESCRITORIO/$VMLINUZ &>/dev/null
 
-# Generamos kernel sources recortadas
+# Generamos kernel sources
 mv System.map ../
 make clean
 mv ../System.map .
 make prepare
 make scripts
-rm -Rf Documentation drivers fs net sound firmware
-ls -1d arch/*|grep -v $KARCH|xargs rm -Rf
-ls -1d include/*|grep asm- |grep -v $KARCH|grep -v generic|xargs rm -Rf
 cp include/generated/* include/linux &>/dev/null
+
+# Limpieza
+rm -Rf Documentation
+ls -1d arch/*|grep -v $KARCH|xargs rm -Rf
 
 # Preparamos creacion de xzm
 VMLINUZNAME=$(grep  "CONFIG_LOCALVERSION=" .config|cut -d = -f2|sed 's/"//g')
 mkdir -p $CONTAINER/usr/src
-cp -r /usr/src/$PRGNAM-$KERNEL_ELEGIDO $CONTAINER/usr/src
-
-# Realizamos limpieza
-RUTA_LIMPIEZA=$CONTAINER/usr/src/$PRGNAM-$KERNEL_ELEGIDO
-FILES_BORRAR="kernel.txt Negative-channel-multi.patch ralink.patch .config.old"
-for X in $FILES_BORRAR; do
-rm $RUTA_LIMPIEZA/$X &>/dev/null
-done
+cp -r $FUENTES $CONTAINER/usr/src
 
 # Creamos xzm de kernel + sources
 dir2xzm $CONTAINER $CONTAINER.xzm -n
