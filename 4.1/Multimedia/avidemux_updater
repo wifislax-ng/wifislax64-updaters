@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20260822
+SCRIPT_VERSION=20260826
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -39,6 +39,9 @@ twolame
 x264
 x265
 xvidcore
+aften
+dcaenc
+faac
 "
 f_dependencias
 }
