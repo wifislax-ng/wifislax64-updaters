@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20260826
+SCRIPT_VERSION=20260911
 CATEGORIA="Editores de video"
 
 ############################################################
@@ -33,7 +33,7 @@ F_dependencias(){
 DEPENDENCIAS="
 faad2
 libdca
-fdk-aac
+libfdk-aac
 opencore-amr
 twolame
 x264
