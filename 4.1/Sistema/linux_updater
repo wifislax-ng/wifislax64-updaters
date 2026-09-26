@@ -217,10 +217,9 @@ rm -rf .tmp_versions
 rm -rf tools/testing/
 rm -rf vmlinux*
 ls -1d arch/*|grep -v $KARCH|xargs rm -Rf
-
 find  -regex '.*\.\(a\|bin\|elf\|exe\|o\|patch\|txt\|xsl\|xz\|ko\|zst\|json\|py\)$' -delete
-find  \( -name "COPYING" -o -name "CREDITS" -o -name "LICENSE*" -o -name "MAINTAINERS*" -o -name "README*" \) -exec rm -fr {} +
 find scripts -xtype l -delete
+find  \( -type f -name ".*" ! -name ".config"  -o -name "COPYING" -o -name "CREDITS" -o -name "LICENSE*" -o -name "MAINTAINERS*" -o -name "README*" \) -exec rm -fr {} +
 find  -type f -perm -u+x -print0 | xargs -0 -r strip --strip-all -R .comment -R .eh_frame -R .eh_frame_hdr -R .eh_frame_ptr -R .jcr -R .note -R .note.ABI-tag -R .note.gnu.build-id -R .note.gnu.gold-version -R .note.GNU-stack >/dev/null 2>&1
 
 # Preparamos creacion de xzm
