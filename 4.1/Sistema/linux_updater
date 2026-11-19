@@ -1,256 +1,374 @@
 #!/bin/bash
 
 # Script by USUARIONUEVO @ www.seguridadwireless.net
+# Versión optimizada y endurecida
 
-# Eliminamos posibles ficheros viejos de modificaciones de scripts	
-rm -rf /opt/wifislax-updaters/*/*~ &>/dev/null
+# Comprobar permisos de root antes de tocar el sistema
+if [ "$EUID" -ne 0 ]; then
+    echo "Error: Este script debe ejecutarse como root." >&2
+    exit 1
+fi
 
-SCRIPT_VERSION=20260926
+# Eliminamos posibles ficheros viejos de modificaciones de scripts
+rm -rf /opt/wifislax-updaters/*/*~ >/dev/null 2>&1
 
-# Colores
-CIERRE=$(tput init)
-ROJO=$(tput setaf 9)
-VERDE=$(tput setaf 10)
-CYAN=$(tput setaf 14)
-AMARILLO=$(tput setaf 11)
-BLANCO=$(tput setaf 15)
-ROSA=$(tput setaf 13)
+readonly SCRIPT_VERSION=20261119
+
+# Configuración de colores (segura para cualquier terminal)
+if [ -t 1 ] && command -v tput >/dev/null 2>&1 && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
+    readonly RESET=$(tput sgr0)
+    readonly ROJO=$(tput setaf 9 2>/dev/null || tput setaf 1)
+    readonly VERDE=$(tput setaf 10 2>/dev/null || tput setaf 2)
+    readonly AMARILLO=$(tput setaf 11 2>/dev/null || tput setaf 3)
+    readonly ROSA=$(tput setaf 13 2>/dev/null || tput setaf 5)
+    readonly CYAN=$(tput setaf 14 2>/dev/null || tput setaf 6)
+    readonly BLANCO=$(tput setaf 15 2>/dev/null || tput setaf 7)
+else
+    readonly RESET=""
+    readonly ROJO=""
+    readonly VERDE=""
+    readonly AMARILLO=""
+    readonly ROSA=""
+    readonly CYAN=""
+    readonly BLANCO=""
+fi
+readonly CIERRE="$RESET"
 
 # Variables globales
-# El PRGNAM2 se usa en la creacion del xzm ,NO BORRAR
-# KARCH se usara siempre x86 ya que especifica arcquitectura "PC"
+# El PRGNAM2 se usa en la creación del xzm, NO BORRAR
+# KARCH se usará siempre x86 ya que especifica arquitectura "PC"
 ARCH=$(uname -m)
 VMLINUZ="vmlinuz"
-PRGNAM2=kernel
-PRGNAM=linux
-KARCH=x86
-SCRIPTNAME=linux_updater
-TAG=wifislax
-WIFISLAX=$(cat /etc/wifislax-version|cut -d ' ' -f2|cut -d_ -f1)
-ESCRITORIO=$(cat '/root/.config/user-dirs.dirs' |grep DESKTOP|cut -d '"' -f2|cut -d/ -f2)
-M0DNUM=000
-MODNAM=Kernel
-BUILD=1
-KERNEL_SISTEMA=$(uname -r|cut -d '-' -f1|tr -d " \t\n\r")
-RAMA_SISTEMA=$(uname -r|cut -d '-' -f1|cut -d "." -f-2|tr -d " \t\n\r")
-WEB=https://www.kernel.org
+PRGNAM2="kernel"
+PRGNAM="linux"
+KARCH="x86"
+SCRIPTNAME="linux_updater"
+TAG="wifislax"
+M0DNUM="000"
+MODNAM="Kernel"
+BUILD="1"
+WEB="https://www.kernel.org"
 
-export MAKEFLAGS=-j$(nproc)
+# Detección segura de la versión de Wifislax
+if [ -r /etc/wifislax-version ]; then
+    WIFISLAX=$(awk '{print $2}' /etc/wifislax-version | cut -d'_' -f1)
+else
+    WIFISLAX="desconocida"
+fi
 
-echo -ne "\033]2;${PRGNAM}_updater\007"
+# Detección robusta del directorio Escritorio
+if command -v xdg-user-dir >/dev/null 2>&1; then
+    ESCRITORIO=$(basename "$(xdg-user-dir DESKTOP)")
+elif [ -r /root/.config/user-dirs.dirs ]; then
+    ESCRITORIO=$(awk -F'"' '/XDG_DESKTOP_DIR/{print $2}' /root/.config/user-dirs.dirs | xargs basename)
+else
+    ESCRITORIO="Desktop"
+fi
+
+# Detección limpia del kernel y rama actuales
+KERNEL_ACTUAL=$(uname -r)
+KERNEL_SISTEMA="${KERNEL_ACTUAL%%-*}"
+RAMA_SISTEMA="${KERNEL_SISTEMA%.*}"
+
+export MAKEFLAGS="-j$(nproc)"
+
+# Título de terminal (solo si es interactiva)
+[ -t 1 ] && printf '\033]2;%s_updater\007' "$PRGNAM"
 
 # Bienvenida
 clear
-echo "${ROSA}
+cat << EOF
+${ROSA}
       __ __                 __  _____                _ __       
      / // /__ _______  ___ / / / ___/__  __ _  ___  (_) /__ ____
     / ,< / -_) __/ _ \/ -_) / / /__/ _ \/  ' \/ _ \/ / / -_) __/
    /_/|_|\__/_/ /_//_/\__/_/  \___/\___/_/_/_/ .__/_/_/\__/_/   
-                                            /_/                  "
-echo -e "\n${AMARILLO}   ##### By USUARIONUEVO @ www.seguridadwireless.net #####${CIERRE}\n"
+                                            /_/                  
+${AMARILLO}   ##### By USUARIONUEVO @ www.seguridadwireless.net #####${RESET}
+EOF
 
-# Sin internet el script no continua.
-if [ ! "$(ping google.com -c1 2>/dev/null)" ]; then
-echo -e "\n${ROJO}No tengo internet ${BLANCO}...  el script se cerrara... ${CIERRE}\n"
-exit 0
+# Configuración y comprobación de red
+HOST_COMPROBACION="https://www.kernel.org"
+MAX_INTENTOS=3
+TIEMPO_ESPERA=4
+
+verificar_internet() {
+    local intento=1
+    while [ "$intento" -le "$MAX_INTENTOS" ]; do
+        if curl --silent --head --fail --max-time "$TIEMPO_ESPERA" "$HOST_COMPROBACION" >/dev/null 2>&1; then
+            return 0
+        fi
+        echo -e "${AMARILLO}Sin respuesta (intento $intento de $MAX_INTENTOS). Reintentando...${RESET}" >&2
+        sleep 2
+        ((intento++))
+    done
+    return 1
+}
+
+if ! verificar_internet; then
+    echo -e "\n${ROJO}Error: Sin conexión a internet tras $MAX_INTENTOS intentos.${BLANCO} El script se cerrará...${RESET}\n" >&2
+    exit 1
 fi
 
-# Comprobar updates para el script
+# Comprobar actualizaciones del propio script
 SERVIDOR_WEB="https://raw.githubusercontent.com/wifislax-ng/wifislax64-updaters/master/$WIFISLAX"
-DIRECTORIO=$(find /opt/wifislax-updaters -type f -name ${SCRIPTNAME} | rev | cut -d/ -f2- | rev | head -1)
-SERVIDOR_VERSION=$(timeout -s SIGTERM 3 curl -s $SERVIDOR_WEB/${DIRECTORIO##*/}/${SCRIPTNAME} | grep "SCRIPT_VERSION=" | head -1 |cut -d "=" -f2)
+DIRECTORIO=$(find /opt/wifislax-updaters -type f -name "$SCRIPTNAME" -printf '%h\n' 2>/dev/null | head -n 1)
 
+echo -e "\n${CYAN}Versión Script${RESET}: ${ROJO}${SCRIPT_VERSION:6}${BLANCO}/${AMARILLO}${SCRIPT_VERSION:4:2}${BLANCO}/${ROJO}${SCRIPT_VERSION:0:4}${RESET}\n"
 
-echo -e "${CYAN}Version Script${CIERRE}: ${ROJO}${SCRIPT_VERSION:6}${BLANCO}/${AMARILLO}${SCRIPT_VERSION:4:2}${BLANCO}/${ROJO}${SCRIPT_VERSION:0:4}${CIERRE}\n"
-
-if [ "$(ping github.com -c1 2>/dev/null)" ]; then
-if [[ $SCRIPT_VERSION -lt $SERVIDOR_VERSION ]]; then
-echo -e "\n${ROSA}Comprobando si hay actualizaciones para el script...\n${ROJO}NUEVA VERSION${CIERRE}"
-echo -e "\n${ROSA}Version Server${CIERRE}:${ROJO}r${CIERRE}:${ROJO} ${SERVIDOR_VERSION:6}${BLANCO}/${AMARILLO}${SERVIDOR_VERSION:4:2}${BLANCO}/${ROJO}${SERVIDOR_VERSION:0:4}${CIERRE}\n"
-echo -e "\n${CYAN}Actualizando ${SCRIPTNAME}\n"
-curl -s $SERVIDOR_WEB/${DIRECTORIO##*/}/${SCRIPTNAME} -o $DIRECTORIO/${SCRIPTNAME}
-echo -e "\n${ROJO}LISTO${CIERRE}\n"
-$0
-exit
+if [ -n "$DIRECTORIO" ] && [ -w "$DIRECTORIO/$SCRIPTNAME" ]; then
+    SERVIDOR_VERSION=$(curl -fsSL --max-time 4 "$SERVIDOR_WEB/${DIRECTORIO##*/}/$SCRIPTNAME" 2>/dev/null | awk -F'=' '/^readonly SCRIPT_VERSION=|^SCRIPT_VERSION=/{print $2; exit}')
+    if [[ "$SERVIDOR_VERSION" =~ ^[0-9]{8}$ ]] && [ "$SCRIPT_VERSION" -lt "$SERVIDOR_VERSION" ]; then
+        echo -e "${ROSA}Comprobando actualizaciones para el script... ${ROJO}¡NUEVA VERSIÓN DISPONIBLE!${RESET}"
+        echo -e "${ROSA}Versión Server${RESET}: ${ROJO}${SERVIDOR_VERSION:6}${BLANCO}/${AMARILLO}${SERVIDOR_VERSION:4:2}${BLANCO}/${ROJO}${SERVIDOR_VERSION:0:4}${RESET}\n"
+        echo -e "${CYAN}Actualizando $SCRIPTNAME...${RESET}"
+        if curl -fsSL --max-time 10 "$SERVIDOR_WEB/${DIRECTORIO##*/}/$SCRIPTNAME" -o "$DIRECTORIO/$SCRIPTNAME.tmp"; then
+            chmod +x "$DIRECTORIO/$SCRIPTNAME.tmp"
+            mv -f "$DIRECTORIO/$SCRIPTNAME.tmp" "$DIRECTORIO/$SCRIPTNAME"
+            echo -e "${VERDE}LISTO. Reiniciando script...${RESET}\n"
+            exec "$0" "$@"
+        else
+            rm -f "$DIRECTORIO/$SCRIPTNAME.tmp"
+            echo -e "${AMARILLO}No se pudo descargar la actualización. Continuando con la versión local...${RESET}\n"
+        fi
+    fi
 fi
-fi
 
-# Aseguramos la existencia del directorio de compilacion y si no existe se crea
-if [ ! -d /usr/src ]; then
+# Aseguramos la existencia del directorio de compilación
 mkdir -p /usr/src
+
+# Obtener listado oficial estructurado (JSON) desde kernel.org
+JSON_RELEASES=$(curl -fsSL --max-time 10 "$WEB/releases.json")
+if [ -z "$JSON_RELEASES" ]; then
+    echo -e "${ROJO}Error: No se pudo obtener la lista de versiones desde $WEB/releases.json${RESET}" >&2
+    exit 1
 fi
 
-# Menu de opciones
-PS3='Selecciona una opcion: '
-OPCIONES=("${VERDE}Seguir rama del sistema ${AMARILLO}(recomendado)${CIERRE}" "${VERDE}Ultimo disponible como estable${CIERRE}" "${VERDE}Elegir uno custom${CIERRE}" "${VERDE}El ultimo disponible rcX${CIERRE}")
-select OPT in "${OPCIONES[@]}"
-do
-    case $OPT in
-        "${VERDE}Seguir rama del sistema ${AMARILLO}(recomendado)${CIERRE}")
-            RAMA=$(echo $(uname -r|cut -d . -f-2))
-            KERNEL_ELEGIDO=$(curl -s $WEB/|grep linux-$RAMA.*|head -1 |cut -d 'x' -f 4|cut -d '-' -f 2|cut -d " " -f 2|cut -d "t" -f1|sed 's/.$//g')
-            RAMA_ELEGIDO=$(echo $KERNEL_ELEGIDO |cut -d "." -f-2 |sed 's/ //g')
-            FAMILIA=$(echo $KERNEL_ELEGIDO|cut -d. -f1)
-            DESCARGA=https://cdn.kernel.org/pub/linux/kernel/v$FAMILIA.x/linux-$KERNEL_ELEGIDO.tar.xz
-                     
-            break;;
-        "${VERDE}Ultimo disponible como estable${CIERRE}")
-            KERNEL_ELEGIDO=$(curl -s $WEB/|grep .tar.xz|head -1|cut -d "-" -f2|cut -d "t" -f-1|sed "s/.$//g")
-            RAMA_ELEGIDO=$(echo $KERNEL_ELEGIDO|cut -d "." -f-2|sed 's/ //g')
-            FAMILIA=$(echo $KERNEL_ELEGIDO|cut -d. -f1)
-            DESCARGA=https://cdn.kernel.org/pub/linux/kernel/v$FAMILIA.x/linux-$KERNEL_ELEGIDO.tar.xz
-            break;;
-        "${VERDE}Elegir uno custom${CIERRE}")
+# Extraer versiones limpias desde el JSON
+VER_RAMA=$(echo "$JSON_RELEASES" | grep -oE "\"version\": \"${RAMA_SISTEMA}\.[0-9]+\"" | head -n 1 | cut -d'"' -f4)
+VER_STABLE=$(echo "$JSON_RELEASES" | grep -A 3 '"moniker": "stable"' | grep '"version":' | head -n 1 | cut -d'"' -f4)
+VER_RC=$(echo "$JSON_RELEASES" | grep -A 3 '"moniker": "mainline"' | grep '"version":' | head -n 1 | cut -d'"' -f4)
+
+# Menú de opciones
+PS3=$'\nSelecciona una opción: '
+OPCIONES=(
+    "${VERDE}Seguir rama del sistema (${VER_RAMA:-no encontrada}) ${AMARILLO}(recomendado)${RESET}"
+    "${VERDE}Último disponible como estable (${VER_STABLE:-desconocido})${RESET}"
+    "${VERDE}Elegir uno custom (manual)${RESET}"
+    "${VERDE}Último disponible mainline/rcX (${VER_RC:-desconocido})${RESET}"
+)
+
+CUSTOM="FALSE"
+select OPT in "${OPCIONES[@]}"; do
+    case $REPLY in
+        1)
+            KERNEL_ELEGIDO="$VER_RAMA"
+            break
+            ;;
+        2)
+            KERNEL_ELEGIDO="$VER_STABLE"
+            break
+            ;;
+        3)
             CUSTOM="TRUE"
-            break;;
-        "${VERDE}El ultimo disponible rcX${CIERRE}")
-            KERNEL_ELEGIDO=$(curl -s $WEB/|grep rc[0-9]|tail -1|cut -d v -f3|cut -d '"' -f-1)
-            RAMA_ELEGIDO=$(echo $KERNEL_ELEGIDO|cut -d "-" -f-1|sed 's/ //g')
-            FAMILIA=$(echo $KERNEL_ELEGIDO|cut -d. -f1)
-            DESCARGA=https://git.kernel.org/torvalds/t/linux-$KERNEL_ELEGIDO.tar.gz
-            break;;
-        *)  echo -e Opcion invalida;;
+            break
+            ;;
+        4)
+            KERNEL_ELEGIDO="$VER_RC"
+            break
+            ;;
+        *)
+            echo -e "${ROJO}Opción inválida. Elige un número del 1 al 4.${RESET}"
+            ;;
     esac
 done
 
-if [ ! -z $CUSTOM ]; then
-# Numero de Kernel completo que queremos compilar
-echo "${VERDE}Escribe el numero de kernel exacto que te gustaria compilar y pulsa ${BLANCO}ENTER${ROSA}"
-read KERNEL_ELEGIDO
-RAMA_ELEGIDO=$(echo $KERNEL_ELEGIDO|cut -d "." -f-2|sed 's/ //g')
-FAMILIA=$(echo $KERNEL_ELEGIDO|cut -d. -f1)
-DESCARGA=https://cdn.kernel.org/pub/linux/kernel/v$FAMILIA.x/linux-$KERNEL_ELEGIDO.tar.xz
-echo "${CIERRE}"
+if [ "$CUSTOM" = "TRUE" ]; then
+    echo -e "\n${VERDE}Escribe el número de kernel exacto que quieres compilar (ej. 6.12.118) y pulsa ${BLANCO}ENTER${RESET}:"
+    read -r KERNEL_ELEGIDO
+    KERNEL_ELEGIDO="${KERNEL_ELEGIDO// /}"
 fi
 
-# Definimos carpeta de las fuentes
-FUENTES=/usr/src/$PRGNAM-$KERNEL_ELEGIDO
-
-# Entramos a la ruta de trabajo
-cd /usr/src/
-
-# Si el paquete no existe se descargara de internet
-if [ ! -f linux-$KERNEL_ELEGIDO.tar.* ]; then
-echo -e "\n${CYAN}Descargando sources de $PRGNAM-$KERNEL_ELEGIDO ${ROSA}"
-wget -N -L -c -q --show-progress $DESCARGA
+if [ -z "$KERNEL_ELEGIDO" ]; then
+    echo -e "${ROJO}Error: No se pudo determinar una versión de kernel válida.${RESET}" >&2
+    exit 1
 fi
 
-# Si existen restos de una prueba anterior seeliminaran
-rm -rf $FUENTES &>/dev/null
+# Construir URL de descarga según tipo de versión (rcX vs estándar)
+FAMILIA="${KERNEL_ELEGIDO%%.*}"
+if [[ "$KERNEL_ELEGIDO" == *"-rc"* ]]; then
+    ARCHIVO_TAR="$PRGNAM-$KERNEL_ELEGIDO.tar.gz"
+    DESCARGA="https://git.kernel.org/torvalds/t/$ARCHIVO_TAR"
+else
+    ARCHIVO_TAR="$PRGNAM-$KERNEL_ELEGIDO.tar.xz"
+    DESCARGA="https://cdn.kernel.org/pub/linux/kernel/v${FAMILIA}.x/$ARCHIVO_TAR"
+fi
+
+FUENTES="/usr/src/$PRGNAM-$KERNEL_ELEGIDO"
+cd /usr/src || exit 1
+
+# Descargar fuentes si no existen previamente
+if [ ! -f "$ARCHIVO_TAR" ]; then
+    echo -e "\n${CYAN}Descargando fuentes de $PRGNAM-$KERNEL_ELEGIDO ...${RESET}"
+    if ! wget -N -L -c -q --show-progress "$DESCARGA" -O "$ARCHIVO_TAR"; then
+        rm -f "$ARCHIVO_TAR"
+        echo -e "\n${ROJO}Error al descargar $DESCARGA. Verifica que la versión exista.${RESET}" >&2
+        exit 1
+    fi
+else
+    echo -e "\n${AMARILLO}El archivo $ARCHIVO_TAR ya existe en /usr/src. Omitiendo descarga.${RESET}"
+fi
+
+# Limpiar compilación anterior si existiera
+rm -rf "$FUENTES"
 
 # Descomprimir fichero
-echo -e "\n${VERDE}Descomprimiendo ...${CIERRE}"
-tar xvf $PRGNAM-$KERNEL_ELEGIDO.tar.xz||tar xvf $PRGNAM-$KERNEL_ELEGIDO.tar.gz
+echo -e "\n${VERDE}Descomprimiendo $ARCHIVO_TAR ...${RESET}"
+if ! tar xf "$ARCHIVO_TAR"; then
+    echo -e "${ROJO}Error al descomprimir $ARCHIVO_TAR. El archivo podría estar corrupto.${RESET}" >&2
+    exit 1
+fi
 
-# Entrar a la ruta del kernel descomprimido
-cd $PRGNAM-$KERNEL_ELEGIDO
-# Se limpia por si los de kernel.org se dejaron algun fichero que no es de kernel
+cd "$FUENTES" || exit 1
 make mrproper
 
-# Ponemos nuestro logo
-LOGO=/usr/share/pixmaps/wifislax_logo_blue.png
-LOGONEW=$FUENTES/drivers/video/logo/logo_linux_clut224.ppm
-if [ -f $LOGO ]; then
-echo -e "\n${VERDE}Convirtiendo logo ...${BLANCO}...${CIERRE}"
-pngtopnm $LOGO|ppmquant 224|pnmtoplainpnm > $LOGONEW||exit 1
+# Convertir e integrar logo personalizado de Wifislax si existe
+LOGO="/usr/share/pixmaps/wifislax_logo_blue.png"
+LOGONEW="$FUENTES/drivers/video/logo/logo_linux_clut224.ppm"
+if [ -f "$LOGO" ] && command -v pngtopnm >/dev/null 2>&1; then
+    echo -e "\n${VERDE}Convirtiendo logo de arranque...${RESET}"
+    pngtopnm "$LOGO" | ppmquant 224 | pnmtoplainpnm > "$LOGONEW" || exit 1
 fi
 
-# Parte1 avisamos por si quieres poner un config
-if [ ! -f $FUENTES/.config ]; then
-echo -e "\n${CYAN}No se detecto fichero config ..."
-echo -e "Si quieres añadir uno hazlo en $FUENTES/.config ..."
-echo -e "Si no añades un config se usara la config del kernel actual."
-echo -e "Cuando pulses ${AMARILLO}ENTER ${CYAN}el proceso continuara. ${CIERRE}\n"
-read junk
+# Gestión del archivo .config
+if [ ! -f "$FUENTES/.config" ]; then
+    echo -e "\n${CYAN}No se detectó fichero .config personalizado."
+    echo -e "Si deseas usar uno propio, cópialo ahora a: $FUENTES/.config$"
+    echo -e "De lo contrario, se extraerá la configuración del kernel actual."
+    echo -e "Pulsa ${AMARILLO}ENTER${CYAN} para continuar...${RESET}\n"
+    read -r
 fi
 
-# Parte2 sino hay config generamos una en base al kernel actual
-if [ -f $FUENTES/.config ]; then
-echo -e "\n${VERDE}Usando config añadida por el usuario ...${CIERRE}\n"
+if [ -f "$FUENTES/.config" ]; then
+    echo -e "\n${VERDE}Usando fichero .config proporcionado por el usuario...${RESET}\n"
 else
-echo -e "\n${VERDE}Generamos fichero .config ...${CIERRE}\n"
-modprobe configs && zcat /proc/config.gz > $FUENTES/.config
+    echo -e "\n${VERDE}Generando .config a partir del kernel en ejecución...${RESET}\n"
+    modprobe configs 2>/dev/null
+    if [ -r /proc/config.gz ]; then
+        zcat /proc/config.gz > "$FUENTES/.config"
+    elif [ -r "/boot/config-$KERNEL_ACTUAL" ]; then
+        cp "/boot/config-$KERNEL_ACTUAL" "$FUENTES/.config"
+    else
+        echo -e "${ROJO}Error: No se encontró configuración base en /proc/config.gz ni en /boot.${RESET}" >&2
+        exit 1
+    fi
 fi
 
-# Compilamos el kernel
+# Actualizar configuración y abrir configurador visual o de terminal
 make olddefconfig || exit 1
-make xconfig || exit 1
 
-# Variables para calcular tiempo de inicio
+if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
+    make xconfig || make menuconfig || exit 1
+else
+    make menuconfig || exit 1
+fi
+
+# Inicio del cronómetro de compilación
 COMIENZO=$(date +%s)
 
-# Comienza la compilacion del kernel
+# Compilación del kernel y módulos
+echo -e "\n${CYAN}Compilando kernel y módulos ($MAKEFLAGS)...${RESET}\n"
 make all || exit 1
 
-# Creamos la ruta de destino a instalar el kernel
-# Cuando es un kernel rc suele aparecer solo la rama
-# Grepeamos aqui la version completa del kernel en el fichero .config
-KERNEL_VERSION=$(grep $(echo $KERNEL_ELEGIDO|cut -d- -f-1) .config|head -1|cut -d ' ' -f3)
-CONTAINER=$HOME/$ESCRITORIO/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG
-mkdir -p $CONTAINER
-ZSTD_CLEVEL=19 make modules_install INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH=$CONTAINER || exit 1
+# Obtener versión exacta compilada desde el propio árbol de compilación
+KERNEL_VERSION=$(make -s kernelrelease)
+CONTAINER="$HOME/$ESCRITORIO/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG"
+rm -rf "$CONTAINER"
+mkdir -p "$CONTAINER"
 
-# Instalamos las cabeceras kernel-headers
-make INSTALL_HDR_PATH=$CONTAINER/usr headers_install || exit 1
+# Instalación de módulos y cabeceras en el contenedor
+ZSTD_CLEVEL=19 make modules_install INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH="$CONTAINER" || exit 1
+make INSTALL_HDR_PATH="$CONTAINER/usr" headers_install || exit 1
 
-# Copiamos el vmlinuz (este con nombre generico para el modo live)
-cp $FUENTES/arch/$KARCH/boot/bzImage $HOME/$ESCRITORIO/$VMLINUZ &>/dev/null
+# Copiar imagen bzImage al escritorio
+cp -f "$FUENTES/arch/$KARCH/boot/bzImage" "$HOME/$ESCRITORIO/$VMLINUZ" || exit 1
 
-# Generamos kernel sources
+# Preparar kernel sources ligeros para compilar drivers externos
 mv System.map ../
 make clean
 mv ../System.map .
 make prepare
 make scripts
-cp include/generated/* include/linux &>/dev/null
+cp -f include/generated/* include/linux/ 2>/dev/null
 
-# Limpieza
-rm -rf Documentation
-rm -rf arch/x86/boot/bzImage
-rm -rf arch/x86/boot/compressed/vmlinux
-rm -rf drivers
-rm -rf firmware
-rm -rf fs
-rm -rf net
-rm -rf sound
-rm -rf .tmp_versions
-rm -rf tools/testing/
-rm -rf vmlinux*
-ls -1d arch/*|grep -v $KARCH|xargs rm -Rf
-find  -regex '.*\.\(a\|bin\|elf\|exe\|o\|patch\|txt\|xsl\|xz\|ko\|zst\|json\|py\)$' -delete
+# Limpieza segura de archivos innecesarios en sources
+rm -rf Documentation arch/x86/boot/bzImage arch/x86/boot/compressed/vmlinux \
+       drivers firmware fs net sound .tmp_versions tools/testing/ vmlinux*
+
+find arch/ -mindepth 1 -maxdepth 1 ! -name "$KARCH" -exec rm -rf {} +
+find . -type f -regextype posix-extended \
+    -regex '.*\.(a|bin|elf|exe|o|patch|txt|xsl|xz|ko|zst|json|py)$' -delete
 find scripts -xtype l -delete
-find  \( -type f -name ".*" ! -name ".config"  -o -name "COPYING" -o -name "CREDITS" -o -name "LICENSE*" -o -name "MAINTAINERS*" -o -name "README*" \) -exec rm -fr {} +
-find  -type f -perm -u+x -print0 | xargs -0 -r strip --strip-all -R .comment -R .eh_frame -R .eh_frame_hdr -R .eh_frame_ptr -R .jcr -R .note -R .note.ABI-tag -R .note.gnu.build-id -R .note.gnu.gold-version -R .note.GNU-stack >/dev/null 2>&1
+find . \( -type f \( -name ".*" ! -name ".config" -o -name "COPYING" -o -name "CREDITS" \
+    -o -name "LICENSE*" -o -name "MAINTAINERS*" -o -name "README*" \) \) -exec rm -rf {} +
 
-# Preparamos creacion de xzm
-VMLINUZNAME=$(grep  "CONFIG_LOCALVERSION=" .config|cut -d = -f2|sed 's/"//g')
-mkdir -p $CONTAINER/usr/src
-cp -r $FUENTES $CONTAINER/usr/src
+find . -type f -perm -u+x -print0 | xargs -0 -r strip --strip-all \
+    -R .comment -R .eh_frame -R .eh_frame_hdr -R .eh_frame_ptr \
+    -R .jcr -R .note -R .note.ABI-tag -R .note.gnu.build-id \
+    -R .note.gnu.gold-version -R .note.GNU-stack >/dev/null 2>&1
 
-# Creamos xzm de kernel + sources
-dir2xzm $CONTAINER $CONTAINER.xzm -n
-mv $CONTAINER.xzm $HOME/$ESCRITORIO/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm
+# Empaquetado final en módulo .xzm
+VMLINUZNAME=$(awk -F'=' '/^CONFIG_LOCALVERSION=/{gsub(/"/, "", $2); print $2}' .config)
+MODULO_FINAL="$HOME/$ESCRITORIO/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm"
 
-# Finalizamos
-rm -Rf $CONTAINER
-AHORA=$(($(date +%s)-3600));
-TIEMPO="$(date --date=@$(($AHORA-$COMIENZO)) +%X)"
-echo -e "\n${AMARILLO}Tiempo empleado${BLANCO}: $TIEMPO\n"
-# Si no es wifislax ya hemos acabado aqui.
-if [ ! -f /etc/wifislax-version ]; then
-echo -e "${AMARILLO}Bye Bye${CIERRE}"
-exit 0
+mkdir -p "$CONTAINER/usr/src"
+cp -a "$FUENTES" "$CONTAINER/usr/src/"
+
+echo -e "\n${CYAN}Creando módulo comprimido .xzm ...${RESET}"
+if ! dir2xzm "$CONTAINER" "$MODULO_FINAL" -n; then
+    echo -e "\n${ROJO}Error al crear el módulo $MODULO_FINAL${RESET}" >&2
+    exit 1
 fi
-# En modo live es absurdo ofrecer instarlo
-if [ -d /mnt/live ]; then
-echo -e "\n${AMARILLO}Bye Bye${CIERRE}\n"
-exit 0
+
+rm -rf "$CONTAINER"
+
+# Cálculo exacto del tiempo total empleado
+SEGUNDOS_TOTALES=$(( $(date +%s) - COMIENZO ))
+HORAS=$(( SEGUNDOS_TOTALES / 3600 ))
+MINUTOS=$(( (SEGUNDOS_TOTALES % 3600) / 60 ))
+SEGUNDOS=$(( SEGUNDOS_TOTALES % 60 ))
+TIEMPO=$(printf "%02d:%02d:%02d" "$HORAS" "$MINUTOS" "$SEGUNDOS")
+
+echo -e "\n${AMARILLO}Tiempo empleado${BLANCO}: $TIEMPO${RESET}\n"
+
+# Si no es Wifislax o está corriendo en modo Live, terminar aquí
+if [ ! -f /etc/wifislax-version ] || [ -d /mnt/live ]; then
+    echo -e "${VERDE}Módulo guardado en: ${BLANCO}$MODULO_FINAL${RESET}"
+    echo -e "${VERDE}Kernel guardado en: ${BLANCO}$HOME/$ESCRITORIO/$VMLINUZ${RESET}"
+    echo -e "\n${AMARILLO}Bye Bye${RESET}\n"
+    exit 0
 fi
-# Si se trata de wifislax en HDD puedo instalar el kernel.
-echo -e "\n${AMARILLO}Pulsa ENTER si quieres instalar el kernel,si no te interesa cierra el scipt. ${CIERRE}\n"
-read junk
-echo -e "\n${VERDE}Instalando Kernel $KERNEL_VERSION en sistema ... ${CIERRE}\n"
-xzm2dir $HOME/$ESCRITORIO/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm /
-cp -r $HOME/$ESCRITORIO/$VMLINUZ /boot/vmlinuz-${KERNEL_VERSION}${VMLINUZNAME}
-update-grub
-echo -e "\n${CYAN}Instalacion completada ...\n\n${AMARILLO}Bye Bye ${CIERRE}\n"
+
+# Instalación opcional en Wifislax instalado en disco duro
+echo -e "${AMARILLO}¿Deseas instalar el kernel $KERNEL_VERSION en el sistema ahora? [s/N]: ${RESET}"
+read -r RESPUESTA
+
+if [[ "$RESPUESTA" =~ ^[sSyY]$ ]]; then
+    if [ -f "$MODULO_FINAL" ] && [ -f "$HOME/$ESCRITORIO/$VMLINUZ" ]; then
+        echo -e "\n${VERDE}Instalando Kernel $KERNEL_VERSION en el sistema ...${RESET}\n"
+        xzm2dir "$MODULO_FINAL" /
+        cp -f "$HOME/$ESCRITORIO/$VMLINUZ" "/boot/vmlinuz-${KERNEL_VERSION}${VMLINUZNAME}"
+        
+        if command -v update-grub >/dev/null 2>&1; then
+            update-grub
+        fi
+        echo -e "\n${CYAN}Instalación completada correctamente.${RESET}"
+    else
+        echo -e "\n${ROJO}Error: No se encontraron los archivos compilados para instalar.${RESET}" >&2
+        exit 1
+    fi
+else
+    echo -e "\n${CYAN}Instalación omitida. Los archivos permanecen en tu Escritorio.${RESET}"
+fi
+
+echo -e "\n${AMARILLO}Bye Bye${RESET}\n"
