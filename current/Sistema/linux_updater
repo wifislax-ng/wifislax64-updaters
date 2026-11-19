@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script by USUARIONUEVO @ www.seguridadwireless.net
-# Versión optimizada y endurecida
+# Versión optimizada y endurecida con IA
 
 # Comprobar permisos de root antes de tocar el sistema
 if [ "$EUID" -ne 0 ]; then
@@ -350,25 +350,21 @@ if [ ! -f /etc/wifislax-version ] || [ -d /mnt/live ]; then
 fi
 
 # Instalación opcional en Wifislax instalado en disco duro
-echo -e "${AMARILLO}¿Deseas instalar el kernel $KERNEL_VERSION en el sistema ahora? [s/N]: ${RESET}"
-read -r RESPUESTA
+echo -e "${AMARILLO}Pulsa ${BLANCO}ENTER${AMARILLO} para instalar el kernel $KERNEL_VERSION en el sistema o ${ROJO}Ctrl+C${AMARILLO} para salir...${RESET}"
+read -r
 
-if [[ "$RESPUESTA" =~ ^[sSyY]$ ]]; then
-    if [ -f "$MODULO_FINAL" ] && [ -f "$HOME/$ESCRITORIO/$VMLINUZ" ]; then
-        echo -e "\n${VERDE}Instalando Kernel $KERNEL_VERSION en el sistema ...${RESET}\n"
-        xzm2dir "$MODULO_FINAL" /
-        cp -f "$HOME/$ESCRITORIO/$VMLINUZ" "/boot/vmlinuz-${KERNEL_VERSION}${VMLINUZNAME}"
-        
-        if command -v update-grub >/dev/null 2>&1; then
-            update-grub
-        fi
-        echo -e "\n${CYAN}Instalación completada correctamente.${RESET}"
-    else
-        echo -e "\n${ROJO}Error: No se encontraron los archivos compilados para instalar.${RESET}" >&2
-        exit 1
+if [ -f "$MODULO_FINAL" ] && [ -f "$HOME/$ESCRITORIO/$VMLINUZ" ]; then
+    echo -e "\n${VERDE}Instalando Kernel $KERNEL_VERSION en el sistema ...${RESET}\n"
+    xzm2dir "$MODULO_FINAL" /
+    cp -f "$HOME/$ESCRITORIO/$VMLINUZ" "/boot/vmlinuz-${KERNEL_VERSION}${VMLINUZNAME}"
+    
+    if command -v update-grub >/dev/null 2>&1; then
+        update-grub
     fi
+    echo -e "\n${CYAN}Instalación completada correctamente.${RESET}"
 else
-    echo -e "\n${CYAN}Instalación omitida. Los archivos permanecen en tu Escritorio.${RESET}"
+    echo -e "\n${ROJO}Error: No se encontraron los archivos compilados para instalar.${RESET}" >&2
+    exit 1
 fi
 
 echo -e "\n${AMARILLO}Bye Bye${RESET}\n"
