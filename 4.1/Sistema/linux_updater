@@ -3,8 +3,8 @@
 # Script by USUARIONUEVO @ www.seguridadwireless.net
 # Versión optimizada y endurecida con IA
 
-# Comprobar permisos de root antes de tocar el sistema
-if [ "$EUID" -ne 0 ]; then
+# Comprobar permisos de root antes de tocar el sistema (compatible POSIX)
+if [ "$(id -u)" -ne 0 ]; then
     echo "Error: Este script debe ejecutarse como root." >&2
     exit 1
 fi
@@ -12,7 +12,7 @@ fi
 # Eliminamos posibles ficheros viejos de modificaciones de scripts
 rm -rf /opt/wifislax-updaters/*/*~ >/dev/null 2>&1
 
-readonly SCRIPT_VERSION=20261119
+readonly SCRIPT_VERSION=20261120
 
 # Configuración de colores (segura para cualquier terminal)
 if [ -t 1 ] && command -v tput >/dev/null 2>&1 && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
@@ -34,6 +34,34 @@ else
 fi
 readonly CIERRE="$RESET"
 
+# Verificar herramientas esenciales antes de perder tiempo compilando
+DEPENDENCIAS=(curl wget tar make gcc bc bison flex sha256sum dir2xzm)
+for cmd in "${DEPENDENCIAS[@]}"; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo -e "${ROJO}Error: Falta la herramienta requerida '$cmd'. Instálala antes de continuar.${RESET}" >&2
+        exit 1
+    fi
+done
+
+# Aseguramos la existencia del directorio de compilación y comprobamos espacio libre
+mkdir -p /usr/src
+ESPACIO_LIBRE=$(df -k /usr/src | awk 'NR==2 {print $4}')
+if [ -n "$ESPACIO_LIBRE" ] && [ "$ESPACIO_LIBRE" -lt 15728640 ]; then
+    echo -e "${AMARILLO}Advertencia: Tienes menos de 15 GB libres en /usr/src ($((ESPACIO_LIBRE / 1024 / 1024)) GB).${RESET}"
+    echo -e "${AMARILLO}La compilación podría fallar por falta de espacio. ¿Continuar de todos modos? [s/N]: ${RESET}"
+    read -r CONT_ESPACIO
+    [[ ! "$CONT_ESPACIO" =~ ^[sSyY]$ ]] && exit 1
+fi
+
+# Verificar espacio libre en $HOME (mínimo 1.5 GB = 1572864 KB para contenedor y .xzm final)
+ESPACIO_HOME=$(df -k "$HOME" | awk 'NR==2 {print $4}')
+if [ -n "$ESPACIO_HOME" ] && [ "$ESPACIO_HOME" -lt 1572864 ]; then
+    echo -e "${AMARILLO}Advertencia: Tienes menos de 1.5 GB libres en $HOME ($((ESPACIO_HOME / 1024)) MB).${RESET}"
+    echo -e "${AMARILLO}El empaquetado final del módulo .xzm podría fallar por falta de espacio/RAM. ¿Continuar? [s/N]: ${RESET}"
+    read -r CONT_HOME
+    [[ ! "$CONT_HOME" =~ ^[sSyY]$ ]] && exit 1
+fi
+
 # Variables globales
 # El PRGNAM2 se usa en la creación del xzm, NO BORRAR
 # KARCH se usará siempre x86 ya que especifica arquitectura "PC"
@@ -48,6 +76,20 @@ M0DNUM="000"
 MODNAM="Kernel"
 BUILD="1"
 WEB="https://www.kernel.org"
+
+# Variables para limpieza automática en caso de interrupción
+FUENTES=""
+CONTAINER=""
+
+limpiar_temporales() {
+    local exit_code=$?
+    if [ "$exit_code" -ne 0 ]; then
+        echo -e "\n${AMARILLO}Limpiando archivos temporales tras interrupción o error...${RESET}" >&2
+        [ -n "$CONTAINER" ] && [ -d "$CONTAINER" ] && rm -rf "$CONTAINER"
+        [ -n "$FUENTES" ] && [ -d "$FUENTES" ] && rm -rf "$FUENTES"
+    fi
+}
+trap limpiar_temporales EXIT INT TERM
 
 # Detección segura de la versión de Wifislax
 if [ -r /etc/wifislax-version ]; then
@@ -134,9 +176,6 @@ if [ -n "$DIRECTORIO" ] && [ -w "$DIRECTORIO/$SCRIPTNAME" ]; then
     fi
 fi
 
-# Aseguramos la existencia del directorio de compilación
-mkdir -p /usr/src
-
 # Obtener listado oficial estructurado (JSON) desde kernel.org
 JSON_RELEASES=$(curl -fsSL --max-time 10 "$WEB/releases.json")
 if [ -z "$JSON_RELEASES" ]; then
@@ -144,15 +183,28 @@ if [ -z "$JSON_RELEASES" ]; then
     exit 1
 fi
 
-# Extraer versiones limpias desde el JSON
-VER_RAMA=$(echo "$JSON_RELEASES" | grep -oE "\"version\": \"${RAMA_SISTEMA}\.[0-9]+\"" | head -n 1 | cut -d'"' -f4)
-VER_STABLE=$(echo "$JSON_RELEASES" | grep -A 3 '"moniker": "stable"' | grep '"version":' | head -n 1 | cut -d'"' -f4)
-VER_RC=$(echo "$JSON_RELEASES" | grep -A 3 '"moniker": "mainline"' | grep '"version":' | head -n 1 | cut -d'"' -f4)
+# Extraer versiones limpias desde el JSON (Python3 con respaldo en grep)
+if command -v python3 >/dev/null 2>&1; then
+    read -r VER_RAMA VER_STABLE VER_RC < <(python3 -c '
+import sys, json
+data = json.load(sys.stdin)
+releases = data.get("releases", [])
+rama = sys.argv[1]
+v_rama = next((r["version"] for r in releases if r["version"].startswith(rama + ".")), "")
+v_stable = next((r["version"] for r in releases if r.get("moniker") == "stable"), "")
+v_rc = next((r["version"] for r in releases if r.get("moniker") == "mainline"), "")
+print(f"{v_rama} {v_stable} {v_rc}")
+' "$RAMA_SISTEMA" <<< "$JSON_RELEASES")
+else
+    VER_RAMA=$(echo "$JSON_RELEASES" | grep -oE "\"version\": \"${RAMA_SISTEMA}\.[0-9]+\"" | head -n 1 | cut -d'"' -f4)
+    VER_STABLE=$(echo "$JSON_RELEASES" | grep -A 3 '"moniker": "stable"' | grep '"version":' | head -n 1 | cut -d'"' -f4)
+    VER_RC=$(echo "$JSON_RELEASES" | grep -A 3 '"moniker": "mainline"' | grep '"version":' | head -n 1 | cut -d'"' -f4)
+fi
 
 # Menú de opciones
 PS3=$'\nSelecciona una opción: '
 OPCIONES=(
-    "${VERDE}Seguir rama del sistema (${VER_RAMA:-no encontrada}) ${AMARILLO}(recomendado)${RESET}"
+    "${VERDE}Seguir rama del sistema (${VER_RAMA:-rama EOL / no disponible}) ${AMARILLO}(recomendado)${RESET}"
     "${VERDE}Último disponible como estable (${VER_STABLE:-desconocido})${RESET}"
     "${VERDE}Elegir uno custom (manual)${RESET}"
     "${VERDE}Último disponible mainline/rcX (${VER_RC:-desconocido})${RESET}"
@@ -162,6 +214,10 @@ CUSTOM="FALSE"
 select OPT in "${OPCIONES[@]}"; do
     case $REPLY in
         1)
+            if [ -z "$VER_RAMA" ]; then
+                echo -e "${ROJO}La rama $RAMA_SISTEMA ya no tiene soporte activo en kernel.org. Elige otra opción.${RESET}"
+                continue
+            fi
             KERNEL_ELEGIDO="$VER_RAMA"
             break
             ;;
@@ -219,6 +275,21 @@ else
     echo -e "\n${AMARILLO}El archivo $ARCHIVO_TAR ya existe en /usr/src. Omitiendo descarga.${RESET}"
 fi
 
+# Validar integridad SHA256 para versiones estándar
+if [[ "$KERNEL_ELEGIDO" != *"-rc"* ]]; then
+    URL_SHA="https://cdn.kernel.org/pub/linux/kernel/v${FAMILIA}.x/sha256sums.asc"
+    HASH_ESPERADO=$(curl -fsSL --max-time 10 "$URL_SHA" 2>/dev/null | awk -v f="$ARCHIVO_TAR" '$2 == f {print $1}')
+    if [ -n "$HASH_ESPERADO" ]; then
+        echo -e "${CYAN}Verificando integridad SHA256...${RESET}"
+        if ! echo "$HASH_ESPERADO  $ARCHIVO_TAR" | sha256sum -c --status; then
+            echo -e "${ROJO}Error: El archivo descargado está corrupto (fallo de SHA256). Borrando...${RESET}" >&2
+            rm -f "$ARCHIVO_TAR"
+            exit 1
+        fi
+        echo -e "${VERDE}Integridad verificada correctamente.${RESET}"
+    fi
+fi
+
 # Limpiar compilación anterior si existiera
 rm -rf "$FUENTES"
 
@@ -243,7 +314,7 @@ fi
 # Gestión del archivo .config
 if [ ! -f "$FUENTES/.config" ]; then
     echo -e "\n${CYAN}No se detectó fichero .config personalizado."
-    echo -e "Si deseas usar uno propio, cópialo ahora a: $FUENTES/.config$"
+    echo -e "Si deseas usar uno propio, cópialo ahora a: $FUENTES/.config"
     echo -e "De lo contrario, se extraerá la configuración del kernel actual."
     echo -e "Pulsa ${AMARILLO}ENTER${CYAN} para continuar...${RESET}\n"
     read -r
@@ -276,19 +347,19 @@ fi
 # Inicio del cronómetro de compilación
 COMIENZO=$(date +%s)
 
-# Compilación del kernel y módulos
+# Compilación del kernel y módulos (LOCALVERSION="" evita el sufijo '+' por cambios locales)
 echo -e "\n${CYAN}Compilando kernel y módulos ($MAKEFLAGS)...${RESET}\n"
-make all || exit 1
+make LOCALVERSION="" all || exit 1
 
 # Obtener versión exacta compilada desde el propio árbol de compilación
-KERNEL_VERSION=$(make -s kernelrelease)
+KERNEL_VERSION=$(make -s LOCALVERSION="" kernelrelease)
 CONTAINER="$HOME/$ESCRITORIO/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG"
 rm -rf "$CONTAINER"
 mkdir -p "$CONTAINER"
 
 # Instalación de módulos y cabeceras en el contenedor
-ZSTD_CLEVEL=19 make modules_install INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH="$CONTAINER" || exit 1
-make INSTALL_HDR_PATH="$CONTAINER/usr" headers_install || exit 1
+ZSTD_CLEVEL=19 make LOCALVERSION="" modules_install INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH="$CONTAINER" || exit 1
+make LOCALVERSION="" INSTALL_HDR_PATH="$CONTAINER/usr" headers_install || exit 1
 
 # Copiar imagen bzImage al escritorio
 cp -f "$FUENTES/arch/$KARCH/boot/bzImage" "$HOME/$ESCRITORIO/$VMLINUZ" || exit 1
@@ -297,8 +368,8 @@ cp -f "$FUENTES/arch/$KARCH/boot/bzImage" "$HOME/$ESCRITORIO/$VMLINUZ" || exit 1
 mv System.map ../
 make clean
 mv ../System.map .
-make prepare
-make scripts
+make LOCALVERSION="" prepare || exit 1
+make LOCALVERSION="" scripts || exit 1
 cp -f include/generated/* include/linux/ 2>/dev/null
 
 # Limpieza segura de archivos innecesarios en sources
@@ -318,11 +389,19 @@ find . -type f -perm -u+x -print0 | xargs -0 -r strip --strip-all \
     -R .note.gnu.gold-version -R .note.GNU-stack >/dev/null 2>&1
 
 # Empaquetado final en módulo .xzm
-VMLINUZNAME=$(awk -F'=' '/^CONFIG_LOCALVERSION=/{gsub(/"/, "", $2); print $2}' .config)
 MODULO_FINAL="$HOME/$ESCRITORIO/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm"
+FUENTES_BASENAME=$(basename "$FUENTES")
 
 mkdir -p "$CONTAINER/usr/src"
-cp -a "$FUENTES" "$CONTAINER/usr/src/"
+cd /usr/src || exit 1
+mv "$FUENTES" "$CONTAINER/usr/src/"
+FUENTES=""
+
+# Garantizar enlaces simbólicos válidos build y source dentro del módulo
+if [ -d "$CONTAINER/lib/modules/$KERNEL_VERSION" ]; then
+    ln -sfn "/usr/src/$FUENTES_BASENAME" "$CONTAINER/lib/modules/$KERNEL_VERSION/build"
+    ln -sfn "/usr/src/$FUENTES_BASENAME" "$CONTAINER/lib/modules/$KERNEL_VERSION/source"
+fi
 
 echo -e "\n${CYAN}Creando módulo comprimido .xzm ...${RESET}"
 if ! dir2xzm "$CONTAINER" "$MODULO_FINAL" -n; then
@@ -331,6 +410,10 @@ if ! dir2xzm "$CONTAINER" "$MODULO_FINAL" -n; then
 fi
 
 rm -rf "$CONTAINER"
+CONTAINER=""
+
+# Eliminar el archivo comprimido descargado tras empaquetar con éxito
+rm -f "/usr/src/$ARCHIVO_TAR"
 
 # Cálculo exacto del tiempo total empleado
 SEGUNDOS_TOTALES=$(( $(date +%s) - COMIENZO ))
@@ -350,13 +433,13 @@ if [ ! -f /etc/wifislax-version ] || [ -d /mnt/live ]; then
 fi
 
 # Instalación opcional en Wifislax instalado en disco duro
-echo -e "${AMARILLO}Pulsa ${BLANCO}ENTER${AMARILLO} para instalar el kernel $KERNEL_VERSION en el sistema o ${ROJO}Ctrl+C${AMARILLO} para salir...${RESET}"
+echo -e "${AMARILLO}Pulsa ENTER para instalar el kernel $KERNEL_VERSION en el sistema o Ctrl+C para salir...${RESET}"
 read -r
 
 if [ -f "$MODULO_FINAL" ] && [ -f "$HOME/$ESCRITORIO/$VMLINUZ" ]; then
     echo -e "\n${VERDE}Instalando Kernel $KERNEL_VERSION en el sistema ...${RESET}\n"
     xzm2dir "$MODULO_FINAL" /
-    cp -f "$HOME/$ESCRITORIO/$VMLINUZ" "/boot/vmlinuz-${KERNEL_VERSION}${VMLINUZNAME}"
+    cp -f "$HOME/$ESCRITORIO/$VMLINUZ" "/boot/vmlinuz-${KERNEL_VERSION}"
     
     if command -v update-grub >/dev/null 2>&1; then
         update-grub
