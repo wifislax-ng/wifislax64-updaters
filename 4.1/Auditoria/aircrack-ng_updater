@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261120
+SCRIPT_VERSION=20261121
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -25,6 +25,28 @@ VERSION=$(curl -fsSL "$WEB/" | grep -oE "aircrack-ng-[0-9.]+\.${EXTENSION}" | he
 SOURCES=$PRGNAM-$VERSION.$EXTENSION
 CD=$PRGNAM-$VERSION
 DOWNLOAD=https://download.aircrack-ng.org/$SOURCES
+}
+
+F_dependencias(){
+DEPENDENCIAS="
+ethtool
+glibc
+hwloc
+iw
+gcc
+libnl3
+libpcap
+net-tools
+openssl
+pcre
+python3
+sqlite
+usbutils
+wireless_tools
+zlib
+python-setuptools
+cmocka"
+f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
@@ -102,6 +124,8 @@ f_presentacion
 f_comprobarUpdates
 #Comprobamos version instalada del paquete
 f_versionInstalada
+# Comprobar dependencias
+F_dependencias
 #Si no existe el fichero se descargara
 f_download
 #Descomprimir sources

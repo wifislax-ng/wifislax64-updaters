@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261120
+SCRIPT_VERSION=20261121
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -21,7 +21,7 @@ EXTENSION=tar.gz
 GESTOR=wget
 printf '\033]2;%s_updater\007' "$PRGNAM"
 WEB=https://github.com/aircrack-ng/$PRGNAM
-VERSION=$(curl -sL --connect-timeout 15 "https://api.github.com/repos/aircrack-ng/$PRGNAM/tags" | sed -n 's/.*"name": "v*\([0-9][^"]*\)".*/\1/p' | head -1)
+VERSION=$(curl -sL $WEB/tags.atom | grep -oE 'releases/tag/v?[0-9.]+' | head -1 | sed 's|^releases/tag/v\?||')
 SOURCES=$VERSION.$EXTENSION
 CD=$PRGNAM-$VERSION
 DOWNLOAD=$WEB/archive/refs/tags/$SOURCES

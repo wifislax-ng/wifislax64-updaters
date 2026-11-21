@@ -21,7 +21,7 @@ EXTENSION=tar.gz
 GESTOR=wget
 printf '\033]2;%s_updater\007' "$PRGNAM"
 WEB=https://github.com/royhills/$PRGNAM
-VERSION=$(curl -fsSL "https://api.github.com/repos/royhills/$PRGNAM/releases/latest" | grep -oE '"tag_name":\s*"v?[0-9.]+"' | sed -E 's/.*"v?([0-9.]+)".*/\1/')
+VERSION=$(curl -Ls -o /dev/null -w '%{url_effective}' "$WEB/releases/latest" | sed -E 's|.*/v?([0-9.]+)$|\1|')
 SOURCES=$VERSION.$EXTENSION
 CD=$PRGNAM-$VERSION
 DOWNLOAD=$WEB/archive/refs/tags/$SOURCES

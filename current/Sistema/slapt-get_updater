@@ -21,7 +21,7 @@ EXTENSION=tar.gz
 GESTOR=wget
 echo -ne "\033]2;${PRGNAM}_updater\007"
 WEB="https://github.com/jaos/$PRGNAM"
-VERSION=$(curl -fsSL --connect-timeout 10 --max-time 20 -H "User-Agent: Wifislax-Updater" "https://api.github.com/repos/jaos/$PRGNAM/tags" | grep -m1 '"name":' | cut -d'"' -f4 | sed 's/^v//')
+VERSION=$(git ls-remote --tags --refs "$WEB.git" | awk -F/ '{print $NF}' | sort -V | tail -n1)
 SOURCES="$VERSION.$EXTENSION"
 CD="$PRGNAM-$VERSION"
 DOWNLOAD="$WEB/archive/refs/tags/$SOURCES"

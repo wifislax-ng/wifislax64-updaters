@@ -21,7 +21,7 @@ EXTENSION=tar.gz
 GESTOR=wget
 echo -ne "\033]2;${PRGNAM}_updater\007"
 WEB="https://github.com/Winetricks/$PRGNAM"
-VERSION=$(curl -fsSL --connect-timeout 10 --max-time 20 -H "User-Agent: Wifislax-Updater" "https://api.github.com/repos/Winetricks/$PRGNAM/tags" | grep '"name":' | cut -d'"' -f4 | grep -Evi 'test|rc|alpha|beta' | head -n1 | sed 's/^v//')
+VERSION=$(wget --spider -S "$WEB/releases/latest" 2>&1 | grep -i "Location:" | tail -n 1 | sed -E 's|.*/tag/v?||;s/\r//')
 SOURCES="$VERSION.$EXTENSION"
 CD="$PRGNAM-$VERSION"
 DOWNLOAD="$WEB/archive/refs/tags/$SOURCES"

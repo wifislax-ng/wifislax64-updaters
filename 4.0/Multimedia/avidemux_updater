@@ -21,11 +21,11 @@ PRGNAM=avidemux
 EXTENSION=tar.xz
 GESTOR=wget
 echo -ne "\033]2;${PRGNAM}_updater\007"
-WEB=http://fixounet.free.fr/avidemux/download.html
-VERSION=$(curl -fs --connect-timeout 15 "https://ponce.cc/slackware/sources/repo/" | grep -oE "${PRGNAM}_[0-9]{8}_[a-z0-9]+\.$EXTENSION" | sort -V | tail -n 1 | sed -E "s/^${PRGNAM}_//; s/\.$EXTENSION$//")
+WEB=https://ponce.cc/slackware/sources/repo
+VERSION=$(curl -fsL --compressed --connect-timeout 15 "$WEB/" | grep -oE "${PRGNAM}_[0-9]{8}_[a-z0-9]+\.$EXTENSION" | sort -V | tail -n 1 | sed -E "s/^${PRGNAM}_//; s/\.$EXTENSION$//")
 SOURCES=${PRGNAM}_${VERSION}.$EXTENSION
 CD=${PRGNAM}_${VERSION}
-DOWNLOAD=https://ponce.cc/slackware/sources/repo/${PRGNAM}_$VERSION.$EXTENSION
+DOWNLOAD=$WEB/${PRGNAM}_$VERSION.$EXTENSION
 }
 
 F_dependencias(){
