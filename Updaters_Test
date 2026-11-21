@@ -1,132 +1,210 @@
 #!/bin/bash
 
-SCRIPTVERSION=1.3
+SCRIPTVERSION=2.0
 
+# v2.0 Aislamiento puro de la funcion F_variables() sin ejecutar funciones_updater, deteccion de HTML/basura en VERSION y reporte exacto por archivo
+# v1.8 Ejecucion paralela (10 hilos), deteccion real de fallos bajo set -e, alineacion exacta de columnas y estadisticas finales
+# v1.7 Excluye correctamente funciones_updater en los bucles de modificacion y ejecucion
+# v1.6 Soporte para estructura /opt/wifislax-updaters/categoria/archivo_updater, ajuste de rutas relativas a funciones_updater y salida limpia si no hay scripts
+# v1.5 Copia funciones_updater al entorno temporal, busqueda insensible a mayusculas para f_exitmode, soporte *_updater* y aumento de timeout a 15s
+# v1.4 Implementacion de colores con tput, limpieza automatica con trap y optimizacion general
 # v1.2 Se añade funcion timeout
-# v1.1 Se añade mensaje si todos los upadters funcionan
+# v1.1 Se añade mensaje si todos los updaters funcionan
+
+readonly DIR_ORIGEN="/opt/wifislax-updaters"
+readonly TMP="/tmp/Updaters_Test"
+readonly TIMEOUT_SEG=15
+readonly HILOS=10
+
+# Configuracion portable de colores mediante tput
+if [[ -t 1 ]] && command -v tput &>/dev/null && [[ $(tput colors 2>/dev/null || echo 0) -ge 8 ]]; then
+  CIERRE=$(tput sgr0)
+  ROJO=$(tput bold; tput setaf 1)
+  VERDE=$(tput bold; tput setaf 2)
+  AMARILLO=$(tput bold; tput setaf 3)
+  CYAN=$(tput bold; tput setaf 6)
+  BLANCO=$(tput bold; tput setaf 7)
+else
+  CIERRE=""
+  ROJO=""
+  VERDE=""
+  AMARILLO=""
+  CYAN=""
+  BLANCO=""
+fi
+
+export CIERRE ROJO VERDE AMARILLO CYAN BLANCO TMP TIMEOUT_SEG
+
+# Asegura que el directorio temporal se borre y se restaure el color incluso si pulsas Ctrl+C
+trap 'rm -rf "$TMP"; printf "%s" "$CIERRE"' EXIT
 
 clear
 
-# Algunos updaters necesitan arquitectura para saber version
-if [ -z "$ARCH" ]; then
-  case "$( uname -m )" in
-    i?86) ARCH=i586 ;;
-    arm*) ARCH=arm ;;
-       *) ARCH=$( uname -m ) ;;
+# Configuracion de arquitectura (algunas URLs en F_variables usan $ARCH o $LIBDIRSUFFIX)
+if [[ -z "$ARCH" ]]; then
+  case "$(uname -m)" in
+    i?86) ARCH="i586" ;;
+    arm*) ARCH="arm" ;;
+       *) ARCH="$(uname -m)" ;;
   esac
 fi
 
-if [ "$ARCH" = "i586" ]; then
-  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
-  LIBDIRSUFFIX=""
-elif [ "$ARCH" = "i686" ]; then
-  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
-  LIBDIRSUFFIX=""
-elif [ "$ARCH" = "x86_64" ]; then
-  SLKCFLAGS="-O2 -fPIC"
-  LIBDIRSUFFIX="64"
+case "$ARCH" in
+  i586)   LIBDIRSUFFIX="" ;;
+  i686)   LIBDIRSUFFIX="" ;;
+  x86_64) LIBDIRSUFFIX="64" ;;
+  *)      LIBDIRSUFFIX="" ;;
+esac
+
+export ARCH LIBDIRSUFFIX
+
+echo "#############################"
+echo "###  ${CYAN}TESTER DE UPDATERS${CIERRE} ###"
+echo "#############################"
+
+# Comprobacion rapida de internet (2 segundos maximo de espera)
+if ! ping -c 1 -W 2 8.8.8.8 &>/dev/null; then
+  echo ""
+  echo "${ROJO}No hay conexion a internet... el script se cerrara.${CIERRE}"
+  echo ""
+  exit 1
+fi
+
+BUSQUEDA() {
+  rm -rf "$TMP"
+  mkdir -p "$TMP"
+  touch "$TMP/CORRECTOS" "$TMP/FALLIDOS"
+
+  if [[ ! -d "$DIR_ORIGEN" ]]; then
+    echo "${ROJO}Error: No existe el directorio $DIR_ORIGEN${CIERRE}"
+    exit 1
+  fi
+
+  echo ""
+  echo "${BLANCO}[${VERDE}*${BLANCO}]${AMARILLO} Buscando updaters y aislando F_variables()...${CIERRE}"
+
+  # Busca en las subcarpetas de categorias (/categoria/archivo_updater) y los copia a $TMP
+  find "$DIR_ORIGEN" -mindepth 2 -maxdepth 2 -type f -name "*_updater*"     ! -name "linux*"     ! -name "funciones_updater*"     ! -name "wifislax-updaters_updater*"     ! -name "firefox_multi_updater*"     -exec cp -t "$TMP" {} + 2>/dev/null
+}
+
+TEMPORAL() {
+  shopt -s nullglob
+  local updaters=("$TMP"/*_updater*)
+  shopt -u nullglob
+
+  if [[ ${#updaters[@]} -eq 0 ]]; then
+    echo "${ROJO}Aviso: No se encontraron scripts de actualizacion en $DIR_ORIGEN${CIERRE}"
+    exit 1
+  fi
+
+  for UPDATER in "${updaters[@]}"; do
+    local ARCHIVO_ORIG
+    ARCHIVO_ORIG=$(basename "$UPDATER")
+    [[ "$ARCHIVO_ORIG" == funciones_updater* ]] && continue
+
+    # Extrae UNICAMENTE el bloque de la funcion F_variables() usando awk contando llaves
+    awk '
+      BEGIN { in_func=0; depth=0 }
+      /^[[:space:]]*F_variables[[:space:]]*\(\)/ { in_func=1 }
+      in_func {
+        print
+        for (i=1; i<=length($0); i++) {
+          c = substr($0, i, 1)
+          if (c == "{") depth++
+          else if (c == "}") depth--
+        }
+        if (depth == 0 && /}/) exit
+      }
+    ' "$UPDATER" > "${UPDATER}.isolated"
+
+    cat << EOF > "$UPDATER"
+#!/bin/bash
+ARCHIVO_ORIG="$ARCHIVO_ORIG"
+$(cat "${UPDATER}.isolated")
+
+if declare -F F_variables >/dev/null; then
+  F_variables >/dev/null 2>&1
+fi
+
+NOMBRE_SHOW="\${PRGNAM:-\${ARCHIVO_ORIG%%_updater*}}"
+
+# Valida que VERSION no este vacia ni contenga HTML, saltos de linea o espacios
+if [[ -z "\$VERSION" ]] || [[ "\$VERSION" == *"<"* ]] || [[ "\$VERSION" == *">"* ]] || [[ "\$VERSION" =~ [[:space:]] ]]; then
+  echo "\$NOMBRE_SHOW (\$ARCHIVO_ORIG)" >> "\$TMP/FALLIDOS"
+  printf "\${BLANCO}Programa: \${CYAN}%-28s \${BLANCO}Version: \${ROJO}Fallido\${CIERRE}
+" "\$NOMBRE_SHOW"
 else
-  SLKCFLAGS="-O2"
-  LIBDIRSUFFIX=""
+  echo "\$NOMBRE_SHOW" >> "\$TMP/CORRECTOS"
+  printf "\${BLANCO}Programa: \${CYAN}%-28s \${BLANCO}Version: \${VERDE}%s\${CIERRE}
+" "\$NOMBRE_SHOW" "\$VERSION"
 fi
-
-export ARCH
-export LIBDIRSUFFIX
-
-# Colores
-CIERRE=${CIERRE:-"[0m"}
-ROJO=${ROJO:-"[1;31m"}
-VERDE=${VERDE:-"[1;32m"}
-CYAN=${CYAN:-"[1;36m"}
-AMARILLO=${AMARILLO:-"[1;33m"}
-BLANCO=${BLANCO:-"[1;37m"}
-ROSA=${ROSA:-"[1;35m"}
-
-echo "#############################"
-echo "###  $CYAN TESTER DE UPDATERS $CIERRE ###"
-echo "#############################"
-
-
-if [ ! "$(ping google.com -c1 2>/dev/null)" ]; then
-echo ""
-echo "No tengo internet ... el script se cerrara."
-echo ""
-sleep 1
-exit 0
-fi
-
-BUSQUEDA(){
-TMP=/tmp/Updaters_Test
-if [ -d $TMP ]; then
-rm -rf $TMP
-fi
-mkdir -p $TMP
-cd /opt/wifislax-updaters
-UPDATERS=$(find . -type f -name "*_updater")
-echo 
-echo "${BLANCO}[${VERDE}*${BLANCO}]$AMARILLO Copiando updaters a directorio temporal ..."
-cp -rf $UPDATERS $TMP &>/dev/null
-rm -rf $TMP/linux* &>/dev/null
-rm -rf $TMP/funciones_updater &>/dev/null
-rm -rf $TMP/wifislax-updaters_updater &>/dev/null
-rm -rf $TMP/last_update &>/dev/null
-rm -rf $TMP/firefox_multi_updater &>/dev/null
+EOF
+    rm -f "${UPDATER}.isolated"
+  done
 }
 
-TEMPORAL(){
-cd $TMP
-TEMPUPDATERS=$(find . -type f -name "*_updater"|sort)
-echo "${BLANCO}[${VERDE}*${BLANCO}]$AMARILLO Modificando copias temporales de updaters ..."
-for UPDATER in $TEMPUPDATERS; do
-LINEA=$(grep -r "f_exitmode" -n $UPDATER|tr -d [a-zA-Z#_.:/])
-FINAL=$(cat $UPDATER|wc -l)
-ELIMINAR=$(expr $FINAL + 1)
-sed -i "${LINEA},${ELIMINAR}d" $UPDATER
-#echo f_variables >> $UPDATER
-echo F_variables >> $UPDATER
-echo 'if [ -z $VERSION ]; then' >> $UPDATER
-echo 'VERSION="[1;31mFallido [0m"' >> $UPDATER
-echo 'echo "$PRGNAM" >> "./FALLIDOS"' >> $UPDATER
-echo 'fi' >> $UPDATER
-echo 'printf "%-52s [1;37mVersion:[1;32m${VERSION}[0m\n" "[1;37mPrograma:[1;36m${PRGNAM}"' >> $UPDATER
-done
+TEST_UNO() {
+  local UPDATER="$1"
+  local NOMBRE_LIMPIO
+  NOMBRE_LIMPIO=$(basename "$UPDATER" | sed 's/_updater.*//')
+
+  timeout -s SIGTERM "$TIMEOUT_SEG" bash "$UPDATER"
+  local RC=$?
+
+  if [[ $RC -eq 124 ]]; then
+    printf "${BLANCO}Programa: ${CYAN}%-28s ${BLANCO}Version: ${ROJO}TIMEOUT${CIERRE}
+" "$NOMBRE_LIMPIO"
+    echo "$NOMBRE_LIMPIO ($(basename "$UPDATER") - TIMEOUT)" >> "$TMP/FALLIDOS"
+  elif [[ $RC -ne 0 ]]; then
+    printf "${BLANCO}Programa: ${CYAN}%-28s ${BLANCO}Version: ${ROJO}Error (exit $RC)${CIERRE}
+" "$NOMBRE_LIMPIO"
+    echo "$NOMBRE_LIMPIO ($(basename "$UPDATER") - Error exit $RC)" >> "$TMP/FALLIDOS"
+  fi
+}
+export -f TEST_UNO
+
+MOSTRAR() {
+  echo "${BLANCO}[${VERDE}*${BLANCO}]${AMARILLO} Testeando F_variables() en $HILOS hilos...${CIERRE}"
+  echo ""
+
+  cd "$TMP" || exit 1
+
+  find . -maxdepth 1 -type f -name "*_updater*" ! -name "funciones_updater*" | sort |     xargs -r -n 1 -P "$HILOS" bash -c 'TEST_UNO "$@"' _
 }
 
-MOSTRAR(){
-echo "${BLANCO}[${VERDE}*${BLANCO}]$AMARILLO Testeando updaters..."
-echo
-sleep 3
-for UPDATER in $TEMPUPDATERS ; do
-timeout -s SIGTERM 5 sh -c "$TMP/$UPDATER"||printf "%-52s [1;37mVersion:[1;31mTIMEOUT[0m\n" "[1;37mPrograma:[1;36m$(echo $UPDATER|cut -d / -f2|sed 's/_updater//g')"
-done
+INFORME() {
+  local TOTAL_OK=0
+  local TOTAL_FAIL=0
+  [[ -s "$TMP/CORRECTOS" ]] && TOTAL_OK=$(sort -u "$TMP/CORRECTOS" | wc -l)
+  [[ -s "$TMP/FALLIDOS" ]] && TOTAL_FAIL=$(sort -u "$TMP/FALLIDOS" | wc -l)
+  local TOTAL=$((TOTAL_OK + TOTAL_FAIL))
+
+  echo ""
+  echo "#############################"
+  echo "###  ${ROJO}INFORME DE ERRORES${CIERRE} ###"
+  echo "#############################"
+  echo ""
+  echo "${BLANCO}[${VERDE}*${BLANCO}] Testeados: ${CYAN}$TOTAL${BLANCO} | Correctos: ${VERDE}$TOTAL_OK${BLANCO} | Fallidos: ${ROJO}$TOTAL_FAIL${BLANCO} (${AMARILLO}${SECONDS}s${BLANCO})${CIERRE}"
+  echo ""
+
+  if [[ -s "$TMP/FALLIDOS" ]]; then
+    echo "${BLANCO}[${VERDE}*${BLANCO}] Los siguientes updaters tienen VERSION rota o fallaron:${ROJO}"
+    sort -u "$TMP/FALLIDOS"
+    echo "${CIERRE}"
+  else
+    echo "${BLANCO}[${VERDE}*${BLANCO}] ${VERDE}!!! Enhorabuena !!!"
+    echo "${BLANCO}[${VERDE}*${BLANCO}] Todos los updaters funcionan.${CIERRE}"
+  fi
 }
 
-INFORME(){
-clear
-echo 
-echo "#############################"
-echo "###  $ROJO INFORME DE ERRORES $CIERRE ###"
-echo "#############################"
-echo 
-if [ -f $TMP/FALLIDOS ]; then
-echo "${BLANCO}[${VERDE}*${BLANCO}] Los siguientes updaters fallaron"
-echo $BLANCO
-cat $TMP/FALLIDOS
-echo $CIERRE
-else 
-echo "${BLANCO}[${VERDE}*${BLANCO}] ${VERDE}!!! Enhorabuena !!!"
-echo "${BLANCO}[${VERDE}*${BLANCO}] Todos los upadters funcionan."
-fi
+LIMPIAR() {
+  echo ""
+  echo "${BLANCO}[${VERDE}*${BLANCO}] Limpiando directorio temporal...${CIERRE}"
+  rm -rf "$TMP"
+  echo "${BLANCO}[${VERDE}*${BLANCO}] Bye Bye${CIERRE}"
 }
 
-LIMPIAR(){
-echo "${BLANCO}[${VERDE}*${BLANCO}] Limpiando directorio temporal ..."
-sleep 1
-rm -rf $TMP
-echo "${BLANCO}[${VERDE}*${BLANCO}] Bye Bye"
-echo $CIERRE
-}
-
+SECONDS=0
 BUSQUEDA
 TEMPORAL
 MOSTRAR
