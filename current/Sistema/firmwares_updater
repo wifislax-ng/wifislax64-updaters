@@ -1,57 +1,139 @@
-#!/bin/bash
+#!/bin/sh
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250123
+SCRIPT_VERSION=20261120
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
-f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+f_variables() {
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
 ## Funciones propias del script. Su nombre empieza por F_ ##
 ############################################################
-# Definicion de variables
 F_variables() {
-	PRGNAM=firmwares
-	SRCNAM=linux-firmware
-	GESTOR=git
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
-	VERSION=$(lynx -dump -width=256 $WEB/commit/?id=HEAD | grep "   committer " | head -n 1 | rev | cut -f 3 -d ' ' | rev | tr -d -)
-	SOURCES=$PRGNAM
-	CD=$SRCNAM
-	DOWNLOAD=$WEB
+PRGNAM=firmwares
+SRCNAM=linux-firmware
+GESTOR=git
+printf '\033]2;%s_updater\007' "$PRGNAM"
+WEB=https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+VERSION=$(curl -fsSL --connect-timeout 5 --max-time 15 "$WEB/atom/" | sed -n '/<entry>/,/<\/entry>/s/.*<updated>\([0-9]\{4\}\)-\([0-9]\{2\}\)-\([0-9]\{2\}\).*/\1\2\3/p; /<\/entry>/q' || true)
+SOURCES=$PRGNAM
+CD=$SRCNAM
+DOWNLOAD=$WEB
 }
 
-# Creamos directorios , eliminamos sobrantes .git y movemos
-F_compilar(){
-echo "$VERDE"Compilando ..."$CIERRE"
-ZSTD_CLEVEL=19 make DESTDIR=$PKG FIRMWAREDIR=/lib/firmware install-zst
-# Vamos a ahorrar espacio
-rm -rf $PKG/lib/firmware/{bnx2x,libertas,liquidio,mellanox,netronome,qcom,qed,qlogic}
-rm -rf $PKG/lib/firmware/{a300_*,bnx2x*,cbfw*,ct2fw*,ctfw*,ql2*,ti-connectivity,vpu*.bin*}
-# Incluimos AMD microcodiigo
-  mkdir -p $PKG/boot/tmp
-  pushd $PKG/boot/tmp
-    mkdir -p kernel/x86/microcode
-    find $PKG/lib/firmware/amd-ucode -type f -name "*.bin" | sort | xargs cat > kernel/x86/microcode/AuthenticAMD.bin
-    find . | cpio --no-absolute-filenames -H newc -o -F $PKG/boot/amd-ucode.img
-  popd
-  rm -rf $PKG/boot/tmp
+F_compilar() {
+printf '%b\n' "${VERDE}Instalando y filtrando firmwares ...${CIERRE}"
+    
+# Lista separada por comas de firmwares, prefijos o carpetas extra a conservar siempre
+# Ejemplo: SALVAR="ath9k_htc,mt76,rt2870.bin"
+SALVAR=""
+
+# 1. Instalamos todo en carpeta temporal con compresión zstd
+mkdir -p "$PKG/tmp_fw"
+ZSTD_CLEVEL=19 make DESTDIR="$PKG/tmp_fw" FIRMWAREDIR=/lib/firmware install-zst
+
+mkdir -p "$PKG/lib/firmware"
+
+# 2. Extraemos la lista única de firmwares (módulos =m, drivers built-in =y y variable SALVAR)
+_fc_KVER=$(uname -r)
+printf '%b\n' "${VERDE}Filtrando firmwares compatibles con el kernel ${AMARILLO}${_fc_KVER}${VERDE} ...${CIERRE}"
+
+    {
+        find "/lib/modules/$_fc_KVER" -type f -name "*.ko*" -print0 2>/dev/null | xargs -0 -r modinfo -F firmware 2>/dev/null
+        if [ -f "/lib/modules/$_fc_KVER/modules.builtin.modinfo" ]; then
+            tr '\0' '\n' < "/lib/modules/$_fc_KVER/modules.builtin.modinfo" | sed -n 's/^[^=]*\.firmware=//p'
+        fi
+        if [ -n "$SALVAR" ]; then
+            printf '%s\n' "$SALVAR" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+        fi
+    } | sort -u | while IFS= read -r _fc_FW; do
+        [ -z "$_fc_FW" ] && continue
+        _fc_FW_CLEAN="${_fc_FW%\*}"
+        _fc_FW_CLEAN="${_fc_FW_CLEAN%/}"
+
+        set -- "$PKG/tmp_fw/lib/firmware/${_fc_FW_CLEAN}"*
+        if [ -e "$1" ]; then
+            _fc_DEST_DIR="$PKG/lib/firmware/$(dirname "$_fc_FW_CLEAN")"
+            mkdir -p "$_fc_DEST_DIR"
+            cp -a "$@" "$_fc_DEST_DIR/"
+        fi
+    done
+
+# 3. Conservamos microcódigos de CPU (Intel y AMD)
+    if [ -d "$PKG/tmp_fw/lib/firmware/amd-ucode" ]; then
+        cp -a "$PKG/tmp_fw/lib/firmware/amd-ucode" "$PKG/lib/firmware/"
+    fi
+    if [ -d "$PKG/tmp_fw/lib/firmware/intel-ucode" ]; then
+        cp -a "$PKG/tmp_fw/lib/firmware/intel-ucode" "$PKG/lib/firmware/"
+    fi
+
+# 4. Reparamos posibles enlaces simbólicos cuyo destino no fue copiado
+    find "$PKG/lib/firmware" -type l | while IFS= read -r _fc_LINK; do
+        if [ ! -e "$_fc_LINK" ]; then
+            _fc_REL_PATH="${_fc_LINK#"$PKG"/lib/firmware/}"
+            _fc_ORIG_TARGET=$(readlink -f "$PKG/tmp_fw/lib/firmware/$_fc_REL_PATH" 2>/dev/null || true)
+            if [ -n "$_fc_ORIG_TARGET" ] && [ -e "$_fc_ORIG_TARGET" ]; then
+                _fc_TARGET="${_fc_ORIG_TARGET#"$PKG"/tmp_fw/lib/firmware/}"
+                mkdir -p "$PKG/lib/firmware/$(dirname "$_fc_TARGET")"
+                cp -a "$_fc_ORIG_TARGET" "$PKG/lib/firmware/$_fc_TARGET"
+                if [ ! -e "$_fc_LINK" ]; then
+                    cp -af "$_fc_ORIG_TARGET" "$_fc_LINK"
+                fi
+            fi
+        fi
+    done
+
+# 5. Generamos imágenes initrd de microcódigo para /boot (en carpetas separadas)
+    if [ -d "$PKG/lib/firmware/amd-ucode" ]; then
+        mkdir -p "$PKG/boot/tmp_amd/kernel/x86/microcode"
+        (
+            cd "$PKG/boot/tmp_amd" || exit 1
+            find "$PKG/lib/firmware/amd-ucode" -type f \( -name "*.zst" -o -name "*.bin" \) | sort | while IFS= read -r _fc_f; do
+                case "$_fc_f" in
+                    *.zst) zstdcat "$_fc_f" ;;
+                    *)     cat "$_fc_f" ;;
+                esac
+            done > kernel/x86/microcode/AuthenticAMD.bin
+
+            if [ -s kernel/x86/microcode/AuthenticAMD.bin ]; then
+                find . | cpio --no-absolute-filenames -H newc -o -F "$PKG/boot/amd-ucode.img" 2>/dev/null
+            fi
+        )
+    fi
+
+    if [ -d "$PKG/lib/firmware/intel-ucode" ]; then
+        mkdir -p "$PKG/boot/tmp_intel/kernel/x86/microcode"
+        (
+            cd "$PKG/boot/tmp_intel" || exit 1
+            find "$PKG/lib/firmware/intel-ucode" -type f -name "[0-9a-f][0-9a-f]-*" | sort | while IFS= read -r _fc_f; do
+                case "$_fc_f" in
+                    *.zst) zstdcat "$_fc_f" ;;
+                    *)     cat "$_fc_f" ;;
+                esac
+            done > kernel/x86/microcode/GenuineIntel.bin
+
+            if [ -s kernel/x86/microcode/GenuineIntel.bin ]; then
+                find . | cpio --no-absolute-filenames -H newc -o -F "$PKG/boot/intel-ucode.img" 2>/dev/null
+            fi
+        )
+    fi
+
+# 6. Limpiamos temporales
+    rm -rf "$PKG/boot/tmp_amd" "$PKG/boot/tmp_intel" "$PKG/tmp_fw"
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
-
 #Inicializamos las variables globales
 f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura noarch
 #Comprobamos conexion a Internet
 f_comprobarConexion
 #Inicializamos las variables del script
@@ -62,11 +144,9 @@ f_directorioTemporal
 f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
-#Asignamos o detectamos arquitectura
-f_arquitectura noarch
-#Comprobamos version instalada del script
+#Comprobamos version instalada del paquete
 f_versionInstalada
-#Descarga los firmwares mas nuevos disponibles
+#Si no existe el fichero se descargara
 f_download
 #Cd a ruta
 f_cd

@@ -2,13 +2,13 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20260124
+SCRIPT_VERSION=20261121
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -16,16 +16,16 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=wine
-	EXTENSION=tar.xz
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://gitlab.winehq.org/wine/wine/-/tags
-	VERSION=$(curl -s $WEB/|grep wine-[0-9]|grep -v rc|head -1|cut -d- -f3|cut -d '"' -f1)
-	RAMA=$(echo $VERSION|cut -d. -f1)
-	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	CD=$PRGNAM-$VERSION
-	DOWNLOAD=https://dl.winehq.org/wine/source/$RAMA.x/$SOURCES
+PRGNAM=wine
+EXTENSION=tar.xz
+GESTOR=wget
+echo -ne "\033]2;${PRGNAM}_updater\007"
+WEB="https://dl.winehq.org/wine/source"
+RAMA=$(curl -fsSL --connect-timeout 10 --max-time 20 "$WEB/" | grep -oE '[0-9]+\.x/' | cut -d. -f1 | sort -n | tail -n1)
+VERSION=$(curl -fsSL --connect-timeout 10 --max-time 20 "$WEB/$RAMA.x/" | grep -oE 'wine-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.xz' | sed -E 's/^wine-|\.tar\.xz$//g' | sort -V | tail -n1)
+SOURCES="$PRGNAM-$VERSION.$EXTENSION"
+CD="$PRGNAM-$VERSION"
+DOWNLOAD="$WEB/$RAMA.x/$SOURCES"
 }
 
 # Comprobar dependencias
@@ -37,7 +37,7 @@ f_dependencias
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 echo 
-echo "$VERDE"Configurando ..."$CIERRE"
+echo "${VERDE}Configurando ...${CIERRE}"
 sleep 1
 
     ./configure \
@@ -45,22 +45,23 @@ sleep 1
     --libdir=/usr/lib$LIBDIRSUFFIX \
     --disable-tests \
     --enable-archs=x86_64,i386 \
-    --enable-build-id
+    --enable-build-id || exit 1
 
 echo 
-echo "$VERDE"Compilando ..."$CIERRE"
+echo "${VERDE}Compilando ...${CIERRE}"
 sleep 1
 
-   make||exit 1
-   make prefix="$PKG/usr" \
-        libdir="$PKG/usr/lib$LIBDIRSUFFIX" \
-        dlldir="$PKG/usr/lib$LIBDIRSUFFIX/wine" install
+make ${NUMJOBS:--j$(nproc 2>/dev/null || echo 1)} || exit 1
+make prefix="$PKG/usr" \
+     libdir="$PKG/usr/lib$LIBDIRSUFFIX" \
+     dlldir="$PKG/usr/lib$LIBDIRSUFFIX/wine" install || exit 1
   
 # Add font configuration:
 # Make dirs
-install -d $PKG/etc/fonts/conf.{avail,d}
+install -d "$PKG/etc/fonts/conf.avail" "$PKG/etc/fonts/conf.d"
 # Make file config
-echo '<?xml version="1.0"?>
+cat << 'EOF' > "$PKG/etc/fonts/conf.avail/30-win32-aliases.conf"
+<?xml version="1.0"?>
 <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
 <fontconfig>
   <alias binding="same">
@@ -79,18 +80,22 @@ echo '<?xml version="1.0"?>
     <prefer><family>Microsoft Sans Serif</family></prefer>
     <default><family>sans-serif</family></default>
   </alias>
-</fontconfig>' > $PKG/etc/fonts/conf.avail/30-win32-aliases.conf
+</fontconfig>
+EOF
 # Linked
-ln -sf /etc/fonts/conf.avail/30-win32-aliases.conf $PKG/etc/fonts/conf.d/30-win32-aliases.conf
+ln -sf /etc/fonts/conf.avail/30-win32-aliases.conf "$PKG/etc/fonts/conf.d/30-win32-aliases.conf"
 
 # Wine.conf
-install -d $PKG/usr/lib$LIBDIRSUFFIX/binfmt.d/
-echo '# Start WINE on Windows executables
-:DOSWin:M::MZ::/usr/bin/wine:' > $PKG/usr/lib$LIBDIRSUFFIX/binfmt.d/wine.conf
+install -d "$PKG/usr/lib$LIBDIRSUFFIX/binfmt.d/"
+cat << 'EOF' > "$PKG/usr/lib$LIBDIRSUFFIX/binfmt.d/wine.conf"
+# Start WINE on Windows executables
+:DOSWin:M::MZ::/usr/bin/wine:
+EOF
 
 # Create Wine menu structure:
-install -d $PKG/etc/xdg/menus/applications-merged
-echo '<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+install -d "$PKG/etc/xdg/menus/applications-merged"
+cat << 'EOF' > "$PKG/etc/xdg/menus/applications-merged/wine.menu"
+<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
 "http://www.freedesktop.org/standards/menu-spec/menu-1.0.dtd">
 <Menu>
   <Name>Applications</Name>
@@ -101,13 +106,14 @@ echo '<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
       <Category>Wine</Category>
     </Include>
   </Menu>
-</Menu>' > $PKG/etc/xdg/menus/applications-merged/wine.menu
+</Menu>
+EOF
 
 # Add a desktop menu for winecfg, wine-uninstaller and wine-browsedrive:
-mkdir -p $PKG/usr/share/{applications,icons/hicolor/scalable/apps,pixmaps}
+mkdir -p "$PKG/usr/share/applications" "$PKG/usr/share/icons/hicolor/scalable/apps" "$PKG/usr/share/pixmaps"
 
 # Make icons
-echo '
+base64 -d << 'EOF' > "$PKG/usr/share/icons/hicolor/scalable/apps/wine.svg"
 PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjwh
 LS0gQ3JlYXRlZCB3aXRoIElua3NjYXBlIChodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy8pIC0tPgo8
 c3ZnCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHhtbG5zPSJo
@@ -119,122 +125,123 @@ ICAgIDxsaW5lYXJHcmFkaWVudAogICAgICAgaWQ9ImxpbmVhckdyYWRpZW50MTY4MzciPgogICAg
 ICA8c3RvcAogICAgICAgICBzdHlsZT0ic3RvcC1jb2xvcjojODMwMDAwO3N0b3Atb3BhY2l0eTox
 IgogICAgICAgICBvZmZzZXQ9IjAiCiAgICAgICAgIGlkPSJzdG9wMTY4MzkiIC8+CiAgICAgIDxz
 dG9wCiAgICAgICAgIHN0eWxlPSJzdG9wLWNvbG9yOiM4MzAwMDA7c3RvcC1vcGFjaXR5OjAiCiAg
-ICAgICAgIG9mZnNldD0iMSIKICAgICAgICAgaWQ9InN0b3AxNjg0MSIgLz4KICAgIDwvbGluZWFy
-R3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQKICAgICAgIHgxPSItMjguMTI4NTQ4IgogICAg
-ICAgeTE9IjM0LjYzNzA4MSIKICAgICAgIHgyPSIxNS43Nzk1MDgiCiAgICAgICB5Mj0iMzQuNjM3
-MDgxIgogICAgICAgaWQ9ImxpbmVhckdyYWRpZW50MTY4NDMiCiAgICAgICB4bGluazpocmVmPSIj
-bGluZWFyR3JhZGllbnQxNjgzNyIKICAgICAgIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNl
-IgogICAgICAgZ3JhZGllbnRUcmFuc2Zvcm09InRyYW5zbGF0ZSgyMC41MTcyNDEsMC45NjU1MTcy
-KSIgLz4KICAgIDxsaW5lYXJHcmFkaWVudAogICAgICAgeDE9Ii0yOC4xMjg1NDgiCiAgICAgICB5
-MT0iMzQuNjM3MDgxIgogICAgICAgeDI9IjE1Ljc3OTUwOCIKICAgICAgIHkyPSIzNC42MzcwODEi
-CiAgICAgICBpZD0ibGluZWFyR3JhZGllbnQxNzM0MyIKICAgICAgIHhsaW5rOmhyZWY9IiNsaW5l
-YXJHcmFkaWVudDE2ODM3IgogICAgICAgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiCiAg
-ICAgICBncmFkaWVudFRyYW5zZm9ybT0idHJhbnNsYXRlKDIwLjY1NzI3OSwwLjYwNDI5NjkpIiAv
-PgogICAgPGxpbmVhckdyYWRpZW50CiAgICAgICB4MT0iLTI4LjEyODU0OCIKICAgICAgIHkxPSIz
-NC42MzcwODEiCiAgICAgICB4Mj0iMTUuNzc5NTA4IgogICAgICAgeTI9IjM0LjYzNzA4MSIKICAg
-ICAgIGlkPSJsaW5lYXJHcmFkaWVudDE4NzU5IgogICAgICAgeGxpbms6aHJlZj0iI2xpbmVhckdy
+ICAgICAgIG9mZnNldD0iMSIKICAgICAgICAgaWQ9InN2ZzE2ODQxIiAvPgogICAgPC9saW5lYXJH
+cmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudAogICAgICAgeDE9Ii0yOC4xMjg1NDgiCiAgICAg
+ICB5MT0iMzQuNjM3MDgxIgogICAgICAgeDI9IjE1Ljc3OTUwOCIKICAgICAgIHkyPSIzNC42Mzcw
+ODEiCiAgICAgICBpZD0ibGluZWFyR3JhZGllbnQxNjg0MyIKICAgICAgIHhsaW5rOmhyZWY9IiNs
+aW5lYXJHcmFkaWVudDE2ODM3IgogICAgICAgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2Ui
+CiAgICAgICBncmFkaWVudFRyYW5zZm9ybT0idHJhbnNsYXRlKDIwLjUxNzI0MSwwLjk2NTUxNzIp
+IiAvPgogICAgPGxpbmVhckdyYWRpZW50CiAgICAgICB4MT0iLTI4LjEyODU0OCIKICAgICAgIHkx
+PSIzNC42MzcwODEiCiAgICAgICB4Mj0iMTUuNzc5NTA4IgogICAgICAgeTI9IjM0LjYzNzA4MSIKICAg
+ICAgIGlkPSJsaW5lYXJHcmFkaWVudDE3MzQzIgogICAgICAgeGxpbms6aHJlZj0iI2xpbmVhckdy
 YWRpZW50MTY4MzciCiAgICAgICBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIKICAgICAg
-IGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDcuMzEwMzQ0LC00LjEzNzkzMDNlLTgpIiAv
-PgogICAgPGZpbHRlcgogICAgICAgaWQ9ImZpbHRlcjIyOTQ5Ij4KICAgICAgPGZlR2F1c3NpYW5C
-bHVyCiAgICAgICAgIGlkPSJmZUdhdXNzaWFuQmx1cjIyOTUxIgogICAgICAgICBzdGREZXZpYXRp
-b249IjEuNzMwMzY2NiIKICAgICAgICAgaW5rc2NhcGU6Y29sbGVjdD0iYWx3YXlzIiAvPgogICAg
-PC9maWx0ZXI+CiAgICA8bGluZWFyR3JhZGllbnQKICAgICAgIHgxPSItMjguMTI4NTQ4IgogICAg
-ICAgeTE9IjM0LjYzNzA4MSIKICAgICAgIHgyPSIxNS43Nzk1MDgiCiAgICAgICB5Mj0iMzQuNjM3
-MDgxIgogICAgICAgaWQ9ImxpbmVhckdyYWRpZW50MjI5NTUiCiAgICAgICB4bGluazpocmVmPSIj
-bGluZWFyR3JhZGllbnQxNjgzNyIKICAgICAgIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNl
-IgogICAgICAgZ3JhZGllbnRUcmFuc2Zvcm09InRyYW5zbGF0ZSg0Ny4yMDkwMDIsLTAuMTE5ODQx
-KSIgLz4KICAgIDxmaWx0ZXIKICAgICAgIGlkPSJmaWx0ZXIyMzkyNiI+CiAgICAgIDxmZUdhdXNz
+IGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjAuNjU3Mjc5LDAuNjA0Mjk2OSkiIC8+
+CiAgICA8bGluZWFyR3JhZGllbnQKICAgICAgIHgxPSItMjguMTI4NTQ4IgogICAgICAgeTE9IjM0
+LjYzNzA4MSIKICAgICAgIHgyPSIxNS43Nzk1MDgiCiAgICAgICB5Mj0iMzQuNjM3MDgxIgogICAg
+ICAgaWQ9ImxpbmVhckdyYWRpZW50MTg3NTkiCiAgICAgICB4bGluazpocmVmPSIjbGluZWFyR3Jh
+ZGllbnQxNjgzNyIKICAgICAgIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIgogICAgICAg
+Z3JhZGllbnRUcmFuc2Zvcm09InRyYW5zbGF0ZSg0Ny4zMTAzNDQsLTQuMTM3OTMwM2UtOCkiIC8+
+CiAgICA8ZmlsdGVyCiAgICAgICBpZD0iZmlsdGVyMjI5NDkiPgogICAgICA8ZmVHYXVzc2lhbkJs
+dXIKICAgICAgICAgaWQ9ImZlR2F1c3NpYW5CbHVyMjI5NTEiCiAgICAgICAgIHN0ZERldmlhdGlv
+bj0iMS43MzAzNjY2IgogICAgICAgICBpbmtzY2FwZTpjb2xsZWN0PSJhbHdheXMiIC8+CiAgICA8
+L2ZpbHRlcj4KICAgIDxsaW5lYXJHcmFkaWVudAogICAgICAgeDE9Ii0yOC4xMjg1NDgiCiAgICAg
+ICB5MT0iMzQuNjM3MDgxIgogICAgICAgeDI9IjE1Ljc3OTUwOCIKICAgICAgIHkyPSIzNC42Mzcw
+ODEiCiAgICAgICBpZD0ibGluZWFyR3JhZGllbnQyMjk1NSIKICAgICAgIHhsaW5rOmhyZWY9IiNs
+aW5lYXJHcmFkaWVudDE2ODM3IgogICAgICAgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2Ui
+CiAgICAgICBncmFkaWVudFRyYW5zZm9ybT0idHJhbnNsYXRlKDQ3LjIwOTAwMiwtMC4xMTk4NDEp
+IiAvPgogICAgPGZpbHRlcgogICAgICAgaWQ9ImZpbHRlcjIzOTI2Ij4KICAgICAgPGZlR2F1c3Nz
 aWFuQmx1cgogICAgICAgICBpZD0iZmVHYXVzc2lhbkJsdXIyMzkyOCIKICAgICAgICAgc3RkRGV2
 aWF0aW9uPSIwLjg0MDk0MTk4IgogICAgICAgICBpbmtzY2FwZTpjb2xsZWN0PSJhbHdheXMiIC8+
 CiAgICA8L2ZpbHRlcj4KICAgIDxsaW5lYXJHcmFkaWVudAogICAgICAgeDE9Ii0yOC4xMjg1NDgi
 CiAgICAgICB5MT0iMzQuNjM3MDgxIgogICAgICAgeDI9IjE1Ljc3OTUwOCIKICAgICAgIHkyPSIz
 NC42MzcwODEiCiAgICAgICBpZD0ibGluZWFyR3JhZGllbnQyMzk1OCIKICAgICAgIHhsaW5rOmhy
 ZWY9IiNsaW5lYXJHcmFkaWVudDE2ODM3IgogICAgICAgZ3JhZGllbnRVbml0cz0idXNlclNwYWNl
-T25Vc2UiCiAgICAgICBncmFkaWVudFRyYW5zZm9ybT0idHJhbnNsYXRlKDIwLjY1NzI3OSwwLjYw
-NDI5NjkpIiAvPgogICAgPGxpbmVhckdyYWRpZW50CiAgICAgICB4MT0iLTI4LjEyODU0OCIKICAg
-ICAgIHkxPSIzNC42MzcwODEiCiAgICAgICB4Mj0iMTUuNzc5NTA4IgogICAgICAgeTI9IjM0LjYz
-NzA4MSIKICAgICAgIGlkPSJsaW5lYXJHcmFkaWVudDIzOTYwIgogICAgICAgeGxpbms6aHJlZj0i
-I2xpbmVhckdyYWRpZW50MTY4MzciCiAgICAgICBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVz
-ZSIKICAgICAgIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDcuMzEwMzQ0LC00LjEzNzkz
-MDNlLTgpIiAvPgogICAgPGxpbmVhckdyYWRpZW50CiAgICAgICB4MT0iLTI4LjEyODU0OCIKICAg
-ICAgIHkxPSIzNC42MzcwODEiCiAgICAgICB4Mj0iMTUuNzc5NTA4IgogICAgICAgeTI9IjM0LjYz
-NzA4MSIKICAgICAgIGlkPSJsaW5lYXJHcmFkaWVudDIzOTYyIgogICAgICAgeGxpbms6aHJlZj0i
-I2xpbmVhckdyYWRpZW50MTY4MzciCiAgICAgICBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVz
-ZSIKICAgICAgIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDcuMjA5MDAyLC0wLjExOTg0
-MSkiIC8+CiAgPC9kZWZzPgogIDxnCiAgICAgdHJhbnNmb3JtPSJtYXRyaXgoMC41NzA5NzM1LDAs
-MCwwLjU1ODgxNDMsOC4xNDk1ODU3LC0wLjE0MzE1ODcpIgogICAgIGlkPSJnMjM5MzAiPgogICAg
-PHBhdGgKICAgICAgIGQ9Ik0gMjkuMzc1LDAuMjgxMjUgQyAyOC4xMDIxMDMsMC4zNjQ5NDYyIDI3
-LjE5MDM2LDAuNjYyOTY1MzEgMjYuODEyNSwxLjIxODc1IEMgMjEuNDI4MDMsMTUuNDgxMjU3IDE0
-LjY5MzYzOSwzNC42Nzg3ODIgMTkuMDMxMjUsNDUuODEyNSBDIDIzLjMwODM2LDU2Ljc5MDkyNyAy
-Mi4yMTI2MjcsNjAuODE0NTY2IDE5LjUzMTI1LDY3LjI4MTI1IEMgMTUuMTI1OTIsNzcuOTA1NiAx
-MC4wMDYzOTksNzAuOTU5MjMxIDIuNDA2MjUsNzMuMzEyNSBDIC01LjM0MjgzMDEsNzUuNzExODgy
-IDM4LjkyMTA2Nyw5MS41MjIwNyAzMy4yODEyNSw4NC4yNSBDIDI3LjQ1NTQyNiw3Ni43MzgwOTEg
-MTkuOTc5NjIsNzguMTc1Mzc0IDIyLjY1NjI1LDY3LjgxMjUgQyAyNS41MTY1MzcsNTYuNzM4NTg3
-IDI2LjYzMDEwNyw1OC41MDM5OTYgMzYuOTA2MjUsNTAuNDM3NSBDIDQ3LjQyMTExLDQyLjE4MzYx
-NyA0OS4zMTI0MjMsMjMuODc2MDM3IDU0LjAzMTI1LDEwLjIxODc1IEMgNTMuNjMxMzE3LDUuNTgy
-NTk0MyAzNi4yNDg2NDUsLTAuMTcwNzA5NSAyOS4zNzUsMC4yODEyNSB6IE0gMjkuOTM3NSwyLjE1
-NjI1IEMgMzUuOTM1Mzg1LDEuODY1NTY5NSA1My4wNDc0NzQsNy45NDQ1OTQ4IDUyLjA5Mzc1LDEx
-LjE4NzUgQyA0Ny41NjYwMzYsMjQuMjkxNjY2IDQ0LjcxOTE5Myw0Mi44OTI4MjEgMzQuMzEyNSw1
-MC4zNDM3NSBDIDI5LjQ5NTU0NCw1My43OTI1NjggMjIuNjAxMTM4LDUwLjM5ODMzNyAyMC40MDYy
-NSw0NS44MTI1IEMgMTYuMjQ0MzExLDM1LjEyOTY5NyAyMi43NzExLDE2LjcxNjEyNiAyNy45Mzc1
-LDMuMDMxMjUgQyAyOC4xMDAzMTYsMi40ODI2OTk4IDI4LjgyNjc4MSwyLjIxMDA3OTcgMjkuOTM3
-NSwyLjE1NjI1IHogIgogICAgICAgc3R5bGU9Im9wYWNpdHk6MTtmaWxsOiMwYTAwMDA7ZmlsbC1v
-cGFjaXR5OjE7ZmlsbC1ydWxlOmV2ZW5vZGQ7c3Ryb2tlOm5vbmU7c3Ryb2tlLXdpZHRoOjFweDtz
+T25Vc2Ui
+CiAgICAgICBncmFkaWVudFRyYW5zZm9ybT0idHJhbnNsYXRlKDIwLjY1NzI3OSwwLjYwNDI5Njkp
+IiAvPgogICAgPGxpbmVhckdyYWRpZW50CiAgICAgICB4MT0iLTI4LjEyODU0OCIKICAgICAgIHkx
+PSIzNC42MzcwODEiCiAgICAgICB4Mj0iMTUuNzc5NTA4IgogICAgICAgeTI9IjM0LjYzNzA4MSIK
+ICAgICAgIGlkPSJsaW5lYXJHcmFkaWVudDIzOTYwIgogICAgICAgeGxpbms6aHJlZj0iI2xpbmVh
+ckdyYWRpZW50MTY4MzciCiAgICAgICBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIKICAg
+ICAgIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDcuMzEwMzQ0LC00LjEzNzkzMDNlLTgp
+IiAvPgogICAgPGxpbmVhckdyYWRpZW50CiAgICAgICB4MT0iLTI4LjEyODU0OCIKICAgICAgIHkx
+PSIzNC42MzcwODEiCiAgICAgICB4Mj0iMTUuNzc5NTA4IgogICAgICAgeTI9IjM0LjYzNzA4MSIK
+ICAgICAgIGlkPSJsaW5lYXJHcmFkaWVudDIzOTYyIgogICAgICAgeGxpbms6aHJlZj0iI2xpbmVh
+ckdyYWRpZW50MTY4MzciCiAgICAgICBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIKICAg
+ICAgIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDcuMjA5MDAyLC0wLjExOTg0MSkiIC8+
+CiAgPC9kZWZzPgogIDxnCiAgICAgdHJhbnNmb3JtPSJtYXRyaXgoMC41NzA5NzM1LDAsMCwwLjU1
+ODgxNDMsOC4xNDk1ODU3LC0wLjE0MzE1ODcpIgogICAgIGlkPSJnMjM5MzAiPgogICAgPHBhdGgK
+ICAgICAgIGQ9Ik0gMjkuMzc1LDAuMjgxMjUgQyAyOC4xMDIxMDMsMC4zNjQ5NDYyIDI3LjE5MDM2
+LDAuNjYyOTY1MzEgMjYuODEyNSwxLjIxODc1IEMgMjEuNDI4MDMsMTUuNDgxMjU3IDE0LjY5MzYz
+OSwzNC42Nzg3ODIgMTkuMDMxMjUsNDUuODEyNSBDIDIzLjMwODM2LDU2Ljc5MDkyNyAyMi4yMTI2
+MjcsNjAuODE0NTY2IDE5LjUzMTI1LDY3LjI4MTI1IEMgMTUuMTI1OTIsNzcuOTA1NiAxMC4wMDYz
+OTksNzAuOTU5MjMxIDIuNDA2MjUsNzMuMzEyNSBDIC01LjM0MjgzMDEsNzUuNzExODgyIDM4Ljky
+MTA2Nyw5MS41MjIwNyAzMy4yODEyNSw4NC4yNSBDIDI3LjQ1NTQyNiw3Ni43MzgwOTEgMTkuOTc5
+NjIsNzguMTc1Mzc0IDIyLjY1NjI1LDY3LjgxMjUgQyAyNS41MTY1MzcsNTYuNzM4NTg3IDI2LjYz
+MDEwNyw1OC41MDM5OTYgMzYuOTA2MjUsNTAuNDM3NSBDIDQ3LjQyMTExLDQyLjE4MzYxNyA0OS4z
+MTI0MjMsMjMuODc2MDM3IDU0LjAzMTI1LDEwLjIxODc1IEMgNTMuNjMxMzE3LDUuNTgyNTk0MyAz
+Ni4yNDg2NDUsLTAuMTcwNzA5NSAyOS4zNzUsMC4yODEyNSB6IE0gMjkuOTM3NSwyLjE1NjI1IEMg
+MzUuOTM1Mzg1LDEuODY1NTY5NSA1My4wNDc0NzQsNy45NDQ1OTQ4IDUyLjA5Mzc1LDExLjE4NzUg
+QyA0Ny41NjYwMzYsMjQuMjkxNjY2IDQ0LjcxOTE5Myw0Mi44OTI4MjEgMzQuMzEyNSw1MC4zNDM3
+NSBDIDI5LjQ5NTU0NCw1My43OTI1NjggMjIuNjAxMTM4LDUwLjM5ODMzNyAyMC40MDYyNSw0NS44
+MTI1IEMgMTYuMjQ0MzExLDM1LjEyOTY5NyAyMi43NzExLDE2LjcxNjEyNiAyNy45Mzc1LDMuMDMx
+MjUgQyAyOC4xMDAzMTYsMi40ODI2OTk4IDI4LjgyNjc4MSwyLjIxMDA3OTcgMjkuOTM3NSwyLjE1
+NjI1IHogIgogICAgICAgc3R5bGU9Im9wYWNpdHk6MTtmaWxsOiMwYTAwMDA7ZmlsbC1vcGFjaXR5
+OjE7ZmlsbC1ydWxlOmV2ZW5vZGQ7c3Ryb2tlOm5vbmU7c3Ryb2tlLXdpZHRoOjFweDtzdHJva2Ut
+bGluZWNhcDpidXR0O3N0cm9rZS1saW5lam9pbjptaXRlcjtzdHJva2Utb3BhY2l0eToxO2ZpbHRl
+cjp1cmwoI2ZpbHRlcjE3MzI3KSIKICAgICAgIGlkPSJwYXRoMTcwNDgiIC8+CiAgICA8cGF0aAog
+ICAgICAgZD0iTSAyMC45MjY3MzUsNDUuNjU2MTc3IEMgMjMuMTIxNjIzLDUwLjI0MjAxMyAyOS43
+OTQ0NDIsNTMuMzUxMDE1IDM0LjgwNjQ5Miw1MC4xOTI0MTUgQyA0Mi43OTkzOTIsNDUuMTU1Mjgg
+NDYuNjMzMjA4LDMyLjMzNzI3MiA1MC4xOTU0MDYsMTkuNzE1ODY1IEMgNDguMzQ2NzgzLDE3LjMx
+MTM4NSA0NC4zMjE5NTksMTUuMTI5MTE5IDM2LjAzMjAyNiwxOS45NDM3OTQgQyAyNy4zNzg1Niwy
+NC45Njk2MDIgMjYuMDcwNzMsMTkuNzA3ODQ4IDIzLjEzNTkyNywxNy44NDI1MTkgQyAxOC45MzUw
+NDQsMzAuNTYxODc3IDE4LjIxMzA3MywzOS4zMTgyMDIgMjAuOTI2NzM1LDQ1LjY1NjE3NyB6ICIK
+ICAgICAgIHN0eWxlPSJmaWxsOnVybCgjbGluZWFyR3JhZGllbnQyMzk1OCk7ZmlsbC1vcGFjaXR5
+OjE7ZmlsbC1ydWxlOmV2ZW5vZGQ7c3Ryb2tlOiMwMDAwMDA7c3Ryb2tlLXdpZHRoOjFweDtzdHJv
+a2UtbGluZWNhcDpidXR0O3N0cm9rZS1saW5lam9pbjptaXRlcjtzdHJva2Utb3BhY2l0eToxO2Zp
+bHRlcjp1cmwoI2ZpbHRlcjE3MzYxKSIKICAgICAgIGlkPSJwYXRoMTczNDEiIC8+CiAgICA8cGF0
+aAogICAgICAgZD0iTSAyMC43ODY2OTgsNDYuMDE3Mzk3IEMgMjIuOTgxNTg2LDUwLjYwMzIzMyAy
+OS42NTQ0MDUsNTMuNzEyMjM1IDM0LjY2NjQ1NSw1MC41NTM2MzUgQyA0Mi42NTkzNTUsNDUuNTE2
+NSA0Ni40OTMxNzEsMzIuNjk4NDkyIDUwLjA1NTM2OSwyMC4wNzcwODUgQyA0OC4yMDY3NDYsMTcu
+NjcyNjA1IDQ0LjE4MTkyMiwxNS40OTAzMzkgMzUuODkxOTg5LDIwLjMwNTAxNCBDIDI3LjIzODUy
+MywyNS4zMzA4MjIgMjUuOTMwNjkzLDIwLjA2OTA2OCAyMi45OTU4OSwxOC4yMDM3MzkgQyAxOC43
+OTUwMDcsMzAuOTIzMDk3IDE4LjA3MzAzNiwzOS42Nzk0MjIgMjAuNzg2Njk4LDQ2LjAxNzM5NyB6
+ICIKICAgICAgIHN0eWxlPSJmaWxsOnVybCgjbGluZWFyR3JhZGllbnQyMzk2MCk7ZmlsbC1vcGFj
+aXR5OjE7ZmlsbC1ydWxlOmV2ZW5vZGQ7c3Ryb2tlOiMwMDAwMDA7c3Ryb2tlLXdpZHRoOjFweDtz
 dHJva2UtbGluZWNhcDpidXR0O3N0cm9rZS1saW5lam9pbjptaXRlcjtzdHJva2Utb3BhY2l0eTox
-O2ZpbHRlcjp1cmwoI2ZpbHRlcjE3MzI3KSIKICAgICAgIGlkPSJwYXRoMTcwNDgiIC8+CiAgICA8
-cGF0aAogICAgICAgZD0iTSAyMC45MjY3MzUsNDUuNjU2MTc3IEMgMjMuMTIxNjIzLDUwLjI0MjAx
-MyAyOS43OTQ0NDIsNTMuMzUxMDE1IDM0LjgwNjQ5Miw1MC4xOTI0MTUgQyA0Mi43OTkzOTIsNDUu
-MTU1MjggNDYuNjMzMjA4LDMyLjMzNzI3MiA1MC4xOTU0MDYsMTkuNzE1ODY1IEMgNDguMzQ2Nzgz
-LDE3LjMxMTM4NSA0NC4zMjE5NTksMTUuMTI5MTE5IDM2LjAzMjAyNiwxOS45NDM3OTQgQyAyNy4z
-Nzg1NiwyNC45Njk2MDIgMjYuMDcwNzMsMTkuNzA3ODQ4IDIzLjEzNTkyNywxNy44NDI1MTkgQyAx
-OC45MzUwNDQsMzAuNTYxODc3IDE4LjIxMzA3MywzOS4zMTgyMDIgMjAuOTI2NzM1LDQ1LjY1NjE3
-NyB6ICIKICAgICAgIHN0eWxlPSJmaWxsOnVybCgjbGluZWFyR3JhZGllbnQyMzk1OCk7ZmlsbC1v
-cGFjaXR5OjE7ZmlsbC1ydWxlOmV2ZW5vZGQ7c3Ryb2tlOiMwMDAwMDA7c3Ryb2tlLXdpZHRoOjFw
-eDtzdHJva2UtbGluZWNhcDpidXR0O3N0cm9rZS1saW5lam9pbjptaXRlcjtzdHJva2Utb3BhY2l0
-eToxO2ZpbHRlcjp1cmwoI2ZpbHRlcjE3MzYxKSIKICAgICAgIGlkPSJwYXRoMTczNDEiIC8+CiAg
-ICA8cGF0aAogICAgICAgZD0iTSAyMC43ODY2OTgsNDYuMDE3Mzk3IEMgMjIuOTgxNTg2LDUwLjYw
-MzIzMyAyOS42NTQ0MDUsNTMuNzEyMjM1IDM0LjY2NjQ1NSw1MC41NTM2MzUgQyA0Mi42NTkzNTUs
-NDUuNTE2NSA0Ni40OTMxNzEsMzIuNjk4NDkyIDUwLjA1NTM2OSwyMC4wNzcwODUgQyA0OC4yMDY3
-NDYsMTcuNjcyNjA1IDQ0LjE4MTkyMiwxNS40OTAzMzkgMzUuODkxOTg5LDIwLjMwNTAxNCBDIDI3
-LjIzODUyMywyNS4zMzA4MjIgMjUuOTMwNjkzLDIwLjA2OTA2OCAyMi45OTU4OSwxOC4yMDM3Mzkg
-QyAxOC43OTUwMDcsMzAuOTIzMDk3IDE4LjA3MzAzNiwzOS42Nzk0MjIgMjAuNzg2Njk4LDQ2LjAx
-NzM5NyB6ICIKICAgICAgIHN0eWxlPSJmaWxsOnVybCgjbGluZWFyR3JhZGllbnQyMzk2MCk7Zmls
-bC1vcGFjaXR5OjE7ZmlsbC1ydWxlOmV2ZW5vZGQ7c3Ryb2tlOiMwMDAwMDA7c3Ryb2tlLXdpZHRo
-OjFweDtzdHJva2UtbGluZWNhcDpidXR0O3N0cm9rZS1saW5lam9pbjptaXRlcjtzdHJva2Utb3Bh
-Y2l0eToxIgogICAgICAgaWQ9InBhdGgxNDg5NyIgLz4KICAgIDxwYXRoCiAgICAgICBkPSJNIDIw
-LjY4NTM1Niw0NS44OTc1NTYgQyAyMi44ODAyNDQsNTAuNDgzMzkyIDI5LjU1MzA2Myw1My41OTIz
-OTQgMzQuNTY1MTEzLDUwLjQzMzc5NCBDIDQyLjU1ODAxMyw0NS4zOTY2NTkgNDYuMzkxODI5LDMy
-LjU3ODY1MSA0OS45NTQwMjcsMTkuOTU3MjQ0IEMgNDguMTA1NDA0LDE3LjU1Mjc2NCA0NC4wODA1
-OCwxNS4zNzA0OTggMzUuNzkwNjQ3LDIwLjE4NTE3MyBDIDI3LjEzNzE4MSwyNS4yMTA5ODEgMjUu
-ODI5MzUxLDE5Ljk0OTIyNyAyMi44OTQ1NDgsMTguMDgzODk4IEMgMTguNjkzNjY1LDMwLjgwMzI1
-NiAxNy45NzE2OTQsMzkuNTU5NTgxIDIwLjY4NTM1Niw0NS44OTc1NTYgeiAiCiAgICAgICBzdHls
-ZT0iZmlsbDp1cmwoI2xpbmVhckdyYWRpZW50MjM5NjIpO2ZpbGwtb3BhY2l0eToxO2ZpbGwtcnVs
-ZTpldmVub2RkO3N0cm9rZTojMDAwMDAwO3N0cm9rZS13aWR0aDoxcHg7c3Ryb2tlLWxpbmVjYXA6
-YnV0dDtzdHJva2UtbGluZWpvaW46bWl0ZXI7c3Ryb2tlLW9wYWNpdHk6MTtmaWx0ZXI6dXJsKCNm
-aWx0ZXIyMzkyNikiCiAgICAgICBpZD0icGF0aDIyOTUzIiAvPgogICAgPHBhdGgKICAgICAgIGQ9
-Ik0gMjkuMzcxNTgsMC4yODY0OTU2MiBDIDI4LjA5ODY4MywwLjM3MDE5MTYyIDI3LjE4Njk0LDAu
-NjY4MjExNjIgMjYuODA5MDgsMS4yMjM5OTU2IEMgMjEuNDI0NjEsMTUuNDg2NTAzIDE0LjY5MDIx
-OSwzNC42ODQwMjggMTkuMDI3ODMsNDUuODE3NzQ2IEMgMjMuMzA0OTQsNTYuNzk2MTczIDIyLjIw
-OTIwNyw2MC44MTk4MTIgMTkuNTI3ODMsNjcuMjg2NDk2IEMgMTUuMTIyNSw3Ny45MTA4NDYgMTAu
-MDAyOTc5LDcwLjk2NDQ3NyAyLjQwMjgzLDczLjMxNzc0NiBDIC01LjM0NjI0OTksNzUuNzE3MTI4
-IDM4LjkxNzY0Nyw5MS41MjczMTkgMzMuMjc3ODMsODQuMjU1MjQ2IEMgMjcuNDUyMDA2LDc2Ljc0
-MzMzNyAxOS45NzYyLDc4LjE4MDYyIDIyLjY1MjgzLDY3LjgxNzc0NiBDIDI1LjUxMzExNyw1Ni43
-NDM4MzMgMjYuNjI2Njg3LDU4LjUwOTI0MiAzNi45MDI4Myw1MC40NDI3NDYgQyA0Ny40MTc2OSw0
-Mi4xODg4NjMgNDkuMzA5MDAzLDIzLjg4MTI4MyA1NC4wMjc4MywxMC4yMjM5OTYgQyA1My42Mjc4
-OTcsNS41ODc4NDA2IDM2LjI0NTIyNSwtMC4xNjU0NjMzOCAyOS4zNzE1OCwwLjI4NjQ5NTYyIHog
-TSAyOS45MzQwOCwyLjE2MTQ5NTYgQyAzNS45MzE5NjUsMS44NzA4MTU2IDUzLjA0NDA1NCw3Ljk0
-OTg0MDYgNTIuMDkwMzMsMTEuMTkyNzQ2IEMgNDcuNTYyNjE2LDI0LjI5NjkxMiA0NC43MTU3NzMs
-NDIuODk4MDY3IDM0LjMwOTA4LDUwLjM0ODk5NiBDIDI5LjQ5MjEyNCw1My43OTc4MTQgMjIuNTk3
-NzE4LDUwLjQwMzU4MyAyMC40MDI4Myw0NS44MTc3NDYgQyAxNi4yNDA4OTEsMzUuMTM0OTQzIDIy
-Ljc2NzY4LDE2LjcyMTM3MiAyNy45MzQwOCwzLjAzNjQ5NTYgQyAyOC4wOTY4OTYsMi40ODc5NDU2
-IDI4LjgyMzM2MSwyLjIxNTMyNTYgMjkuOTM0MDgsMi4xNjE0OTU2IHogIgogICAgICAgc3R5bGU9
-Im9wYWNpdHk6MTtmaWxsOiMwMDAwMDA7ZmlsbC1vcGFjaXR5OjE7ZmlsbC1ydWxlOmV2ZW5vZGQ7
-c3Ryb2tlOm5vbmU7c3Ryb2tlLXdpZHRoOjFweDtzdHJva2UtbGluZWNhcDpidXR0O3N0cm9rZS1s
+IgogICAgICAgaWQ9InBhdGgxNDg5NyIgLz4KICAgIDxwYXRoCiAgICAgICBkPSJNIDIwLjY4NTM1
+Niw0NS44OTc1NTYgQyAyMi44ODAyNDQsNTAuNDgzMzkyIDI5LjU1MzA2Myw1My41OTIzOTQgMzQu
+NTY1MTEzLDUwLjQzMzc5NCBDIDQyLjU1ODAxMyw0NS4zOTY2NTkgNDYuMzkxODI5LDMyLjU3ODY1
+MSA0OS45NTQwMjcsMTkuOTU3MjQ0IEMgNDguMTA1NDA0LDE3LjU1Mjc2NCA0NC4wODA1OCwxNS4z
+NzA0OTggMzUuNzkwNjQ3LDIwLjE4NTE3MyBDIDI3LjEzNzE4MSwyNS4yMTA5ODEgMjUuODI5MzUx
+LDE5Ljk0OTIyNyAyMi44OTQ1NDgsMTguMDgzODk4IEMgMTguNjkzNjY1LDMwLjgwMzI1NiAxNy45
+NzE2OTQsMzkuNTU5NTgxIDIwLjY4NTM1Niw0NS44OTc1NTYgeiAiCiAgICAgICBzdHlsZT0iZmls
+bDp1cmwoI2xpbmVhckdyYWRpZW50MjM5NjIpO2ZpbGwtb3BhY2l0eToxO2ZpbGwtcnVsZTpldmVu
+b2RkO3N0cm9rZTojMDAwMDAwO3N0cm9rZS13aWR0aDoxcHg7c3Ryb2tlLWxpbmVjYXA6YnV0dDtz
+dHJva2UtbGluZWpvaW46bWl0ZXI7c3Ryb2tlLW9wYWNpdHk6MTtmaWx0ZXI6dXJsKCNmaWx0ZXIy
+MzkyNikiCiAgICAgICBpZD0icGF0aDIyOTUzIiAvPgogICAgPHBhdGgKICAgICAgIGQ9Ik0gMjku
+MzcxNTgsMC4yODY0OTU2MiBDIDI4LjA5ODY4MywwLjM3MDE5MTYyIDI3LjE4Njk0LDAuNjY4MjEx
+NjIgMjYuODA5MDgsMS4yMjM5OTU2IEMgMjEuNDI0NjEsMTUuNDg2NTAzIDE0LjY5MDIxOSwzNC42
+ODQwMjggMTkuMDI3ODMsNDUuODE3NzQ2IEMgMjMuMzA0OTQsNTYuNzk2MTczIDIyLjIwOTIwNyw2
+MC44MTk4MTIgMTkuNTI3ODMsNjcuMjg2NDk2IEMgMTUuMTIyNSw3Ny45MTA4NDYgMTAuMDAyOTc5
+LDcwLjk2NDQ3NyAyLjQwMjgzLDczLjMxNzc0NiBDIC01LjM0NjI0OTksNzUuNzE3MTI4IDM4Ljkx
+NzY0Nyw5MS41MjczMTkgMzMuMjc3ODMsODQuMjU1MjQ2IEMgMjcuNDUyMDA2LDc2Ljc0MzMzNyAx
+OS45NzYyLDc4LjE4MDYyIDIyLjY1MjgzLDY3LjgxNzc0NiBDIDI1LjUxMzExNyw1Ni43NDM4MzMg
+MjYuNjI2Njg3LDU4LjUwOTI0MiAzNi45MDI4Myw1MC40NDI3NDYgQyA0Ny40MTc2OSw0Mi4xODg4
+NjMgNDkuMzA5MDAzLDIzLjg4MTI4MyA1NC4wMjc4MywxMC4yMjM5OTYgQyA1My42Mjc4OTcsNS41
+ODc4NDA2IDM2LjI0NTIyNSwtMC4xNjU0NjMzOCAyOS4zNzE1OCwwLjI4NjQ5NTYyIHogTSAyOS45
+MzQwOCwyLjE2MTQ5NTYgQyAzNS45MzE5NjUsMS44NzA4MTU2IDUzLjA0NDA1NCw3Ljk0OTg0MDYg
+NTIuMDkwMzMsMTEuMTkyNzQ2IEMgNDcuNTYyNjE2LDI0LjI5NjkxMiA0NC43MTU3NzMsNDIuODk4
+MDY3IDM0LjMwOTA4LDUwLjM0ODk5NiBDIDI5LjQ5MjEyNCw1My43OTc4MTQgMjIuNTk3NzE4LDUw
+LjQwMzU4MyAyMC40MDI4Myw0NS44MTc3NDYgQyAxNi4yNDA4OTEsMzUuMTM0OTQzIDIyLjc2NzY4
+LDE2LjcyMTM3MiAyNy45MzQwOCwzLjAzNjQ5NTYgQyAyOC4wOTY4OTYsMi40ODc5NDU2IDI4Ljgy
+MzM2MSwyLjIxNTMyNTYgMjkuOTM0MDgsMi4xNjE0OTU2IHogIgogICAgICAgc3R5bGU9Im9wYWNp
+dHk6MTtmaWxsOiMwMDAwMDA7ZmlsbC1vcGFjaXR5OjE7ZmlsbC1ydWxlOmV2ZW5vZGQ7c3Ryb2tl
+Om5vbmU7c3Ryb2tlLXdpZHRoOjFweDtzdHJva2UtbGluZWNhcDpidXR0O3N0cm9rZS1s
 aW5lam9pbjptaXRlcjtzdHJva2Utb3BhY2l0eToxO2ZpbHRlcjp1cmwoI2ZpbHRlcjIyOTQ5KSIK
 ICAgICAgIGlkPSJwYXRoMjA5OTUiIC8+CiAgPC9nPgo8L3N2Zz4K
-'|base64 -d > $PKG/usr/share/icons/hicolor/scalable/apps/wine.svg
+EOF
 
-echo '
+base64 -d << 'EOF' > "$PKG/usr/share/pixmaps/winecfg.png"
 iVBORw0KGgoAAAANSUhEUgAAAEAAAAA+CAYAAACbQR1vAAAAIGNIUk0AAHomAACAhAAA+gAAAIDo
 AAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGYktHRAD/AP8A/6C9p5MAAAAJcEhZcwAADsMAAA7DAcdv
 qGQAAAAHdElNRQfpAw8BKScC0srbAAAPwUlEQVRo3u2beZRU1Z3HP+9V175XV3UVS9PNTqOyKGgg
@@ -311,48 +318,63 @@ x+v14vf7cbvdlJeXn9KhTCwWY//+/ezdu5dgMIjD4WDSpElMnjw5n2V2S/qXRcDpgqIohMNhkskk
 NpsN9wlH/X3B/wIk0mPf6ZdTvQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyNS0wMy0xNVQwMToxNjoz
 OCswMDowMLXaPkgAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjQtMDMtMzBUMDI6NTE6MTErMDA6MDBF
 uOl+AAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDI1LTAzLTE1VDAxOjQxOjM5KzAwOjAwpm4bpAAA
-AABJRU5ErkJggg=='|base64 -d > $PKG/usr/share/pixmaps/winecfg.png
+AABJRU5ErkJggg==
+EOF
 
 # Some converts and copy
-rsvg-convert --width=64px --height=64px $PKG/usr/share/icons/hicolor/scalable/apps/wine.svg > $PKG/usr/share/pixmaps/wine.png
-cp -rf $PKG/usr/share/pixmaps/winecfg.png $PKG/usr/share/pixmaps/folder-wine.png 
-cp -rf $PKG/usr/share/pixmaps/winecfg.png $PKG/usr/share/pixmaps/wine-uninstaller.png
-cp programs/winecfg/winecfg.svg $PKG/usr/share/icons/hicolor/scalable/apps/
+rsvg-convert --width=64px --height=64px "$PKG/usr/share/icons/hicolor/scalable/apps/wine.svg" > "$PKG/usr/share/pixmaps/wine.png"
+cp -f "$PKG/usr/share/pixmaps/winecfg.png" "$PKG/usr/share/pixmaps/folder-wine.png"
+cp -f "$PKG/usr/share/pixmaps/winecfg.png" "$PKG/usr/share/pixmaps/wine-uninstaller.png"
+cp -f programs/winecfg/winecfg.svg "$PKG/usr/share/icons/hicolor/scalable/apps/"
 
 # Desktops
-echo '[Desktop Entry]
+cat << 'EOF' > "$PKG/usr/share/applications/wine-uninstaller.desktop"
+[Desktop Entry]
 Name=Uninstall Wine Software
 Comment=Uninstall Windows applications for Wine
 Exec=wine uninstaller
 Terminal=false
 Type=Application
 Icon=wine-uninstaller
-Categories=System;X-Wine;' > $PKG/usr/share/applications/wine-uninstaller.desktop
+Categories=System;X-Wine;
+EOF
 
-echo '[Desktop Entry]
+cat << 'EOF' > "$PKG/usr/share/applications/winecfg.desktop"
+[Desktop Entry]
 Exec=winecfg
 Icon=winecfg
 Terminal=false
 Name=Wine Configuration
 Comment=Configure Wine
 Type=Application
-Categories=Settings;' > $PKG/usr/share/applications/winecfg.desktop
+Categories=Settings;
+EOF
 
-echo '[Desktop Entry]
+cat << 'EOF' > "$PKG/usr/share/applications/wine-browsedrive.desktop"
+[Desktop Entry]
 Name=Browse C: Drive
 Comment=Browse your virtual C: drive
 Exec=wine winebrowser c:
 Terminal=false
 Type=Application
 Icon=folder-wine
-Categories=System;X-Wine;' > $PKG/usr/share/applications/wine-browsedrive.desktop
+Categories=System;X-Wine;
+EOF
+
+# Permisos seguros en ficheros generados
+chmod 644 "$PKG/etc/fonts/conf.avail/30-win32-aliases.conf" \
+          "$PKG/usr/lib$LIBDIRSUFFIX/binfmt.d/wine.conf" \
+          "$PKG/etc/xdg/menus/applications-merged/wine.menu" \
+          "$PKG/usr/share/applications/"*.desktop \
+          "$PKG/usr/share/pixmaps/"*.png \
+          "$PKG/usr/share/icons/hicolor/scalable/apps/"*.svg
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables

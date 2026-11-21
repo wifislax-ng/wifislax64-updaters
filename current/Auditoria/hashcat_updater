@@ -2,13 +2,13 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250523
+SCRIPT_VERSION=20261120
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -16,34 +16,40 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=hashcat
-	EXTENSION=tar.gz
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/$PRGNAM/$PRGNAM
-	VERSION=$(curl -s $WEB/tags|grep $EXTENSION|head -1|cut -d / -f7|cut -d t -f-1|sed 's/.$//g'|cut -d v -f2)
-	SOURCES=v$VERSION.$EXTENSION
-	CD=$PRGNAM-$VERSION
-	DOWNLOAD=$WEB/archive/$SOURCES
+PRGNAM=hashcat
+EXTENSION=tar.gz
+GESTOR=wget
+echo -ne "\033]2;${PRGNAM}_updater\007"
+WEB=https://github.com/$PRGNAM/$PRGNAM
+VERSION=$(curl -fsSL "https://api.github.com/repos/$PRGNAM/$PRGNAM/releases/latest" | grep -oE '"tag_name":\s*"v?[0-9.]+"' | sed -E 's/.*"v?([0-9.]+)".*/\1/')
+SOURCES=v$VERSION.$EXTENSION
+CD=$PRGNAM-$VERSION
+DOWNLOAD=$WEB/archive/refs/tags/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="opencl-headers xxHash"
+f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 echo 
-echo "$VERDE"Compilando ..."$CIERRE"
+echo "${VERDE}Compilando ...${CIERRE}"
 sleep 1
 
 # Forzamos compilar con las liberias de sistema
 rm -rf deps/{OpenCL-Headers,xxHash}
-make PREFIX=/usr DOCUMENT_FOLDER=/usr/doc SHARED=1 USE_SYSTEM_OPENCL=1 USE_SYSTEM_XXHASH=1 LIBRARY_FOLDER=/usr/lib${LIBDIRSUFFIX}||exit 1
-make PREFIX=/usr DOCUMENT_FOLDER=/usr/doc SHARED=1 USE_SYSTEM_OPENCL=1 USE_SYSTEM_XXHASH=1 LIBRARY_FOLDER=/usr/lib${LIBDIRSUFFIX} DESTDIR=$PKG install||exit 1
+make -j$(nproc) PREFIX=/usr DOCUMENT_FOLDER=/usr/doc/$PRGNAM-$VERSION SHARED=1 USE_SYSTEM_OPENCL=1 USE_SYSTEM_XXHASH=1 LIBRARY_FOLDER=/usr/lib${LIBDIRSUFFIX} || exit 1
+make PREFIX=/usr DOCUMENT_FOLDER=/usr/doc/$PRGNAM-$VERSION SHARED=1 USE_SYSTEM_OPENCL=1 USE_SYSTEM_XXHASH=1 LIBRARY_FOLDER=/usr/lib${LIBDIRSUFFIX} DESTDIR="$PKG" install || exit 1
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables
@@ -61,6 +67,8 @@ f_presentacion
 f_comprobarUpdates
 #Comprobamos version instalada del paquete
 f_versionInstalada
+#Comprobar dependencias
+F_dependencias
 #Si no existe el fichero se descargara
 f_download
 #Descomprimir sources

@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/bin/sh
 
 # Script by USUARIONUEVO @ www.seguridadwireless.net
-# Versión optimizada y endurecida con IA
+# Versión optimizada, endurecida y compatible 100% con POSIX
 
-# Comprobar permisos de root antes de tocar el sistema (compatible POSIX)
+# Comprobar permisos de root antes de tocar el sistema
 if [ "$(id -u)" -ne 0 ]; then
-    echo "Error: Este script debe ejecutarse como root." >&2
+    printf "Error: Este script debe ejecutarse como root.\n" >&2
     exit 1
 fi
 
@@ -35,10 +35,10 @@ fi
 readonly CIERRE="$RESET"
 
 # Verificar herramientas esenciales antes de perder tiempo compilando
-DEPENDENCIAS=(curl wget tar make gcc bc bison flex sha256sum dir2xzm)
-for cmd in "${DEPENDENCIAS[@]}"; do
+DEPENDENCIAS="curl wget tar make gcc bc bison flex sha256sum dir2xzm"
+for cmd in $DEPENDENCIAS; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
-        echo -e "${ROJO}Error: Falta la herramienta requerida '$cmd'. Instálala antes de continuar.${RESET}" >&2
+        printf "%bError: Falta la herramienta requerida '%s'. Instálala antes de continuar.%b\n" "$ROJO" "$cmd" "$RESET" >&2
         exit 1
     fi
 done
@@ -47,19 +47,25 @@ done
 mkdir -p /usr/src
 ESPACIO_LIBRE=$(df -k /usr/src | awk 'NR==2 {print $4}')
 if [ -n "$ESPACIO_LIBRE" ] && [ "$ESPACIO_LIBRE" -lt 15728640 ]; then
-    echo -e "${AMARILLO}Advertencia: Tienes menos de 15 GB libres en /usr/src ($((ESPACIO_LIBRE / 1024 / 1024)) GB).${RESET}"
-    echo -e "${AMARILLO}La compilación podría fallar por falta de espacio. ¿Continuar de todos modos? [s/N]: ${RESET}"
+    printf "%bAdvertencia: Tienes menos de 15 GB libres en /usr/src (%s GB).%b\n" "$AMARILLO" "$((ESPACIO_LIBRE / 1024 / 1024))" "$RESET"
+    printf "%bLa compilación podría fallar por falta de espacio. ¿Continuar de todos modos? [s/N]: %b" "$AMARILLO" "$RESET"
     read -r CONT_ESPACIO
-    [[ ! "$CONT_ESPACIO" =~ ^[sSyY]$ ]] && exit 1
+    case "$CONT_ESPACIO" in
+        [sSyY]) ;;
+        *) exit 1 ;;
+    esac
 fi
 
 # Verificar espacio libre en $HOME (mínimo 1.5 GB = 1572864 KB para contenedor y .xzm final)
 ESPACIO_HOME=$(df -k "$HOME" | awk 'NR==2 {print $4}')
 if [ -n "$ESPACIO_HOME" ] && [ "$ESPACIO_HOME" -lt 1572864 ]; then
-    echo -e "${AMARILLO}Advertencia: Tienes menos de 1.5 GB libres en $HOME ($((ESPACIO_HOME / 1024)) MB).${RESET}"
-    echo -e "${AMARILLO}El empaquetado final del módulo .xzm podría fallar por falta de espacio/RAM. ¿Continuar? [s/N]: ${RESET}"
+    printf "%bAdvertencia: Tienes menos de 1.5 GB libres en %s (%s MB).%b\n" "$AMARILLO" "$HOME" "$((ESPACIO_HOME / 1024))" "$RESET"
+    printf "%bEl empaquetado final del módulo .xzm podría fallar por falta de espacio/RAM. ¿Continuar? [s/N]: %b" "$AMARILLO" "$RESET"
     read -r CONT_HOME
-    [[ ! "$CONT_HOME" =~ ^[sSyY]$ ]] && exit 1
+    case "$CONT_HOME" in
+        [sSyY]) ;;
+        *) exit 1 ;;
+    esac
 fi
 
 # Variables globales
@@ -82,9 +88,9 @@ FUENTES=""
 CONTAINER=""
 
 limpiar_temporales() {
-    local exit_code=$?
-    if [ "$exit_code" -ne 0 ]; then
-        echo -e "\n${AMARILLO}Limpiando archivos temporales tras interrupción o error...${RESET}" >&2
+    _lt_exit_code=$?
+    if [ "$_lt_exit_code" -ne 0 ]; then
+        printf "\n%bLimpiando archivos temporales tras interrupción o error...%b\n" "$AMARILLO" "$RESET" >&2
         [ -n "$CONTAINER" ] && [ -d "$CONTAINER" ] && rm -rf "$CONTAINER"
         [ -n "$FUENTES" ] && [ -d "$FUENTES" ] && rm -rf "$FUENTES"
     fi
@@ -135,20 +141,20 @@ MAX_INTENTOS=3
 TIEMPO_ESPERA=4
 
 verificar_internet() {
-    local intento=1
-    while [ "$intento" -le "$MAX_INTENTOS" ]; do
+    _vi_intento=1
+    while [ "$_vi_intento" -le "$MAX_INTENTOS" ]; do
         if curl --silent --head --fail --max-time "$TIEMPO_ESPERA" "$HOST_COMPROBACION" >/dev/null 2>&1; then
             return 0
         fi
-        echo -e "${AMARILLO}Sin respuesta (intento $intento de $MAX_INTENTOS). Reintentando...${RESET}" >&2
+        printf "%bSin respuesta (intento %s de %s). Reintentando...%b\n" "$AMARILLO" "$_vi_intento" "$MAX_INTENTOS" "$RESET" >&2
         sleep 2
-        ((intento++))
+        _vi_intento=$((_vi_intento + 1))
     done
     return 1
 }
 
 if ! verificar_internet; then
-    echo -e "\n${ROJO}Error: Sin conexión a internet tras $MAX_INTENTOS intentos.${BLANCO} El script se cerrará...${RESET}\n" >&2
+    printf "\n%bError: Sin conexión a internet tras %s intentos.%b El script se cerrará...%b\n\n" "$ROJO" "$MAX_INTENTOS" "$BLANCO" "$RESET" >&2
     exit 1
 fi
 
@@ -156,36 +162,46 @@ fi
 SERVIDOR_WEB="https://raw.githubusercontent.com/wifislax-ng/wifislax64-updaters/master/$WIFISLAX"
 DIRECTORIO=$(find /opt/wifislax-updaters -type f -name "$SCRIPTNAME" -printf '%h\n' 2>/dev/null | head -n 1)
 
-echo -e "\n${CYAN}Versión Script${RESET}: ${ROJO}${SCRIPT_VERSION:6}${BLANCO}/${AMARILLO}${SCRIPT_VERSION:4:2}${BLANCO}/${ROJO}${SCRIPT_VERSION:0:4}${RESET}\n"
+SV_DIA=$(printf '%s' "$SCRIPT_VERSION" | cut -c 7-8)
+SV_MES=$(printf '%s' "$SCRIPT_VERSION" | cut -c 5-6)
+SV_ANO=$(printf '%s' "$SCRIPT_VERSION" | cut -c 1-4)
+printf "\n%bVersión Script%b: %b%s%b/%b%s%b/%b%s%b\n\n" "$CYAN" "$RESET" "$ROJO" "$SV_DIA" "$BLANCO" "$AMARILLO" "$SV_MES" "$BLANCO" "$ROJO" "$SV_ANO" "$RESET"
 
 if [ -n "$DIRECTORIO" ] && [ -w "$DIRECTORIO/$SCRIPTNAME" ]; then
     SERVIDOR_VERSION=$(curl -fsSL --max-time 4 "$SERVIDOR_WEB/${DIRECTORIO##*/}/$SCRIPTNAME" 2>/dev/null | awk -F'=' '/^readonly SCRIPT_VERSION=|^SCRIPT_VERSION=/{print $2; exit}')
-    if [[ "$SERVIDOR_VERSION" =~ ^[0-9]{8}$ ]] && [ "$SCRIPT_VERSION" -lt "$SERVIDOR_VERSION" ]; then
-        echo -e "${ROSA}Comprobando actualizaciones para el script... ${ROJO}¡NUEVA VERSIÓN DISPONIBLE!${RESET}"
-        echo -e "${ROSA}Versión Server${RESET}: ${ROJO}${SERVIDOR_VERSION:6}${BLANCO}/${AMARILLO}${SERVIDOR_VERSION:4:2}${BLANCO}/${ROJO}${SERVIDOR_VERSION:0:4}${RESET}\n"
-        echo -e "${CYAN}Actualizando $SCRIPTNAME...${RESET}"
-        if curl -fsSL --max-time 10 "$SERVIDOR_WEB/${DIRECTORIO##*/}/$SCRIPTNAME" -o "$DIRECTORIO/$SCRIPTNAME.tmp"; then
-            chmod +x "$DIRECTORIO/$SCRIPTNAME.tmp"
-            mv -f "$DIRECTORIO/$SCRIPTNAME.tmp" "$DIRECTORIO/$SCRIPTNAME"
-            echo -e "${VERDE}LISTO. Reiniciando script...${RESET}\n"
-            exec "$0" "$@"
-        else
-            rm -f "$DIRECTORIO/$SCRIPTNAME.tmp"
-            echo -e "${AMARILLO}No se pudo descargar la actualización. Continuando con la versión local...${RESET}\n"
-        fi
-    fi
+    case "$SERVIDOR_VERSION" in
+        [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9])
+            if [ "$SCRIPT_VERSION" -lt "$SERVIDOR_VERSION" ]; then
+                SRV_DIA=$(printf '%s' "$SERVIDOR_VERSION" | cut -c 7-8)
+                SRV_MES=$(printf '%s' "$SERVIDOR_VERSION" | cut -c 5-6)
+                SRV_ANO=$(printf '%s' "$SERVIDOR_VERSION" | cut -c 1-4)
+                printf "%bComprobando actualizaciones para el script... %b¡NUEVA VERSIÓN DISPONIBLE!%b\n" "$ROSA" "$ROJO" "$RESET"
+                printf "%bVersión Server%b: %b%s%b/%b%s%b/%b%s%b\n\n" "$ROSA" "$RESET" "$ROJO" "$SRV_DIA" "$BLANCO" "$AMARILLO" "$SRV_MES" "$BLANCO" "$ROJO" "$SRV_ANO" "$RESET"
+                printf "%bActualizando %s...%b\n" "$CYAN" "$SCRIPTNAME" "$RESET"
+                if curl -fsSL --max-time 10 "$SERVIDOR_WEB/${DIRECTORIO##*/}/$SCRIPTNAME" -o "$DIRECTORIO/$SCRIPTNAME.tmp"; then
+                    chmod +x "$DIRECTORIO/$SCRIPTNAME.tmp"
+                    mv -f "$DIRECTORIO/$SCRIPTNAME.tmp" "$DIRECTORIO/$SCRIPTNAME"
+                    printf "%bLISTO. Reiniciando script...%b\n\n" "$VERDE" "$RESET"
+                    exec "$0" "$@"
+                else
+                    rm -f "$DIRECTORIO/$SCRIPTNAME.tmp"
+                    printf "%bNo se pudo descargar la actualización. Continuando con la versión local...%b\n\n" "$AMARILLO" "$RESET"
+                fi
+            fi
+            ;;
+    esac
 fi
 
 # Obtener listado oficial estructurado (JSON) desde kernel.org
 JSON_RELEASES=$(curl -fsSL --max-time 10 "$WEB/releases.json")
 if [ -z "$JSON_RELEASES" ]; then
-    echo -e "${ROJO}Error: No se pudo obtener la lista de versiones desde $WEB/releases.json${RESET}" >&2
+    printf "%bError: No se pudo obtener la lista de versiones desde %s/releases.json%b\n" "$ROJO" "$WEB" "$RESET" >&2
     exit 1
 fi
 
 # Extraer versiones limpias desde el JSON (Python3 con respaldo en grep)
 if command -v python3 >/dev/null 2>&1; then
-    read -r VER_RAMA VER_STABLE VER_RC < <(python3 -c '
+    VERSIONES_EXTR=$(printf '%s' "$JSON_RELEASES" | python3 -c '
 import sys, json
 data = json.load(sys.stdin)
 releases = data.get("releases", [])
@@ -193,29 +209,33 @@ rama = sys.argv[1]
 v_rama = next((r["version"] for r in releases if r["version"].startswith(rama + ".")), "")
 v_stable = next((r["version"] for r in releases if r.get("moniker") == "stable"), "")
 v_rc = next((r["version"] for r in releases if r.get("moniker") == "mainline"), "")
-print(f"{v_rama} {v_stable} {v_rc}")
-' "$RAMA_SISTEMA" <<< "$JSON_RELEASES")
+print(f"{v_rama}|{v_stable}|{v_rc}")
+' "$RAMA_SISTEMA")
+    VER_RAMA=$(printf '%s' "$VERSIONES_EXTR" | cut -d'|' -f1)
+    VER_STABLE=$(printf '%s' "$VERSIONES_EXTR" | cut -d'|' -f2)
+    VER_RC=$(printf '%s' "$VERSIONES_EXTR" | cut -d'|' -f3)
 else
-    VER_RAMA=$(echo "$JSON_RELEASES" | grep -oE "\"version\": \"${RAMA_SISTEMA}\.[0-9]+\"" | head -n 1 | cut -d'"' -f4)
-    VER_STABLE=$(echo "$JSON_RELEASES" | grep -A 3 '"moniker": "stable"' | grep '"version":' | head -n 1 | cut -d'"' -f4)
-    VER_RC=$(echo "$JSON_RELEASES" | grep -A 3 '"moniker": "mainline"' | grep '"version":' | head -n 1 | cut -d'"' -f4)
+    VER_RAMA=$(printf '%s
+' "$JSON_RELEASES" | grep -oE ""version": "${RAMA_SISTEMA}\.[0-9]+"" | head -n 1 | cut -d'"' -f4)
+    VER_STABLE=$(printf '%s
+' "$JSON_RELEASES" | grep -A 3 '"moniker": "stable"' | grep '"version":' | head -n 1 | cut -d'"' -f4)
+    VER_RC=$(printf '%s
+' "$JSON_RELEASES" | grep -A 3 '"moniker": "mainline"' | grep '"version":' | head -n 1 | cut -d'"' -f4)
 fi
 
-# Menú de opciones
-PS3=$'\nSelecciona una opción: '
-OPCIONES=(
-    "${VERDE}Seguir rama del sistema (${VER_RAMA:-rama EOL / no disponible}) ${AMARILLO}(recomendado)${RESET}"
-    "${VERDE}Último disponible como estable (${VER_STABLE:-desconocido})${RESET}"
-    "${VERDE}Elegir uno custom (manual)${RESET}"
-    "${VERDE}Último disponible mainline/rcX (${VER_RC:-desconocido})${RESET}"
-)
-
+# Menú de opciones compatible POSIX
 CUSTOM="FALSE"
-select OPT in "${OPCIONES[@]}"; do
-    case $REPLY in
+while true; do
+    printf "\n1) %bSeguir rama del sistema (%s) %b(recomendado)%b\n" "$VERDE" "${VER_RAMA:-rama EOL / no disponible}" "$AMARILLO" "$RESET"
+    printf "2) %bÚltimo disponible como estable (%s)%b\n" "$VERDE" "${VER_STABLE:-desconocido}" "$RESET"
+    printf "3) %bElegir uno custom (manual)%b\n" "$VERDE" "$RESET"
+    printf "4) %bÚltimo disponible mainline/rcX (%s)%b\n" "$VERDE" "${VER_RC:-desconocido}" "$RESET"
+    printf "\nSelecciona una opción: "
+    read -r REPLY
+    case "$REPLY" in
         1)
             if [ -z "$VER_RAMA" ]; then
-                echo -e "${ROJO}La rama $RAMA_SISTEMA ya no tiene soporte activo en kernel.org. Elige otra opción.${RESET}"
+                printf "%bLa rama %s ya no tiene soporte activo en kernel.org. Elige otra opción.%b\n" "$ROJO" "$RAMA_SISTEMA" "$RESET"
                 continue
             fi
             KERNEL_ELEGIDO="$VER_RAMA"
@@ -234,69 +254,75 @@ select OPT in "${OPCIONES[@]}"; do
             break
             ;;
         *)
-            echo -e "${ROJO}Opción inválida. Elige un número del 1 al 4.${RESET}"
+            printf "%bOpción inválida. Elige un número del 1 al 4.%b\n" "$ROJO" "$RESET"
             ;;
     esac
 done
 
 if [ "$CUSTOM" = "TRUE" ]; then
-    echo -e "\n${VERDE}Escribe el número de kernel exacto que quieres compilar (ej. 6.12.118) y pulsa ${BLANCO}ENTER${RESET}:"
+    printf "\n%bEscribe el número de kernel exacto que quieres compilar (ej. 6.12.118) y pulsa %bENTER%b:\n" "$VERDE" "$BLANCO" "$RESET"
     read -r KERNEL_ELEGIDO
-    KERNEL_ELEGIDO="${KERNEL_ELEGIDO// /}"
+    KERNEL_ELEGIDO=$(printf '%s' "$KERNEL_ELEGIDO" | tr -d ' ')
 fi
 
 if [ -z "$KERNEL_ELEGIDO" ]; then
-    echo -e "${ROJO}Error: No se pudo determinar una versión de kernel válida.${RESET}" >&2
+    printf "%bError: No se pudo determinar una versión de kernel válida.%b\n" "$ROJO" "$RESET" >&2
     exit 1
 fi
 
 # Construir URL de descarga según tipo de versión (rcX vs estándar)
 FAMILIA="${KERNEL_ELEGIDO%%.*}"
-if [[ "$KERNEL_ELEGIDO" == *"-rc"* ]]; then
-    ARCHIVO_TAR="$PRGNAM-$KERNEL_ELEGIDO.tar.gz"
-    DESCARGA="https://git.kernel.org/torvalds/t/$ARCHIVO_TAR"
-else
-    ARCHIVO_TAR="$PRGNAM-$KERNEL_ELEGIDO.tar.xz"
-    DESCARGA="https://cdn.kernel.org/pub/linux/kernel/v${FAMILIA}.x/$ARCHIVO_TAR"
-fi
+case "$KERNEL_ELEGIDO" in
+    *-rc*)
+        ARCHIVO_TAR="$PRGNAM-$KERNEL_ELEGIDO.tar.gz"
+        DESCARGA="https://git.kernel.org/torvalds/t/$ARCHIVO_TAR"
+        ;;
+    *)
+        ARCHIVO_TAR="$PRGNAM-$KERNEL_ELEGIDO.tar.xz"
+        DESCARGA="https://cdn.kernel.org/pub/linux/kernel/v${FAMILIA}.x/$ARCHIVO_TAR"
+        ;;
+esac
 
 FUENTES="/usr/src/$PRGNAM-$KERNEL_ELEGIDO"
 cd /usr/src || exit 1
 
 # Descargar fuentes si no existen previamente
 if [ ! -f "$ARCHIVO_TAR" ]; then
-    echo -e "\n${CYAN}Descargando fuentes de $PRGNAM-$KERNEL_ELEGIDO ...${RESET}"
+    printf "\n%bDescargando fuentes de %s-%s ...%b\n" "$CYAN" "$PRGNAM" "$KERNEL_ELEGIDO" "$RESET"
     if ! wget -N -L -c -q --show-progress "$DESCARGA" -O "$ARCHIVO_TAR"; then
         rm -f "$ARCHIVO_TAR"
-        echo -e "\n${ROJO}Error al descargar $DESCARGA. Verifica que la versión exista.${RESET}" >&2
+        printf "\n%bError al descargar %s. Verifica que la versión exista.%b\n" "$ROJO" "$DESCARGA" "$RESET" >&2
         exit 1
     fi
 else
-    echo -e "\n${AMARILLO}El archivo $ARCHIVO_TAR ya existe en /usr/src. Omitiendo descarga.${RESET}"
+    printf "\n%bEl archivo %s ya existe en /usr/src. Omitiendo descarga.%b\n" "$AMARILLO" "$ARCHIVO_TAR" "$RESET"
 fi
 
 # Validar integridad SHA256 para versiones estándar
-if [[ "$KERNEL_ELEGIDO" != *"-rc"* ]]; then
-    URL_SHA="https://cdn.kernel.org/pub/linux/kernel/v${FAMILIA}.x/sha256sums.asc"
-    HASH_ESPERADO=$(curl -fsSL --max-time 10 "$URL_SHA" 2>/dev/null | awk -v f="$ARCHIVO_TAR" '$2 == f {print $1}')
-    if [ -n "$HASH_ESPERADO" ]; then
-        echo -e "${CYAN}Verificando integridad SHA256...${RESET}"
-        if ! echo "$HASH_ESPERADO  $ARCHIVO_TAR" | sha256sum -c --status; then
-            echo -e "${ROJO}Error: El archivo descargado está corrupto (fallo de SHA256). Borrando...${RESET}" >&2
-            rm -f "$ARCHIVO_TAR"
-            exit 1
+case "$KERNEL_ELEGIDO" in
+    *-rc*) ;;
+    *)
+        URL_SHA="https://cdn.kernel.org/pub/linux/kernel/v${FAMILIA}.x/sha256sums.asc"
+        HASH_ESPERADO=$(curl -fsSL --max-time 10 "$URL_SHA" 2>/dev/null | awk -v f="$ARCHIVO_TAR" '$2 == f {print $1}')
+        if [ -n "$HASH_ESPERADO" ]; then
+            printf "%bVerificando integridad SHA256...%b\n" "$CYAN" "$RESET"
+            if ! printf "%s  %s\n" "$HASH_ESPERADO" "$ARCHIVO_TAR" | sha256sum -c --status; then
+                printf "%bError: El archivo descargado está corrupto (fallo de SHA256). Borrando...%b\n" "$ROJO" "$RESET" >&2
+                rm -f "$ARCHIVO_TAR"
+                exit 1
+            fi
+            printf "%bIntegridad verificada correctamente.%b\n" "$VERDE" "$RESET"
         fi
-        echo -e "${VERDE}Integridad verificada correctamente.${RESET}"
-    fi
-fi
+        ;;
+esac
 
 # Limpiar compilación anterior si existiera
 rm -rf "$FUENTES"
 
 # Descomprimir fichero
-echo -e "\n${VERDE}Descomprimiendo $ARCHIVO_TAR ...${RESET}"
+printf "\n%bDescomprimiendo %s ...%b\n" "$VERDE" "$ARCHIVO_TAR" "$RESET"
 if ! tar xf "$ARCHIVO_TAR"; then
-    echo -e "${ROJO}Error al descomprimir $ARCHIVO_TAR. El archivo podría estar corrupto.${RESET}" >&2
+    printf "%bError al descomprimir %s. El archivo podría estar corrupto.%b\n" "$ROJO" "$ARCHIVO_TAR" "$RESET" >&2
     exit 1
 fi
 
@@ -307,30 +333,30 @@ make mrproper
 LOGO="/usr/share/pixmaps/wifislax_logo_blue.png"
 LOGONEW="$FUENTES/drivers/video/logo/logo_linux_clut224.ppm"
 if [ -f "$LOGO" ] && command -v pngtopnm >/dev/null 2>&1; then
-    echo -e "\n${VERDE}Convirtiendo logo de arranque...${RESET}"
+    printf "\n%bConvirtiendo logo de arranque...%b\n" "$VERDE" "$RESET"
     pngtopnm "$LOGO" | ppmquant 224 | pnmtoplainpnm > "$LOGONEW" || exit 1
 fi
 
 # Gestión del archivo .config
 if [ ! -f "$FUENTES/.config" ]; then
-    echo -e "\n${CYAN}No se detectó fichero .config personalizado."
-    echo -e "Si deseas usar uno propio, cópialo ahora a: $FUENTES/.config"
-    echo -e "De lo contrario, se extraerá la configuración del kernel actual."
-    echo -e "Pulsa ${AMARILLO}ENTER${CYAN} para continuar...${RESET}\n"
+    printf "\n%bNo se detectó fichero .config personalizado.\n" "$CYAN"
+    printf "Si deseas usar uno propio, cópialo ahora a: %s/.config\n" "$FUENTES"
+    printf "De lo contrario, se extraerá la configuración del kernel actual.\n"
+    printf "Pulsa %bENTER%b para continuar...%b\n\n" "$AMARILLO" "$CYAN" "$RESET"
     read -r
 fi
 
 if [ -f "$FUENTES/.config" ]; then
-    echo -e "\n${VERDE}Usando fichero .config proporcionado por el usuario...${RESET}\n"
+    printf "\n%bUsando fichero .config proporcionado por el usuario...%b\n\n" "$VERDE" "$RESET"
 else
-    echo -e "\n${VERDE}Generando .config a partir del kernel en ejecución...${RESET}\n"
+    printf "\n%bGenerando .config a partir del kernel en ejecución...%b\n\n" "$VERDE" "$RESET"
     modprobe configs 2>/dev/null
     if [ -r /proc/config.gz ]; then
         zcat /proc/config.gz > "$FUENTES/.config"
     elif [ -r "/boot/config-$KERNEL_ACTUAL" ]; then
         cp "/boot/config-$KERNEL_ACTUAL" "$FUENTES/.config"
     else
-        echo -e "${ROJO}Error: No se encontró configuración base en /proc/config.gz ni en /boot.${RESET}" >&2
+        printf "%bError: No se encontró configuración base en /proc/config.gz ni en /boot.%b\n" "$ROJO" "$RESET" >&2
         exit 1
     fi
 fi
@@ -348,7 +374,7 @@ fi
 COMIENZO=$(date +%s)
 
 # Compilación del kernel y módulos (LOCALVERSION="" evita el sufijo '+' por cambios locales)
-echo -e "\n${CYAN}Compilando kernel y módulos ($MAKEFLAGS)...${RESET}\n"
+printf "\n%bCompilando kernel y módulos (%s)...%b\n\n" "$CYAN" "$MAKEFLAGS" "$RESET"
 make LOCALVERSION="" all || exit 1
 
 # Obtener versión exacta compilada desde el propio árbol de compilación
@@ -403,9 +429,9 @@ if [ -d "$CONTAINER/lib/modules/$KERNEL_VERSION" ]; then
     ln -sfn "/usr/src/$FUENTES_BASENAME" "$CONTAINER/lib/modules/$KERNEL_VERSION/source"
 fi
 
-echo -e "\n${CYAN}Creando módulo comprimido .xzm ...${RESET}"
+printf "\n%bCreando módulo comprimido .xzm ...%b\n" "$CYAN" "$RESET"
 if ! dir2xzm "$CONTAINER" "$MODULO_FINAL" -n; then
-    echo -e "\n${ROJO}Error al crear el módulo $MODULO_FINAL${RESET}" >&2
+    printf "\n%bError al crear el módulo %s%b\n" "$ROJO" "$MODULO_FINAL" "$RESET" >&2
     exit 1
 fi
 
@@ -422,32 +448,32 @@ MINUTOS=$(( (SEGUNDOS_TOTALES % 3600) / 60 ))
 SEGUNDOS=$(( SEGUNDOS_TOTALES % 60 ))
 TIEMPO=$(printf "%02d:%02d:%02d" "$HORAS" "$MINUTOS" "$SEGUNDOS")
 
-echo -e "\n${AMARILLO}Tiempo empleado${BLANCO}: $TIEMPO${RESET}\n"
+printf "\n%bTiempo empleado%b: %s%b\n\n" "$AMARILLO" "$BLANCO" "$TIEMPO" "$RESET"
 
 # Si no es Wifislax o está corriendo en modo Live, terminar aquí
 if [ ! -f /etc/wifislax-version ] || [ -d /mnt/live ]; then
-    echo -e "${VERDE}Módulo guardado en: ${BLANCO}$MODULO_FINAL${RESET}"
-    echo -e "${VERDE}Kernel guardado en: ${BLANCO}$HOME/$ESCRITORIO/$VMLINUZ${RESET}"
-    echo -e "\n${AMARILLO}Bye Bye${RESET}\n"
+    printf "%bMódulo guardado en: %b%s%b\n" "$VERDE" "$BLANCO" "$MODULO_FINAL" "$RESET"
+    printf "%bKernel guardado en: %b%s/%s/%s%b\n" "$VERDE" "$BLANCO" "$HOME" "$ESCRITORIO" "$VMLINUZ" "$RESET"
+    printf "\n%bBye Bye%b\n\n" "$AMARILLO" "$RESET"
     exit 0
 fi
 
 # Instalación opcional en Wifislax instalado en disco duro
-echo -e "${AMARILLO}Pulsa ENTER para instalar el kernel $KERNEL_VERSION en el sistema o Ctrl+C para salir...${RESET}"
+printf "%bPulsa ENTER para instalar el kernel %s en el sistema o Ctrl+C para salir...%b\n" "$AMARILLO" "$KERNEL_VERSION" "$RESET"
 read -r
 
 if [ -f "$MODULO_FINAL" ] && [ -f "$HOME/$ESCRITORIO/$VMLINUZ" ]; then
-    echo -e "\n${VERDE}Instalando Kernel $KERNEL_VERSION en el sistema ...${RESET}\n"
+    printf "\n%bInstalando Kernel %s en el sistema ...%b\n\n" "$VERDE" "$KERNEL_VERSION" "$RESET"
     xzm2dir "$MODULO_FINAL" /
     cp -f "$HOME/$ESCRITORIO/$VMLINUZ" "/boot/vmlinuz-${KERNEL_VERSION}"
     
     if command -v update-grub >/dev/null 2>&1; then
         update-grub
     fi
-    echo -e "\n${CYAN}Instalación completada correctamente.${RESET}"
+    printf "\n%bInstalación completada correctamente.%b\n" "$CYAN" "$RESET"
 else
-    echo -e "\n${ROJO}Error: No se encontraron los archivos compilados para instalar.${RESET}" >&2
+    printf "\n%bError: No se encontraron los archivos compilados para instalar.%b\n" "$ROJO" "$RESET" >&2
     exit 1
 fi
 
-echo -e "\n${AMARILLO}Bye Bye${RESET}\n"
+printf "\n%bBye Bye%b\n\n" "$AMARILLO" "$RESET"

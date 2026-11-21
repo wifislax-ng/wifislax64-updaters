@@ -2,13 +2,13 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20260124
+SCRIPT_VERSION=20261120
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -16,15 +16,15 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=vkd3d
-	EXTENSION=tar.xz
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://gitlab.winehq.org/wine/$PRGNAM/-/tags
-	VERSION=$(curl -s $WEB/|grep $PRGNAM-[0-9]|grep -v rc|head -1|cut -d- -f3|cut -d '"' -f1)
-	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	CD=$PRGNAM-$VERSION
-	DOWNLOAD=https://dl.winehq.org/$PRGNAM/source/$SOURCES
+PRGNAM=vkd3d
+EXTENSION=tar.xz
+GESTOR=wget
+echo -ne "\033]2;${PRGNAM}_updater\007"
+WEB=https://dl.winehq.org/$PRGNAM/source
+VERSION=$(curl -sL "$WEB/" | grep -oE 'vkd3d-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.xz' | sed -E 's/vkd3d-([0-9.]+)\.tar\.xz/\1/' | sort -V | tail -n 1)
+SOURCES=$PRGNAM-$VERSION.$EXTENSION
+CD=$PRGNAM-$VERSION
+DOWNLOAD=$WEB/$SOURCES
 }
 
 # Comprobar dependencias
@@ -36,9 +36,10 @@ f_dependencias
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 echo 
-echo "$VERDE"Configurando ..."$CIERRE"
-sleep 1
+echo "${VERDE}Configurando ...${CIERRE}"
 
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
   --libdir=/usr/lib${LIBDIRSUFFIX} \
@@ -47,21 +48,20 @@ sleep 1
   --with-spirv-tools \
   --disable-tests \
   --disable-doxygen-doc \
-  --disable-doxygen-man
+  --disable-doxygen-man || exit 1
 
 echo 
-echo "$VERDE"Compilando ..."$CIERRE"
-sleep 1
+echo "${VERDE}Compilando ...${CIERRE}"
 
-make
-make DESTDIR=$PKG install
+make -j$(nproc) || exit 1
+make DESTDIR="$PKG" install || exit 1
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables

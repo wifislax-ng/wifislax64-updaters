@@ -2,13 +2,13 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20221001
+SCRIPT_VERSION=20261120
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -16,52 +16,49 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=xampp
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://sourceforge.net/projects/xampp/files/XAMPP%20Linux
-	VERSION=$(curl -s $WEB/|grep Linux/[0-9]|head -1|cut -d/ -f6)
-	SOURCES=$(curl -s $WEB/$VERSION/|grep class=\"file|grep -Po 'title="\K.*(?=" )'|head -1|grep x64)
-	DOWNLOAD=${WEB}/$VERSION/$SOURCES
-}
-
-# Comprobar dependencias
-F_dependencias() {
-DEPENDENCIAS="google-chrome"
-f_dependencias
+PRGNAM=xampp
+GESTOR=wget
+echo -ne "\033]2;${PRGNAM}_updater\007"
+WEB=https://sourceforge.net/projects/xampp/files/XAMPP%20Linux
+VERSION=$(wget -qO- "$WEB/" | grep -oE 'XAMPP Linux/[0-9.]+' | cut -d/ -f2 | sort -V | tail -n 1)
+SOURCES=$(wget -qO- "$WEB/$VERSION/" | grep -oE 'xampp-linux-x64-[0-9.-]+-installer\.run' | head -n 1)
+DOWNLOAD=$WEB/$VERSION/$SOURCES
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-mkdir -p $PKG/{opt,usr/bin} $PKG/usr/share/{pixmaps,applications/wifislax/Servidores}
+mkdir -p "$PKG"/{opt,usr/bin,usr/share/pixmaps,usr/share/applications/wifislax/Servidores}
 echo ""
-echo "$VERDE"Descomprimiendo ..."$CIERRE"
+echo "${VERDE}Instalando en directorio temporal ...${CIERRE}"
 sleep 1
-rm -rf $PRGNAM-$VERSION
-mkdir -p $PKG/opt $PKG/usr/share/applications/
-chmod +x $SOURCES
-# Creamos xzm , instalamos y salimos
+
+[ -x /opt/lampp/lampp ] && /opt/lampp/lampp stop 2>/dev/null
+rm -rf /opt/lampp /tmp/bitrock*.log
+
+chmod +x "$TMP/$SOURCES"
+"$TMP/$SOURCES" --mode unattended || exit 1
+
 echo ""
-sleep 1
-rm -rf /tmp/bitrock*.log &
-$TMP/$SOURCES --debuglevel 4 --mode unattended
-echo $AMARILLO
-echo "Detenemos el servicio xampp y movemos ficheros ..."
-/opt/lampp/lampp stop
-echo $AMARILLO
-echo "Moviendo /opt/lampp -->>  $PKG/opt/lampp..."
-mv -f /opt/lampp $PKG/opt/lampp
+echo "${AMARILLO}Deteniendo el servicio xampp y moviendo ficheros ...${CIERRE}"
+/opt/lampp/lampp stop 2>/dev/null
+mv -f /opt/lampp "$PKG/opt/lampp" || exit 1
+rm -f /tmp/bitrock*.log
 
 # Generamos pequeño script de inicio para xampp
-echo "#!/bin/sh
+cat << 'EOF' > "$PKG/usr/bin/xampp"
+#!/bin/sh
 /opt/lampp/lampp start && \
-/opt/google/chrome/google-chrome --user-data-dir= --disable-infobars --no-sandbox localhost" > $PKG/usr/bin/xampp
-
-# Permiso de ejecucion para el script
-chmod 755 $PKG/usr/bin/xampp
+if [ -x /opt/google/chrome/google-chrome ]; then
+  /opt/google/chrome/google-chrome --user-data-dir= --disable-infobars --no-sandbox http://localhost
+else
+  xdg-open http://localhost 2>/dev/null || firefox http://localhost &
+fi
+EOF
+chmod 755 "$PKG/usr/bin/xampp"
 
 # Entrada a menu para xampp
-echo "[Desktop Entry]
+cat << 'EOF' > "$PKG/usr/share/applications/wifislax/Servidores/xampp.desktop"
+[Desktop Entry]
 Categories=Servidores;
 Exec=xampp
 Icon=xampp
@@ -71,12 +68,14 @@ Path=
 StartupNotify=true
 Terminal=false
 TerminalOptions=
-Type=Application" > $PKG/usr/share/applications/wifislax/Servidores/$PRGNAM.desktop
+Type=Application
+EOF
 
-# Entrada a menu para xampp_control_pannel
-echo "[Desktop Entry]
+# Entrada a menu para xampp_control_pannel (usa el gestor grafico nativo de XAMPP)
+cat << 'EOF' > "$PKG/usr/share/applications/wifislax/Servidores/xampp_control_pannel.desktop"
+[Desktop Entry]
 Categories=Servidores;
-Exec=/opt/lampp/share/xampp-control-panel/xampp-control-panel
+Exec=/opt/lampp/manager-linux-x64.run
 Icon=xampp-stop
 MimeType=
 Name[es]=Xampp panel de control
@@ -85,7 +84,8 @@ Path=
 StartupNotify=true
 Terminal=false
 TerminalOptions=
-Type=Application" > $PKG/usr/share/applications/wifislax/Servidores/xampp_control_pannel.desktop
+Type=Application
+EOF
 
 # Icono del panel control
 echo "
@@ -156,7 +156,7 @@ df/u7bfb/sb3By/B4CDgA/rHEHCAFKTrQUwHOc11nZvWrv2jJxYvvuUuz/OE4zhhG34Do/BqMpFI
 CIEwxhbmLM4dHTNs+FlE53NhhcB6nu+dPNnZ8fvfnz4GdghEL9iL4F+EoQyhCmPKO5GlExRtVJGC
 WApkCnQSZAJsHEwMHBesAzggCxWzZGgDwgAGhAKtQAYgfdAe6Dy4OVDDMJAnXPnCtjMuuMmM0nI/
 SqQj4DaKEbfaMKSBPkv0Pi2KAlDDlTcoExr/B0nVYCG2fRLtAAAAAElFTkSuQmCC
-" | base64 -d > $PKG/usr/share/pixmaps/xampp-stop.png
+" | base64 -d > "$PKG/usr/share/pixmaps/xampp-stop.png"
 
 # Icono desktop xampp
 echo "
@@ -220,15 +220,15 @@ nIhQPQDxUvhF3i5jaN2c/tlL4IT0vxl4K0ROiSr3xCHtPdeD0uz4o84WPrkcLw4E1gdvoo7QCIHT
 Vk4Cq2nUm+H/IQRSF/LMJwrOeebLibKcKMvkIroHn5TIPCYA3/67BweS0yPbgsD+aU7im4Jy0Zp8
 +/bAGGMM2Faa/7+QRLOWcIBzQoSgcWk8lmC2bApzGnYekKD9Pz7yz09f+h8vyfPYNv/ETwAAAABJ
 RU5ErkJggg==
-" | base64 -d > $PKG/usr/share/pixmaps/xampp.png
-chmod 777 -R $PKG/opt/lampp
+" | base64 -d > "$PKG/usr/share/pixmaps/xampp.png"
+chmod -R a+rwX "$PKG/opt/lampp/htdocs"
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables
@@ -244,10 +244,8 @@ f_directorioTemporal
 f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
-#Comprobamos version instalada del script
+#Comprobamos version instalada del paquete
 f_versionInstalada
-#Compronar dependencias
-F_dependencias
 #Si no existe el fichero se descargara
 f_download
 #Descomprimir fichero descargado y compilamos

@@ -2,13 +2,13 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20260808
+SCRIPT_VERSION=20261120
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -16,16 +16,16 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=ffmpeg
-	SRCNAM=FFmpeg
-	EXTENSION=tar.gz
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/$SRCNAM/$SRCNAM
-	VERSION=$(ls /var/log/packages|grep ffmpeg-|cut -d- -f2|grep -v compat)
-	SOURCES=n$VERSION.$EXTENSION
-	CD=$SRCNAM-n$VERSION
-	DOWNLOAD=$WEB/archive/$SOURCES
+PRGNAM=ffmpeg
+SRCNAM=FFmpeg
+EXTENSION=tar.gz
+GESTOR=wget
+echo -ne "\033]2;${PRGNAM}_updater\007"
+WEB=https://github.com/$SRCNAM/$SRCNAM
+VERSION=$(ls /var/log/packages | grep -E '^ffmpeg-[0-9]' | cut -d- -f2 | head -n 1)
+SOURCES=n$VERSION.$EXTENSION
+CD=$SRCNAM-n$VERSION
+DOWNLOAD=$WEB/archive/refs/tags/$SOURCES
 }
 
 # Comprobar dependencias
@@ -57,8 +57,7 @@ x265
 xvidcore
 zeromq
 zimg
-vapoursynth
-"
+vapoursynth"
 f_dependencias
 }
 
@@ -78,17 +77,18 @@ JIGU3tFjDW6YoKTBSa0YWfZu7z8ouVrQgKtql2LuEVHAGyOrIUA8BeWP8pNZ0tf+Rgg4K3MWn3tj
 Oah/UYkvReA0kwLATSvf/zi7y1W9Dkl885HQvWSw10Y9C9ZPNPz7otFf97EPUkn9SoMnAueJtQqo
 84HSky6fYC3YLLuEUbo/QrSjkLF+JrZ8pCB56/d0pNAlymghD4HSAd3W+Knu7fUKbvGFAg9k/4u0
 1zLt+DC6GjRTeqXBpcdEqlSvqeky+qk0EKz7ffBQcFzukXm4iT10HTssnY1uqAAA5Xetz1XPdt4A
-AdgFgBgAAByBtAqxxGf7AgAAAAAEWVo="|base64 -d > $TMP/patches.txz
+AdgFgBgAAByBtAqxxGf7AgAAAAAEWVo=" | base64 -d > "$TMP/patches.txz" || exit 1
 
-tar xvf $TMP/patches.txz &>/dev/null
-patch -p1 < ./0001-Add-av_stream_get_first_dts-for-Chromium.patch||exit 1
+tar xf "$TMP/patches.txz" >/dev/null 2>&1 || exit 1
+patch -p1 < ./0001-Add-av_stream_get_first_dts-for-Chromium.patch || exit 1
 
 echo 
-echo "$VERDE"Configurando ..."$CIERRE"
+echo "${VERDE}Configurando ...${CIERRE}"
 sleep 1
 
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}" \
 ./configure \
     --prefix=/usr \
     --libdir=/usr/lib${LIBDIRSUFFIX} \
@@ -166,20 +166,22 @@ CXXFLAGS="$SLKCFLAGS" \
     --enable-vapoursynth \
     --enable-version3 \
     --enable-vulkan \
-    --disable-decoder=magicyuv
+    --disable-decoder=magicyuv || exit 1
   
-make || exit 1
-make install DESTDIR=$PKG
+make -j$(nproc) || exit 1
+make install DESTDIR="$PKG" || exit 1
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
 #Comprobamos conexion a Internet
 f_comprobarConexion
 #Inicializamos las variables del script
@@ -190,11 +192,9 @@ f_directorioTemporal
 f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
-#Asignamos o detectamos arquitectura
-f_arquitectura
-#Comprobamos version instalada del script
+#Comprobamos version instalada del paquete
 f_versionInstalada
-#Compronar dependencias
+#Comprobar dependencias
 F_dependencias
 #Si no existe el fichero se descargara
 f_download

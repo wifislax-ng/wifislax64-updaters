@@ -1,15 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20260911
+SCRIPT_VERSION=20261121
 CATEGORIA="Editores de video"
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -17,16 +17,15 @@ f_variables(){
 ############################################################
 
 F_variables() {
-	PRGNAM=avidemux
-	EXTENSION=tar.xz
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=http://fixounet.free.fr/avidemux/download.html
-	#VERSION=$(curl -s $WEB|grep $EXTENSION|head -1|sed 's/ //g'|cut -d '>' -f3|cut -d '<' -f1)
-	VERSION=20260818_825c397
-	SOURCES=${PRGNAM}_${VERSION}.$EXTENSION
-	CD=${PRGNAM}_${VERSION}
-	DOWNLOAD=https://ponce.cc/slackware/sources/repo/${PRGNAM}_$VERSION.$EXTENSION
+PRGNAM=avidemux
+EXTENSION=tar.xz
+GESTOR=wget
+echo -ne "\033]2;${PRGNAM}_updater\007"
+WEB=http://fixounet.free.fr/avidemux/download.html
+VERSION=$(curl -fs --connect-timeout 15 "https://ponce.cc/slackware/sources/repo/" | grep -oE "${PRGNAM}_[0-9]{8}_[a-z0-9]+\.$EXTENSION" | sort -V | tail -n 1 | sed -E "s/^${PRGNAM}_//; s/\.$EXTENSION$//")
+SOURCES=${PRGNAM}_${VERSION}.$EXTENSION
+CD=${PRGNAM}_${VERSION}
+DOWNLOAD=https://ponce.cc/slackware/sources/repo/${PRGNAM}_$VERSION.$EXTENSION
 }
 
 F_dependencias(){
@@ -41,8 +40,7 @@ x265
 xvidcore
 aften
 dcaenc
-faac
-"
+faac"
 f_dependencias
 }
 
@@ -52,22 +50,23 @@ echo
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
  
-sed -i 's|0.19|1.0|' avidemux_plugins/ADM_videoFilters6/ass/CMakeLists.txt || exit 1
-bash bootStrap.bash --with-core --with-cli --with-plugins --enable-qt5
-make -C buildCli DESTDIR="$PKG" install
-make -C buildCore DESTDIR="$PKG" install
-make -C buildPluginsCLI DESTDIR="$PKG" install
-make -C buildPluginsCommon DESTDIR="$PKG" install
-install -Dm 644 avidemux_icon.png $PKG/usr/share/pixmaps/avidemux.png
-make -C buildQt5 DESTDIR="$PKG" install
-make -C buildPluginsQt5 DESTDIR="$PKG" install
+sed -i 's|0.19|1.0|' avidemux_plugins/ADM_videoFilters6/ass/CMakeLists.txt 2>/dev/null
+export MAKEFLAGS="-j$(nproc)"
+bash bootStrap.bash --with-core --with-cli --with-plugins --enable-qt5 || exit 1
+make -C buildCli DESTDIR="$PKG" install || exit 1
+make -C buildCore DESTDIR="$PKG" install || exit 1
+make -C buildPluginsCLI DESTDIR="$PKG" install || exit 1
+make -C buildPluginsCommon DESTDIR="$PKG" install || exit 1
+install -Dm 644 avidemux_icon.png "$PKG/usr/share/pixmaps/avidemux.png" || exit 1
+make -C buildQt5 DESTDIR="$PKG" install || exit 1
+make -C buildPluginsQt5 DESTDIR="$PKG" install || exit 1
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables

@@ -2,13 +2,13 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20220122
+SCRIPT_VERSION=20261121
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -16,15 +16,15 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=winetricks
-	EXTENSION=tar.gz
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/Winetricks/winetricks
-	VERSION=$(curl -s $WEB/releases/|grep tag/|grep -v test|head -1|cut -d / -f6|cut -d '"' -f-1)
-	SOURCES=$VERSION.$EXTENSION
-	CD=$PRGNAM-$VERSION
-	DOWNLOAD=$WEB/archive/$SOURCES
+PRGNAM=winetricks
+EXTENSION=tar.gz
+GESTOR=wget
+echo -ne "\033]2;${PRGNAM}_updater\007"
+WEB="https://github.com/Winetricks/$PRGNAM"
+VERSION=$(curl -fsSL --connect-timeout 10 --max-time 20 -H "User-Agent: Wifislax-Updater" "https://api.github.com/repos/Winetricks/$PRGNAM/tags" | grep '"name":' | cut -d'"' -f4 | grep -Evi 'test|rc|alpha|beta' | head -n1 | sed 's/^v//')
+SOURCES="$VERSION.$EXTENSION"
+CD="$PRGNAM-$VERSION"
+DOWNLOAD="$WEB/archive/refs/tags/$SOURCES"
 }
 
 # Comprobar dependencias ( si hay mas de una se separan por un espacio )
@@ -38,22 +38,27 @@ F_compilar(){
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
 sleep 1
-mkdir -p $PKG/{usr/bin,usr/share/pixmaps,usr/share/applications}
-make DESTDIR=$PKG install
+make DESTDIR="$PKG" install || exit 1
+
+# Eliminamos desktop e iconos originales para evitar duplicados
+rm -rf "$PKG/usr/share/applications" "$PKG/usr/share/icons"
+mkdir -p "$PKG/usr/bin" "$PKG/usr/share/pixmaps" "$PKG/usr/share/applications"
 
 # Creamos el fichero desktop
-echo "[Desktop Entry]
-Categories=Wine
+cat << EOF > "$PKG/usr/share/applications/$PRGNAM.desktop"
+[Desktop Entry]
+Categories=Wine;
 Comment=Settings Tool for WINE
 Encoding=UTF-8
 Exec=winetricks
 Icon=winetricks
 Name=winetricks
 Terminal=false
-Type=Application" > $PKG/usr/share/applications/$PRGNAM.desktop
+Type=Application
+EOF
 
 # Creamos el icono
-echo "
+base64 -d << 'EOF' > "$PKG/usr/share/pixmaps/$PRGNAM.png"
 iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABHNCSVQICAgIfAhkiAAAAAlwSFlz
 AAAOxAAADsQBlSsOGwAACVpJREFUaIHFmVuMW9UVhr9je2wylyaTIQlVOlxy0ZAMEaXchGhSEigN
 KqBKPAQhtS+VmlYRlXhBqgp9QZV4IakKUnmJVB4qHhqJhApUhKpcCCU0aSAkGUiYNJdJhmRsz4zH
@@ -98,15 +103,16 @@ dndV1mHfa8u+BJbncrmhoaGhZHd3d9elS5e6pKw6O5LtPmwFurrfmK6DOcDN2Eb0WTqdDh3Hqf9F
 XmMT+Dmg99sCOpc5QD+wCXgF+3x/htoBLRoKOACs/rpfdD0kFFkZ25Q+BY4BZ6ldD9NABiunW4A1
 wD8q/9ORXetG1cpSWKksB4aAlVjg38Um9FlgN7CXFg+wWtk3RSCyJNb7PcBi7LGlD1uRJrGPEds6
 hUb2TROIWzI2IhwhHfaG/wMP69FzuY1cpwAAAABJRU5ErkJggg==
-" | base64 -d > $PKG/usr/share/pixmaps/$PRGNAM.png
+EOF
 
+chmod 644 "$PKG/usr/share/applications/$PRGNAM.desktop" "$PKG/usr/share/pixmaps/$PRGNAM.png"
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables
@@ -124,7 +130,7 @@ f_comprobarUpdates
 f_arquitectura
 #Comprobamos version instalada del paquete
 f_versionInstalada
-#Compronar dependencias
+#Comprobar dependencias
 F_dependencias
 #Si no existe el fichero se descargara
 f_download

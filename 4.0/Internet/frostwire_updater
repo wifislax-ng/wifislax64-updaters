@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20251205
+SCRIPT_VERSION=20261120
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -20,11 +20,11 @@ F_variables() {
 	EXTENSION=tar.gz
 	GESTOR=wget
 	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://sourceforge.net/projects/frostwire/files
-	VERSION=$(curl -s ${WEB}/|grep frostwire-desktop|head -1|cut -d- -f7)
-	RAMA=$(curl -s $WEB/|grep frostwire-desktop|head -1|cut -d/ -f7)
+	WEB=https://github.com/frostwire/frostwire
+	RAMA=$(curl -fsSL "https://api.github.com/repos/frostwire/frostwire/releases" | grep -oE '"tag_name":\s*"frostwire-desktop-[0-9.]+-build-[0-9]+"' | sed -E 's/.*"([^"]+)".*/\1/' | sort -V | tail -n 1)
+	VERSION=$(echo "$RAMA" | sed -E 's/frostwire-desktop-([0-9.]+)-build-.*/\1/')
 	SOURCES=$PRGNAM-$VERSION.x86_64.$EXTENSION
-	DOWNLOAD=$WEB/$RAMA/$SOURCES
+	DOWNLOAD=$WEB/releases/download/$RAMA/$SOURCES
 }
 
 #Comprobar dependencias
@@ -35,17 +35,17 @@ f_dependencias
 
 #Configurando
 F_compilar() {
-mkdir -p $PKG/{opt,usr/bin,usr/share/pixmaps}
-mv -f $TMP/$PRGNAM-$VERSION.x86_64 $PKG/opt/$PRGNAM-$VERSION
-# Creamos el paquete
-cat << EOF > $PKG/usr/bin/$PRGNAM
-#!/bin/sh
-cd /opt/frostwire
-./frostwire
-EOF
-chmod 0755 $PKG/usr/bin/$PRGNAM
+mkdir -p "$PKG"/{opt,usr/bin,usr/share/pixmaps,usr/share/applications}
+mv -f "$TMP/$PRGNAM-$VERSION.x86_64" "$PKG/opt/$PRGNAM-$VERSION" || exit 1
 
-ln -s $PRGNAM-$VERSION $PKG/opt/$PRGNAM
+# Creamos el lanzador
+cat << 'EOF' > "$PKG/usr/bin/$PRGNAM"
+#!/bin/sh
+cd /opt/frostwire && exec ./frostwire "$@"
+EOF
+chmod 0755 "$PKG/usr/bin/$PRGNAM"
+
+ln -s "$PRGNAM-$VERSION" "$PKG/opt/$PRGNAM"
 
 # Generamos el icono usando base64 gracias vk489 por enseñarme esto
 echo "
@@ -124,12 +124,11 @@ BXFR5JeQOZ4+2ci1/3NME/PhEUvlhe4pwHx3ip6Ey52y2Kw62ZqnZcDAMhkatFhRFOCvS4NYxUHl
 7xw7RQqSrYDtK1KQmYr/N2fG03hKFdBkX0avWEbjrjeNF3dZ7Xrc4y4yfxKgnxsBoWUSdSxuCtr8
 Q8jm7ELhcye4bfWvDcBP1nzrZwrS5oQLySx/dLM8mhWeSS00fZ9Hni8KYQCcpYJtmOvYVFkw17HA
 QLErnA/gGLZkhZjPZK9mPZpd4dXsoi++/f8BVpxwwkgkvLoAAAAASUVORK5CYII=
-
-" | base64 -d >/$PKG/usr/share/pixmaps/$PRGNAM.png
+" | base64 -d > "$PKG/usr/share/pixmaps/$PRGNAM.png"
 
 # Entrada a menu para Frostwire
-mkdir -p $PKG/usr/share/applications
-echo "[Desktop Entry]
+cat > "$PKG/usr/share/applications/$PRGNAM.desktop" << 'EOF'
+[Desktop Entry]
 Version=1.0
 Name=FrostWire
 GenericName=P2P Bittorrent and cloud downloader
@@ -141,15 +140,15 @@ Icon=frostwire
 Terminal=false
 Type=Application
 Categories=Network;FileTransfer;P2P;
-MimeType=application/x-bittorrent;x-scheme-handler/magnet;" > $PKG/usr/share/applications/$PRGNAM.desktop
+MimeType=application/x-bittorrent;x-scheme-handler/magnet;
+EOF
 }
-
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables
@@ -164,8 +163,8 @@ f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
 #Asignamos o detectamos arquitectura
-f_arquitectura noarch
-#Comprobamos version instalada del script
+f_arquitectura
+#Comprobamos version instalada del paquete
 f_versionInstalada
 #Comprobar dependencias
 F_dependencias
@@ -175,7 +174,5 @@ f_download
 f_descomprimir
 #Compilamos el paquete
 F_compilar
-#Hacemos strip sobre el paquete
-f_strip
 #Creamos xzm , instalamos y salimos
-f_tareasFinales 
+f_tareasFinales

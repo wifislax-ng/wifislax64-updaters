@@ -1,15 +1,14 @@
-
 #!/bin/sh
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20201029
+SCRIPT_VERSION=20261120
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -17,54 +16,146 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=netactview
-	EXTENSION=tar.bz2
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://sourceforge.net/projects/${PRGNAM}/files/${PRGNAM}/
-	VERSION=$(curl -s $WEB|grep bz2|head -1|cut -d- -f6|cut -d '/' -f-1)
-	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	CD=$PRGNAM-$VERSION
-	DOWNLOAD=$WEB/$PRGNAM-$VERSION/$SOURCES
+PRGNAM=netactview
+EXTENSION=tar.bz2
+GESTOR=wget
+printf '\033]2;%s_updater\007' "$PRGNAM"
+WEB=https://sourceforge.net/projects/${PRGNAM}/files/${PRGNAM}
+VERSION=$(curl -sL --connect-timeout 15 "https://sourceforge.net/projects/${PRGNAM}/rss?path=/${PRGNAM}" | sed -n "s|.*${PRGNAM}-\([0-9][0-9.]*\)/${PRGNAM}-.*|\1|p" | head -1)
+SOURCES=$PRGNAM-$VERSION.$EXTENSION
+CD=$PRGNAM-$VERSION
+DOWNLOAD=$WEB/$PRGNAM-$VERSION/$SOURCES
 }
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="libgtop ORBit2 libbonobo gnome-mime-data gnome-vfs recode libgnome"
+DEPENDENCIAS="libgtop gtk+2 libglade"
 f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-echo 
-echo "$VERDE"Configurando ..."$CIERRE"
-sleep 1
+echo
+echo "${VERDE}Aplicando parches ...${CIERRE}"
+echo "
+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
+AAAAAARZWg==" | base64 -d > "$TMP/patches.txz" || exit 1
+
+tar xf "$TMP/patches.txz" >/dev/null 2>&1 || exit 1
+
+      for p in patches/drop-libgnome.patch patches/drop-gconf.patch; do
+          echo "  -> Aplicando $(basename "$p")"
+          patch -Np1 --forward --batch -i "$p" || exit 1
+      done
+
+sed -i 's/\[gksu\]/\[pkexec\]/' configure.ac || exit 1
+sed -i 's|GKSU_PATH, EXECUTABLE_PATH|"/usr/bin/netactview_polkit"|
+s/install gksu/install polkit/' src/mainwindow.c || exit 1
+
+intltoolize --force --copy --automake >/dev/null 2>&1 || exit 1
+autoreconf -fi || exit 1
+
+echo
+echo "${VERDE}Configurando ...${CIERRE}"
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
 ./configure \
-  --prefix=/usr \
-  --libdir=/usr/lib$LIBDIRSUFFIX \
-  --sysconfdir=/etc \
-  --localstatedir=/var \
-  --mandir=/usr/man \
-  --build=$ARCH-slackware-linux
+--prefix=/usr \
+--libdir=/usr/lib$LIBDIRSUFFIX \
+--sysconfdir=/etc \
+--localstatedir=/var \
+--mandir=/usr/man \
+--build=$ARCH-slackware-linux || exit 1
 
-echo 
-echo "$VERDE"Compilando ..."$CIERRE"
-sleep 1
+echo
+echo "${VERDE}Compilando ...${CIERRE}"
+make -j"$(nproc 2>/dev/null || echo 1)" || exit 1
+make install DESTDIR="$PKG" || exit 1
 
-make||exit 1
-make install DESTDIR=$PKG
+mkdir -p "$PKG/usr/bin" "$PKG/usr/share/polkit-1/actions"
+cat << 'EOF' > "$PKG/usr/bin/netactview_polkit"
+#!/bin/sh
+pkexec --disable-internal-agent env ${DISPLAY:+DISPLAY="$DISPLAY"} ${XAUTHORITY:+XAUTHORITY="$XAUTHORITY"} ${WAYLAND_DISPLAY:+WAYLAND_DISPLAY="$WAYLAND_DISPLAY"} ${XDG_RUNTIME_DIR:+XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR"} "/usr/bin/netactview" "$@"
+EOF
+chmod 0755 "$PKG/usr/bin/netactview_polkit"
+
+cat << 'EOF' > "$PKG/usr/share/polkit-1/actions/org.netactview.pkexec.policy"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <action id="org.netactview.pkexec">
+    <description>Ejecutar Netactview como administrador</description>
+    <message>Se requiere autenticacion para ver todas las conexiones de red</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/netactview</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+</policyconfig>
+EOF
+
+[ -f "$PKG/usr/share/applications/netactview.desktop" ] && sed -i 's|^Exec=.*|Exec=netactview_polkit|' "$PKG/usr/share/applications/netactview.desktop"
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables
+#Asignamos o detectamos arquitectura
+f_arquitectura
 #Comprobamos conexion a Internet
 f_comprobarConexion
 #Inicializamos las variables del script
@@ -75,11 +166,9 @@ f_directorioTemporal
 f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
-#Asignamos o detectamos arquitectura
-f_arquitectura
 #Comprobamos version instalada del paquete
 f_versionInstalada
-# Comprobar dependencias
+#Comprobar dependencias
 F_dependencias
 #Si no existe el fichero se descargara
 f_download

@@ -2,13 +2,13 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20240918
+SCRIPT_VERSION=20261120
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -16,43 +16,54 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=arping-th
-	SRCNAM=arping
-	EXTENSION=tar.gz
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/ThomasHabets/arping
-	VERSION=$(curl -s $WEB/tags|grep $EXTENSION|head -1|rev|cut -d/ -f1|cut -d- -f1|rev|cut -dt -f1|sed 's/.$//g')
-	SOURCES=$SRCNAM-$VERSION.$EXTENSION
-	CD=$SRCNAM-$SRCNAM-$VERSION
-	DOWNLOAD=$WEB/archive/refs/tags/$SOURCES
+PRGNAM=arping-th
+SRCNAM=arping
+EXTENSION=tar.gz
+GESTOR=wget
+echo -ne "\033]2;${PRGNAM}_updater\007"
+WEB=https://github.com/ThomasHabets/$SRCNAM
+VERSION=$(curl -fsSL "https://api.github.com/repos/ThomasHabets/$SRCNAM/tags" | grep -oE "\"name\":\s*\"$SRCNAM-[0-9.]+\"" | head -n 1 | sed -E "s/.*\"$SRCNAM-([0-9.]+)\".*/\1/")
+SOURCES=$SRCNAM-$VERSION.$EXTENSION
+CD=$SRCNAM-$SRCNAM-$VERSION
+DOWNLOAD=$WEB/archive/refs/tags/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="libnet libpcap"
+f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 echo 
-echo "$VERDE"Configurando ..."$CIERRE"
+echo "${VERDE}Configurando ...${CIERRE}"
 sleep 1
 
-./bootstrap.sh
+./bootstrap.sh || exit 1
 
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --sysconfdir=/etc \
+  --mandir=/usr/man \
   --program-suffix=-th \
-  --mandir=/usr/man
+  --build=$ARCH-slackware-linux || exit 1
 
 echo 
-echo "$VERDE"Compilando ..."$CIERRE"
+echo "${VERDE}Compilando ...${CIERRE}"
 sleep 1
-make || exit 1
-make install DESTDIR=$PKG || exit 1
+make -j$(nproc) || exit 1
+make DESTDIR="$PKG" install || exit 1
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables
@@ -70,6 +81,8 @@ f_presentacion
 f_comprobarUpdates
 #Comprobamos version instalada del paquete
 f_versionInstalada
+#Compronar dependencias
+F_dependencias
 #Si no existe el fichero se descargara
 f_download
 #Descomprimir sources

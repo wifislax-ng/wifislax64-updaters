@@ -2,13 +2,13 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20260520
+SCRIPT_VERSION=20261121
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -16,85 +16,85 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=libreoffice
-	SRCNAM=LibreOffice
-	EXTENSION=tar.gz
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://es.libreoffice.org/descarga
-	VERSION=$(curl -s $WEB/|grep ${SRCNAM}_|head -1|cut -d "/" -f 9|cut -d "_" -f2)
-	SOURCES=${SRCNAM}_${VERSION}_Linux_x86-64_rpm.$EXTENSION
-	CD=${SRCNAM}_${VERSION}*_Linux_x86-64_rpm/RPMS/
-	DOWNLOAD=http://download.documentfoundation.org/$PRGNAM/stable/$VERSION/rpm/$ARCH/$SOURCES
+PRGNAM=libreoffice
+SRCNAM=LibreOffice
+EXTENSION=tar.gz
+GESTOR=wget
+printf '\033]2;%s_updater\007' "$PRGNAM"
+WEB=https://es.libreoffice.org/descarga
+VERSION=$(curl -sL --connect-timeout 15 "$WEB/" | grep "${SRCNAM}_" | head -1 | cut -d "/" -f 9 | cut -d "_" -f2)
+SOURCES=${SRCNAM}_${VERSION}_Linux_x86-64_rpm.$EXTENSION
+CD=${SRCNAM}_${VERSION}*_Linux_x86-64_rpm/RPMS/
+DOWNLOAD=https://download.documentfoundation.org/libreoffice/stable/$VERSION/rpm/x86_64/$SOURCES
 }
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS="jdk libreoffice-langpack libreoffice-helppack"
+DEPENDENCIAS="rpm cpio jdk libreoffice-langpack libreoffice-helppack"
 f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-SRCSHORT=$(echo $VERSION | cut -f1-2 -d.)
+SRCSHORT=$(printf '%s' "$VERSION" | cut -d. -f1-2)
 rm -f *onlineupdate*.rpm
 
-for FILE in *.rpm ; do rpm2cpio < $FILE | cpio -imdv ; done
-rm -rf desktop-integration *.rpm
-mv opt usr $PKG
-cd $PKG
+for FILE in *.rpm; do
+[ -f "$FILE" ] || continue
+rpm2cpio < "$FILE" | cpio -imdv || exit 1
+done
 
-# Create symlinks in /usr/bin to actual binaries
-cd $PKG/usr/bin
-  for FILE in \
-    sbase scalc sdraw simpress smath soffice swriter unopkg ; do
-      rm -f $FILE
-      ln -sf ../../opt/libreoffice$SRCSHORT/program/$FILE $FILE ;
-  done
-  
-# The symlinks below are required to (directly) open documents
-# supported by libreoffice with Xfe file manager.
-ln -sf ../../opt/libreoffice$SRCSHORT/program/sbase    lobase
-ln -sf ../../opt/libreoffice$SRCSHORT/program/scalc    localc
-ln -sf ../../opt/libreoffice$SRCSHORT/program/sdraw    lodraw
-ln -sf ../../opt/libreoffice$SRCSHORT/program/simpress loimpress
-ln -sf ../../opt/libreoffice$SRCSHORT/program/smath    lomath
-ln -sf ../../opt/libreoffice$SRCSHORT/program/swriter  lowriter
+for FILE in desktop-integration/*freedesktop-menus*.rpm; do
+[ -f "$FILE" ] || continue
+rpm2cpio < "$FILE" | cpio -imdv || exit 1
+done
 
-cd -
+rm -rf desktop-integration ./*.rpm
+cp -a opt usr "$PKG/" || exit 1
 
-cd $PKG/usr/share/applications
-  for APP in base calc draw impress math startcenter writer xsltfilter ; do
-    rm -f $PRGNAM$SRCSHORT-$APP.desktop
-    ln -sf ../../../opt/libreoffice$SRCSHORT/share/xdg/$APP.desktop $PRGNAM-$APP.desktop
-  done
-cd -
+mkdir -p "$PKG/usr/bin"
+cd "$PKG/usr/bin" || exit 1
+for FILE in sbase scalc sdraw simpress smath soffice swriter unopkg; do
+rm -f "$FILE"
+ln -sf "../../opt/libreoffice${SRCSHORT}/program/${FILE}" "$FILE"
+done
 
-# Remove DejaVu and Liberation fonts - these are included in other packages
-rm -f opt/libreoffice$SRCSHORT/share/fonts/truetype/{DejaVu,Liberation}*.ttf
+ln -sf "../../opt/libreoffice${SRCSHORT}/program/sbase" lobase
+ln -sf "../../opt/libreoffice${SRCSHORT}/program/scalc" localc
+ln -sf "../../opt/libreoffice${SRCSHORT}/program/sdraw" lodraw
+ln -sf "../../opt/libreoffice${SRCSHORT}/program/simpress" loimpress
+ln -sf "../../opt/libreoffice${SRCSHORT}/program/smath" lomath
+ln -sf "../../opt/libreoffice${SRCSHORT}/program/swriter" lowriter
 
-# Fix Exec commands in the desktop files
-# See http://bugzilla.xfce.org/show_bug.cgi?id=2430
-cd $PKG/opt/libreoffice$SRCSHORT/share/xdg/
-  for APP in base calc draw impress math writer; do
-    sed -i "s%Exec=libreoffice -%Exec=/opt/libreoffice$SRCSHORT/program/s%" $APP.desktop ;
-  done
-cd -
+mkdir -p "$PKG/usr/share/applications"
+cd "$PKG/usr/share/applications" || exit 1
+for APP in base calc draw impress math startcenter writer xsltfilter; do
+rm -f "${PRGNAM}${SRCSHORT}-${APP}.desktop" "${PRGNAM}-${APP}.desktop"
+ln -sf "../../../opt/libreoffice${SRCSHORT}/share/xdg/${APP}.desktop" "${PRGNAM}-${APP}.desktop"
+done
 
-# Eliminamos de los desktop la categoria education
-cd $PKG/opt/libreoffice*/share/xdg/
-  for MENU in $(find -type f); do
-  cat $MENU | sed 's/Cate.*/Categories=Office;/g' >${MENU}2
-  rm $MENU
-  mv ${MENU}2 ${MENU}
-  done
+rm -f "$PKG/opt/libreoffice${SRCSHORT}/share/fonts/truetype"/DejaVu*.ttf
+rm -f "$PKG/opt/libreoffice${SRCSHORT}/share/fonts/truetype"/Liberation*.ttf
+
+if [ -d "$PKG/opt/libreoffice${SRCSHORT}/share/xdg" ]; then
+cd "$PKG/opt/libreoffice${SRCSHORT}/share/xdg" || exit 1
+for APP in base calc draw impress math writer; do
+[ -f "${APP}.desktop" ] && sed -i "s%Exec=libreoffice -%Exec=/opt/libreoffice${SRCSHORT}/program/s%" "${APP}.desktop"
+done
+for MENU in *.desktop; do
+[ -f "$MENU" ] || continue
+sed -i 's/^Categories=.*/Categories=Office;/' "$MENU"
+done
+fi
+
+chown -R root:root "$PKG"
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables
@@ -122,7 +122,5 @@ f_descomprimir
 f_cd
 #Descomprimir fichero descargado y compilamos
 F_compilar
-#Hacemos strip sobre el paquete
-f_strip
 #Creamos xzm , instalamos y salimos
 f_tareasFinales

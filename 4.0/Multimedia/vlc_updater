@@ -2,14 +2,14 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20260808
+SCRIPT_VERSION=20261121
 CATEGORIA="Reproductores multimedia"
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -17,15 +17,15 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=vlc
-	EXTENSION=tar.xz
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://get.videolan.org/vlc/last
-	VERSION=$(curl -s $WEB/|grep $EXTENSION|head -1|cut -d- -f2|cut -dt -f-1|sed 's/.$//g')
-	CD=$PRGNAM-$VERSION
-	SOURCES=$PRGNAM-$VERSION.$EXTENSION
-	DOWNLOAD=https://download.videolan.org/pub/videolan/$PRGNAM/$VERSION/$SOURCES
+PRGNAM=vlc
+EXTENSION=tar.xz
+GESTOR=wget
+echo -ne "\033]2;${PRGNAM}_updater\007"
+WEB=https://get.videolan.org/vlc/last
+VERSION=$(wget -qO- "$WEB/" | grep -oE 'vlc-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.xz' | sed -E 's/vlc-([0-9.]+)\.tar\.xz/\1/' | sort -V | tail -n 1)
+CD=$PRGNAM-$VERSION
+SOURCES=$PRGNAM-$VERSION.$EXTENSION
+DOWNLOAD=https://download.videolan.org/pub/videolan/$PRGNAM/$VERSION/$SOURCES
 }
 
 # Comprobar dependencias
@@ -57,16 +57,14 @@ aribb25
 portaudio
 schroedinger
 chromaprint
-faad2
-"
+faad2"
 f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 echo 
-echo "$VERDE"Configurando ..."$CIERRE"
-sleep 1
+echo "${VERDE}Configurando ...${CIERRE}"
 
 echo "
 /Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Av/Ag9dADgYSu7FL5n6pvg745dpgzgztyjlznaup/Ke
@@ -79,15 +77,15 @@ Vrq4AJGtK2SWMYYk4/fyVj6nQs1b8qkztqwpDTZpTPfGgb/veShij03eXBzF8gow3C6avu934zC4
 a4MWuUyXpWX/JPJDbofBaRi3ZUMjFLr8jypiVusfAxtQ6+pSRO3/umrlHN9GEWy3dHOqdQ6w57MQ
 PqHqoUQMMvTbhyMfuXFcMvREIm0+3FfMqzffoAxQH3iyQW26UD4b95eAlLszMKRQq8FO/vKIdPGF
 FO8HTKR2PbJ2ZLUEd3mHKm5floIZNib73HDw+OQjIVW1hdx/TN6lJHNsNNb+AACYHYpmIDQ8oAAB
-qwSAGAAAw9diurHEZ/sCAAAAAARZWg=="|base64 -d > $TMP/patches.txz
+qwSAGAAAw9diurHEZ/sCAAAAAARZWg==" | base64 -d > "$TMP/patches.txz" || exit 1
 
-tar xvf $TMP/patches.txz &>/dev/null
-patch -p0 < ./patches/patch_vlc_cache_gen.patch||exit 1
+tar xf "$TMP/patches.txz" >/dev/null 2>&1 || exit 1
+patch -p0 < ./patches/patch_vlc_cache_gen.patch || exit 1
 
 # Fix gst-plugins-base 1.28.1
-sed -i 's/gstvideopool.h/video.h/' modules/codec/gstreamer/gstvlcvideopool.h
+[ -f modules/codec/gstreamer/gstvlcvideopool.h ] && sed -i 's/gstvideopool.h/video.h/' modules/codec/gstreamer/gstvlcvideopool.h
 
-autoreconf -fiv
+autoreconf -fiv || exit 1
 
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
@@ -189,25 +187,23 @@ LDFLAGS="$SLKLDFLAGS" \
     --enable-x264 \
     --enable-x265 \
     --enable-zvbi \
-    --build=$ARCH-slackware-linux
+    --build=$ARCH-slackware-linux || exit 1
   
 echo 
-echo "$VERDE"Compilando ..."$CIERRE"
-sleep 1
+echo "${VERDE}Compilando ...${CIERRE}"
 sed -i -e '/^#define _FORTIFY_SOURCE/d' config.h
-make || exit 1
-make install DESTDIR=$PKG || exit 1
-
-install -D -m0644 extras/analyser/vlc.vim $PKG/usr/share/vim/vimfiles/syntax/vlc.vim
-rm -rf $PKG/usr/lib${LIBDIRSUFFIX}/vlc/plugins/plugins.dat
-rm -rf $PKG/usr/lib${LIBDIRSUFFIX}/*.la
+make -j$(nproc) || exit 1
+make install DESTDIR="$PKG" || exit 1
+install -D -m0644 extras/analyser/vlc.vim "$PKG/usr/share/vim/vimfiles/syntax/vlc.vim"
+rm -rf "$PKG/usr/lib${LIBDIRSUFFIX}/vlc/plugins/plugins.dat"
+rm -rf "$PKG/usr/lib${LIBDIRSUFFIX}"/*.la
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables
@@ -223,7 +219,7 @@ f_directorioTemporal
 f_presentacion
 #Comprobamos updates del script
 f_comprobarUpdates
-#Comprobamos version instalada del script
+#Comprobamos version instalada del paquete
 f_versionInstalada
 # Comprobar dependencias
 F_dependencias

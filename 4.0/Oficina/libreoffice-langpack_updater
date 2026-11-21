@@ -2,13 +2,13 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20260520
+SCRIPT_VERSION=20261121
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -16,30 +16,40 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=libreoffice-langpack
-	SRCNAM=LibreOffice
-	EXTENSION=tar.gz
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://es.libreoffice.org/descarga
-	VERSION=$(curl -s $WEB/|grep ${SRCNAM}_|head -1|cut -d "/" -f 9|cut -d "_" -f2)
-	SOURCES=${SRCNAM}_${VERSION}_Linux_x86-64_rpm_langpack_$IDIOMA.$EXTENSION
-	CD=${SRCNAM}_${VERSION}*_rpm_langpack_${IDIOMA}/RPMS/
-	DOWNLOAD=http://download.documentfoundation.org/libreoffice/stable/$VERSION/rpm/$ARCH/$SOURCES
+PRGNAM=libreoffice-langpack
+SRCNAM=LibreOffice
+EXTENSION=tar.gz
+GESTOR=wget
+printf '\033]2;%s_updater\007' "$PRGNAM"
+WEB=https://es.libreoffice.org/descarga
+VERSION=$(curl -sL --connect-timeout 15 "$WEB/" | grep "${SRCNAM}_" | head -1 | cut -d "/" -f 9 | cut -d "_" -f2)
+SOURCES=${SRCNAM}_${VERSION}_Linux_x86-64_rpm_langpack_$IDIOMA.$EXTENSION
+CD=${SRCNAM}_${VERSION}*_rpm_langpack_$IDIOMA/RPMS/
+DOWNLOAD=https://download.documentfoundation.org/libreoffice/stable/$VERSION/rpm/x86_64/$SOURCES
+}
+
+# Comprobacion de dependencias
+F_dependencias(){
+DEPENDENCIAS="rpm cpio"
+f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-	rm -f *onlineupdate*.rpm
-	for FILE in *.rpm ; do rpm2cpio < $FILE | cpio -imdv ; done
-	cp -Rf opt $PKG
+rm -f *onlineupdate*.rpm
+for FILE in *.rpm; do
+[ -f "$FILE" ] || continue
+rpm2cpio < "$FILE" | cpio -imdv || exit 1
+done
+cp -a opt "$PKG/" || exit 1
+chown -R root:root "$PKG"
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables
@@ -57,6 +67,8 @@ f_presentacion
 f_comprobarUpdates
 #Comprobamos version instalada del paquete
 f_versionInstalada
+#Compronar dependencias
+F_dependencias
 #Si no existe el fichero se descargara
 f_download
 #Descomprimir sources
@@ -65,7 +77,5 @@ f_descomprimir
 f_cd
 #Descomprimir fichero descargado y compilamos
 F_compilar
-#Hacemos strip sobre el paquete
-f_strip
 #Creamos xzm , instalamos y salimos
 f_tareasFinales

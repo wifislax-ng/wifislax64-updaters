@@ -2,13 +2,13 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20251117
+SCRIPT_VERSION=20261121
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -16,57 +16,66 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-		
-	echo $VERDE
-	echo "Please write the languaje you want for your firefox:"
-	echo
-	echo "Some options are:"
-	echo 
-	echo "$AMARILLO English -->$VERDE en-US" 
-	echo "$AMARILLO rumania -->$VERDE ro" 
-	echo "$AMARILLO italian -->$VERDE it" 
-	echo "$AMARILLO french  -->$VERDE fr" 
-	echo "$AMARILLO deutsch -->$VERDE de"
-	echo "$CYAN"
-	echo "If you dont kwon what letters write to your lang"
-	echo "Visit firefox homepage to see."
-	echo "$AMARILLO"
-	echo "Now write letters for your lang and press ENTER to continue ..."
-	echo "$ROSA"
-	read LANGUAGE
-	echo "$BLANCO"
-	PRGNAM=firefox_multi
-	SRCNAM=firefox
-	EXTENSION=tar.xz
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB="https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=$LANGUAGE"
-	VERSION=$(wget --spider -S --max-redirect 0 $WEB 2>&1 | sed -n '/Location: /{s|.*/firefox-\(.*\)\.tar.*|\1|p;q;}')
-	SOURCES=$SRCNAM-$VERSION.$EXTENSION
-	DOWNLOAD=https://ftp.mozilla.org/pub/firefox/releases/$VERSION/linux-$ARCH/$LANGUAGE/$SOURCES
-}
+echo "$VERDE"
+echo "Please write the language you want for your firefox:"
+echo
+echo "Some options are:"
+echo
+echo "$AMARILLO Spanish -->$VERDE es-ES"
+echo "$AMARILLO English -->$VERDE en-US"
+echo "$AMARILLO Rumania -->$VERDE ro"
+echo "$AMARILLO Italian -->$VERDE it"
+echo "$AMARILLO French  -->$VERDE fr"
+echo "$AMARILLO Deutsch -->$VERDE de"
+echo "$CYAN"
+echo "If you dont know what letters write to your lang"
+echo "Visit firefox homepage to see."
+echo "$AMARILLO"
+echo "Now write letters for your lang (default: en-US) and press ENTER to continue ..."
+echo "$ROSA"
+read -r LANGUAGE
+LANGUAGE=$(printf '%s' "$LANGUAGE" | tr -d ' ')
+[ -z "$LANGUAGE" ] && LANGUAGE="en-US"
+echo "$BLANCO"
 
+PRGNAM=firefox_multi
+SRCNAM=firefox
+EXTENSION=tar.xz
+GESTOR=wget
+printf '\033]2;%s_updater\007' "$PRGNAM"
+WEB="https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=$LANGUAGE"
+VERSION=$(curl -sI --connect-timeout 15 "$WEB" | sed -n 's|.*[Ll]ocation: .*/firefox-\([0-9][^/]*\)\.tar\..*|\1|p' | head -1)
+SOURCES=$SRCNAM-$VERSION.$EXTENSION
+DOWNLOAD=https://ftp.mozilla.org/pub/firefox/releases/$VERSION/linux-x86_64/$LANGUAGE/$SOURCES
+}
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-mkdir -p $PKG/usr/{lib${LIBDIRSUFFIX},bin,share/pixmaps,share/applications}
-cp -r $TMP/$SRCNAM $PKG/usr/lib${LIBDIRSUFFIX}
-cd $PKG
+mkdir -p "$PKG/usr/lib${LIBDIRSUFFIX}" "$PKG/usr/bin" "$PKG/usr/share/pixmaps" "$PKG/usr/share/applications" "$PKG/usr/lib/mozilla"
+cp -a "$TMP/$SRCNAM" "$PKG/usr/lib${LIBDIRSUFFIX}/" || exit 1
+ln -s "/usr/lib${LIBDIRSUFFIX}/firefox/firefox" "$PKG/usr/bin/firefox" || exit 1
+install -Dm 644 "$TMP/firefox/browser/chrome/icons/default/default128.png" "$PKG/usr/share/pixmaps/firefox.png" || exit 1
 
-# Por si persisten restos fuera del log package
-if [ -d /usr/lib${LIBDIRSUFFIX}/firefox ]; then
-rm -rf /usr/lib${LIBDIRSUFFIX}/firefox
+for size in 16 32 48 64 128; do
+if [ -f "$TMP/firefox/browser/chrome/icons/default/default${size}.png" ]; then
+install -Dm 644 "$TMP/firefox/browser/chrome/icons/default/default${size}.png" "$PKG/usr/share/icons/hicolor/${size}x${size}/apps/firefox.png"
 fi
+done
 
-(ln -s /usr/lib${LIBDIRSUFFIX}/firefox/firefox ./usr/bin/firefox)
-   
-cp $TMP/firefox/browser/chrome/icons/default/default128.png $PKG/usr/share/pixmaps/firefox.png
+mkdir -p "$PKG/usr/lib${LIBDIRSUFFIX}/firefox/distribution"
+cat << 'EOF' > "$PKG/usr/lib${LIBDIRSUFFIX}/firefox/distribution/policies.json"
+{
+  "policies": {
+    "DisableAppUpdate": true
+  }
+}
+EOF
 
 # Linkeamos plugins en /usr/lib
-mkdir -p $PKG/usr/lib/mozilla
-ln -s /usr/lib${LIBDIRSUFFIX}/mozilla/plugins $PKG/usr/lib/mozilla/
+ln -s "/usr/lib${LIBDIRSUFFIX}/mozilla/plugins" "$PKG/usr/lib/mozilla/plugins"
 
-echo "[Desktop Entry]
+cat << 'EOF' > "$PKG/usr/share/applications/mozilla-firefox.desktop"
+[Desktop Entry]
 Encoding=UTF-8
 Exec=firefox %u
 Icon=firefox
@@ -76,14 +85,15 @@ Name=Firefox
 GenericName[es]=Navegador Web
 GenericName=Web Browser
 MimeType=text/html
-StartupNotify=false" > $PKG/usr/share/applications/mozilla-firefox.desktop
+StartupNotify=false
+EOF
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables
@@ -107,7 +117,5 @@ f_download
 f_descomprimir
 #Descomprimir fichero descargado y compilamos
 F_compilar
-#Hacemos strip sobre el paquete
-f_strip
 #Creamos xzm , instalamos y salimos
 f_tareasFinales

@@ -2,13 +2,13 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250221
+SCRIPT_VERSION=20261120
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -16,20 +16,28 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=mdk4
-	EXTENSION=tar.gz
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/aircrack-ng/$PRGNAM
-	VERSION=$(curl -s $WEB/tags|grep $EXTENSION|head -1|cut -d/ -f7|cut -dt -f-1|sed 's/.$//g')
-	SOURCES=$VERSION.$EXTENSION
-	CD=$PRGNAM-$VERSION
-	DOWNLOAD=$WEB/archive/refs/tags/$SOURCES
+PRGNAM=mdk4
+EXTENSION=tar.gz
+GESTOR=wget
+printf '\033]2;%s_updater\007' "$PRGNAM"
+WEB=https://github.com/aircrack-ng/$PRGNAM
+VERSION=$(curl -sL --connect-timeout 15 "https://api.github.com/repos/aircrack-ng/$PRGNAM/tags" | sed -n 's/.*"name": "v*\([0-9][^"]*\)".*/\1/p' | head -1)
+SOURCES=$VERSION.$EXTENSION
+CD=$PRGNAM-$VERSION
+DOWNLOAD=$WEB/archive/refs/tags/$SOURCES
+}
+
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="libpcap libnl3"
+f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-
+echo
+echo "${VERDE}Aplicando parches ...${CIERRE}"
+mkdir -p "$TMP/parches"
 echo "
 /Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4C3/CtldACIZSGbtYocueB74Yeynd9EqaOAmhmXuzpVr
 NzwuxoQyQUE/oXRSHdfLdBkaM/sOY0l+BIiEL68/8Z0H+yTJFuCoypwqupnwPPAkmhZDZwuIEi7N
@@ -80,28 +88,27 @@ JtrMh1GVsosWlgYajAL2n7wVLxknI7zjG16Rmtu4Dl0dVxLwMrsfXFLlhmg10DAFPdU2ODp+as+m
 bUc2PPUjkUXQCOOFd6ZYe47RYHjjex2dCpHGK5Y4pYmZSmDcbERqAGNDNuXn2qxZDdDRQ5EA+fUn
 a/Qh+HlyDe6acv4x0WtD6RcTncbv47/6Ux5S94h2/lnhfA91pvnJbTchQJt0kHxFt5Rqllsqi4SW
 L8aqZ19qULuT6NaLfvSPBBOt76BBEoixh5JAi5topo01nz0kxqa2DtO+NJGaebrTd9V9Y9NMLGCD
-0TsN4nmiPD/0Ht++6o0AAAAAALrNLOABSBCTAAH1FYBcAABqJfWmscRn+wIAAAAABFla"|base64 -d > $TMP/patches.txz
+0TsN4nmiPD/0Ht++6o0AAAAAALrNLOABSBCTAAH1FYBcAABqJfWmscRn+wIAAAAABFla" | base64 -d > "$TMP/patches.txz" || exit 1
 
-tar xvf $TMP/patches.txz &>/dev/null
-patch -p1 < $TMP/$CD/makefile_osdep_parallel_build_fix.patch || exit 1
-patch -p1 < $TMP/$CD/fix-x-mode-bug.patch || exit 1
-patch -p1 < $TMP/$CD/Declare-functions-before-using-it.patch || exit 1
-patch -p1 < $TMP/$CD/ftbfs-with-gcc-14.patch || exit 1
+tar xf "$TMP/patches.txz" -C "$TMP/parches" || exit 1
+find "$TMP/parches" -type f -name "*.patch" | sort | xargs -r -n 1 sh -c '
+echo "  -> Aplicando $(basename "$1")"
+patch -p1 --forward --batch < "$1" || exit 255
+' _ || exit 1
 
-echo 
-echo "$VERDE"Compilando ..."$CIERRE"
-sleep 1
-sed 's/\/local//g' -i Makefile
-sed 's/sbin/bin/g' -i Makefile||exit 1
-make || exit 1
-install -Dm 755 src/mdk4 -t $PKG/usr/bin/
+echo
+echo "${VERDE}Compilando ...${CIERRE}"
+sed -e 's|/local||g' -e 's|sbin|bin|g' -i Makefile || exit 1
+sed -i "s|^CFLAGS *[:?]\?=|CFLAGS += $SLKCFLAGS |" src/Makefile || exit 1
+make -j"$(nproc 2>/dev/null || echo 1)" || exit 1
+make install DESTDIR="$PKG" || exit 1
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables
@@ -119,6 +126,8 @@ f_presentacion
 f_comprobarUpdates
 #Comprobamos version instalada del paquete
 f_versionInstalada
+#Comprobar dependencias
+F_dependencias
 #Si no existe el fichero se descargara
 f_download
 #Descomprimir sources

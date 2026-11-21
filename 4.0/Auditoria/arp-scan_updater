@@ -2,13 +2,13 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250712
+SCRIPT_VERSION=20261120
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -16,15 +16,15 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=arp-scan
-	EXTENSION=tar.gz
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/royhills/arp-scan
-	VERSION=$(curl -s $WEB/tags|grep $EXTENSION|head -1|rev|cut -d/ -f1|rev|cut -dt -f-1|sed 's/.$//g')
-	SOURCES=$VERSION.$EXTENSION
-	CD=$PRGNAM-$VERSION
-	DOWNLOAD=$WEB/archive/$SOURCES
+PRGNAM=arp-scan
+EXTENSION=tar.gz
+GESTOR=wget
+printf '\033]2;%s_updater\007' "$PRGNAM"
+WEB=https://github.com/royhills/$PRGNAM
+VERSION=$(curl -fsSL "https://api.github.com/repos/royhills/$PRGNAM/releases/latest" | grep -oE '"tag_name":\s*"v?[0-9.]+"' | sed -E 's/.*"v?([0-9.]+)".*/\1/')
+SOURCES=$VERSION.$EXTENSION
+CD=$PRGNAM-$VERSION
+DOWNLOAD=$WEB/archive/refs/tags/$SOURCES
 }
 
 # Comprobar dependencias
@@ -72,31 +72,96 @@ f_dependencias
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
+if ! grep -q "errno == EACCES" arp-scan.c 2>/dev/null; then
+    echo "${VERDE}El parche es necesario para esta version ($VERSION). Aplicando parche EACCES ...${CIERRE}"
+    patch -p1 << 'EOF' || exit 1
+diff --git a/arp-scan.c b/arp-scan.c
+index 04bba56..a7babe5 100644
+--- a/arp-scan.c
++++ b/arp-scan.c
+@@ -2642,7 +2642,7 @@ get_mac_vendor_filename(const char *specified_filename,
+    if (!specified_filename) { /* No filename specified */
+       file_name = make_message("%s", default_filename);
+       status = stat(file_name, &statbuf);
+-      if (status == -1 && errno == ENOENT) {
++      if (status == -1 && (errno == ENOENT || errno == EACCES)) {
+          free(file_name);
+          file_name = make_message("%s/%s", default_datadir, default_filename);
+       }
+EOF
+else
+    echo "${AMARILLO}Parche innecesario: esta version ($VERSION) de $PRGNAM ya incluye el arreglo EACCES.${CIERRE}"
+fi
+
 echo 
-echo "$VERDE"Configurando ..."$CIERRE"
+echo "${VERDE}Configurando ...${CIERRE}"
 sleep 1
 
-autoreconf -fiv
+autoreconf -fiv || exit 1
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
   --libdir=/usr/lib${LIBDIRSUFFIX} \
   --mandir=/usr/man \
   --sysconfdir=/etc \
-  --build=$ARCH-slackware-linux
+  --build=$ARCH-slackware-linux || exit 1
 
 echo 
-echo "$VERDE"Compilando ..."$CIERRE"
+echo "${VERDE}Compilando ...${CIERRE}"
 sleep 1
-make||exit 1
-make DESTDIR="$PKG" install||exit 1
+make -j$(nproc) || exit 1
+make DESTDIR="$PKG" install || exit 1
+
+# Verificacion de integridad del binario compilado
+"$PKG/usr/bin/arp-scan" --version >/dev/null 2>&1 || {
+    echo "${ROJO}Error: El binario arp-scan compilado no funciona o le faltan librerias.${CIERRE}"
+    exit 1
+}
+
+# Actualizacion segura de la base de datos OUI descargando con curl y procesando con get-oui local
+OUI_DIR=$(mktemp -d)
+OUI_FILE="$PKG/usr/share/arp-scan/ieee-oui.txt"
+
+if [ -x "$PKG/usr/bin/get-oui" ]; then
+    echo "${VERDE}Actualizando bases de datos OUI de arp-scan ...${CIERRE}"
+    [ -f "$OUI_FILE" ] && cp "$OUI_FILE" "${OUI_FILE}.orig"
+
+    UA="Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"
+    if curl -fsSL --retry 3 --retry-delay 3 -A "$UA" "https://standards-oui.ieee.org/oui/oui.csv" -o "$OUI_DIR/oui.csv" && \
+       curl -fsSL --retry 3 --retry-delay 3 -A "$UA" "https://standards-oui.ieee.org/iab/iab.csv" -o "$OUI_DIR/iab.csv" && \
+       curl -fsSL --retry 3 --retry-delay 3 -A "$UA" "https://standards-oui.ieee.org/oui28/mam.csv" -o "$OUI_DIR/mam.csv" && \
+       curl -fsSL --retry 3 --retry-delay 3 -A "$UA" "https://standards-oui.ieee.org/oui36/oui36.csv" -o "$OUI_DIR/oui36.csv"; then
+
+        GET_OUI_TMP="$OUI_DIR/get-oui.pl"
+        sed -e "s|https://standards-oui.ieee.org/oui/oui.csv|file://$OUI_DIR/oui.csv|g" \
+            -e "s|https://standards-oui.ieee.org/iab/iab.csv|file://$OUI_DIR/iab.csv|g" \
+            -e "s|https://standards-oui.ieee.org/oui28/mam.csv|file://$OUI_DIR/mam.csv|g" \
+            -e "s|https://standards-oui.ieee.org/oui36/oui36.csv|file://$OUI_DIR/oui36.csv|g" \
+            "$PKG/usr/bin/get-oui" > "$GET_OUI_TMP"
+
+        perl "$GET_OUI_TMP" -f "$OUI_FILE"
+        rm -f "${OUI_FILE}.bak"
+    fi
+
+    VALID_LINES=$(grep -cE '^[0-9A-F]{6,9}[[:space:]]' "$OUI_FILE" 2>/dev/null)
+    if [ "${VALID_LINES:-0}" -gt 30000 ]; then
+        rm -f "${OUI_FILE}.orig" "${OUI_FILE}.bak"
+        echo "${VERDE}Base de datos OUI actualizada correctamente ($VALID_LINES entradas).${CIERRE}"
+    else
+        echo "${AMARILLO}Aviso: Descarga incompleta de la IEEE. Restaurando base por defecto.${CIERRE}"
+        [ -f "${OUI_FILE}.orig" ] && mv "${OUI_FILE}.orig" "$OUI_FILE"
+        rm -f "${OUI_FILE}.bak"
+    fi
+fi
+rm -rf "$OUI_DIR"
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+# Limpieza garantizada y sin doble ejecucion ante errores o interrupciones
+trap 'rc=$?; [ $rc -ne 0 ] && f_exitmode' EXIT
+trap 'exit 130' SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables

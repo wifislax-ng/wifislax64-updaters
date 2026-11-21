@@ -2,13 +2,13 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20250524
+SCRIPT_VERSION=20261120
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -16,32 +16,36 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=pixiewps
-	EXTENSION=tar.gz
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/wiire-a/$PRGNAM
-	VERSION=$(curl -s $WEB/tags|grep $EXTENSION|head -1|cut -d v -f3|cut -d t -f-1|sed 's/.$//g')
-	SOURCES=v$VERSION.$EXTENSION
-	CD=$PRGNAM-$VERSION
-	DOWNLOAD=$WEB/archive/$SOURCES
+PRGNAM=pixiewps
+EXTENSION=tar.gz
+GESTOR=wget
+printf '\033]2;%s_updater\007' "$PRGNAM"
+WEB=https://github.com/wiire-a/$PRGNAM
+VERSION=$(curl -sL --connect-timeout 15 "$WEB/tags" | sed -n "s/.*v\([0-9][0-9.]*\)\.$EXTENSION.*/\1/p" | head -1)
+SOURCES=v$VERSION.$EXTENSION
+CD=$PRGNAM-$VERSION
+DOWNLOAD=$WEB/archive/$SOURCES
 }
 
+# Comprobar dependencias
+F_dependencias(){
+DEPENDENCIAS="openssl"
+f_dependencias
+}
 
 # Compilamos
 F_compilar(){
-echo 
-echo "$VERDE"Compilando ..."$CIERRE"
-sleep 1
-make OPENSSL=1 || exit 1
-make DESTDIR="${PKG}" PREFIX=/usr MANDIR=/usr/man install || exit 1
+echo
+echo "${VERDE}Compilando ...${CIERRE}"
+make -j"$(nproc 2>/dev/null || echo 1)" OPENSSL=1 || exit 1
+make DESTDIR="${PKG}" PREFIX=/usr install || exit 1
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables
@@ -59,6 +63,8 @@ f_presentacion
 f_comprobarUpdates
 #Comprobamos version instalada del paquete
 f_versionInstalada
+#Comprobamos dependencias
+F_dependencias
 #Si no existe el fichero se descargara
 f_download
 #Descomprimir sources

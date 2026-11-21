@@ -1,14 +1,14 @@
-#!/bin/sh
+#!/bin/bash
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261005
+SCRIPT_VERSION=20261120
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -16,16 +16,16 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=aegisub
-	SRCNAM=Aegisub
-	EXTENSION=tar.gz
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/TypesettingTools/$SRCNAM
-	VERSION=$(curl -s $WEB/tags|grep [0-9].$EXTENSION|head -1|cut -d/ -f7|sed 's/v//g'|cut -dt -f-1|sed 's/.$//g')
-	SOURCES=v$VERSION.$EXTENSION
-	CD=$SRCNAM-$VERSION
-	DOWNLOAD=$WEB/archive/refs/tags/$SOURCES
+PRGNAM=aegisub
+SRCNAM=Aegisub
+EXTENSION=tar.gz
+GESTOR=wget
+echo -ne "\033]2;${PRGNAM}_updater\007"
+WEB=https://github.com/TypesettingTools/$SRCNAM
+VERSION=$(git ls-remote --tags --refs --sort="v:refname" "$WEB.git" | grep -E 'refs/tags/v?[0-9]+\.[0-9]+(\.[0-9]+)?$' | tail -n 1 | sed -E 's/.*\/v?//')
+SOURCES=v$VERSION.$EXTENSION
+CD=$SRCNAM-$VERSION
+DOWNLOAD=$WEB/archive/refs/tags/$SOURCES
 }
 
 # Comprobar dependencias
@@ -51,21 +51,19 @@ echo
 echo "$VERDE"Configurando ..."$CIERRE"
 sleep 1
 
-  sed "/subdir('tests')/d" -i meson.build
-  echo "#define BUILD_GIT_VERSION_NUMBER ${VERSION/./}" >> git_version.h
-  echo "#define BUILD_GIT_VERSION_STRING \"${VERSION}\"" >> git_version.h
-  echo '#define TAGGED_RELEASE 0' >> git_version.h
-  echo '#define INSTALLER_VERSION "0.0.0"' >> git_version.h
-  echo '#define RESOURCE_BASE_VERSION 0, 0, 0' >> git_version.h
+sed "/subdir('tests')/d" -i meson.build
+echo "#define BUILD_GIT_VERSION_NUMBER ${VERSION//./}" > git_version.h
+echo "#define BUILD_GIT_VERSION_STRING \"${VERSION}\"" >> git_version.h
+echo '#define TAGGED_RELEASE 0' >> git_version.h
+echo '#define INSTALLER_VERSION "0.0.0"' >> git_version.h
+echo '#define RESOURCE_BASE_VERSION 0, 0, 0' >> git_version.h
 
 echo 
 echo "$VERDE"Compilando ..."$CIERRE"
-  
-mkdir build
-cd build
+
   CFLAGS="$SLKCFLAGS" \
   CXXFLAGS="$SLKCFLAGS -fpermissive" \
-  meson .. \
+  meson setup build \
     --buildtype=release \
     --infodir=/usr/info \
     --libdir=/usr/lib${LIBDIRSUFFIX} \
@@ -77,17 +75,17 @@ cd build
     -Dportaudio=disabled \
     -Dsystem_luajit=true \
     -Denable_update_checker=false \
-    -Dstrip=true
-  "${NINJA:=ninja}"
-  DESTDIR=$PKG $NINJA install
-cd ..
+    -Dstrip=true || exit 1
+
+"${NINJA:=ninja}" -C build -j$(nproc) || exit 1
+DESTDIR="$PKG" $NINJA -C build install || exit 1
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables

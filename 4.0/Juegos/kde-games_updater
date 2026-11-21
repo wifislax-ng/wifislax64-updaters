@@ -2,13 +2,13 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20240925
+SCRIPT_VERSION=20261120
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -16,75 +16,55 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=kde-games
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=http://ftp.osuosl.org/.2/slackware/slackware64-current
-	ELGRANARCHIVO=$(curl -s $WEB/slackware${LIBDIRSUFFIX}/PACKAGES.TXT)
-	ELPACK=$(echo "$ELGRANARCHIVO"|grep -i game -B5|grep NAME|awk '{print $3}'|grep -vi kanagram |grep -vi khangman |grep -vi xgames|grep -vi bsd-games|grep -vi kig)
-	LOSEXTRAS=$(echo "$ELGRANARCHIVO"|grep NAME|grep -E "(libkmahjongg|kmines)"|awk '{print $3}')
-	LOSGRANDESJUEGOS=$(cat <<EOF
-	$ELPACK
-	$LOSEXTRAS
-EOF
-)
-VERSION=$(echo "$ELGRANARCHIVO"|grep -i kdelibs|head -1|cut -d "-" -f 2)
+PRGNAM=kde-games
+echo -ne "\033]2;${PRGNAM}_updater\007"
+WEB=https://ftp.osuosl.org/.2/slackware/slackware64-current
+ELGRANARCHIVO=$(curl -fsSL "$WEB/slackware${LIBDIRSUFFIX}/PACKAGES.TXT")
+ELPACK=$(echo "$ELGRANARCHIVO" | grep -i game -B5 | grep "PACKAGE NAME:" | awk '{print $3}' | grep -viE 'kanagram|khangman|xgames|bsd-games|kig|nethack')
+LOSEXTRAS=$(echo "$ELGRANARCHIVO" | grep "PACKAGE NAME:" | grep -E '(libkmahjongg|kmines)' | awk '{print $3}')
+LOSGRANDESJUEGOS=$(printf "%s\n%s\n" "$ELPACK" "$LOSEXTRAS" | grep -v '^$' | sort -u)
+VERSION=$(echo "$ELGRANARCHIVO" | grep -E '^PACKAGE NAME:  libplasma-[0-9]' | head -n 1 | sed -E 's/.*libplasma-([0-9.]+)-.*/\1/')
 }
 
 # Si el paquete no existe se descargara de internet
 F_download(){
-echo "$CYAN"Se han detectado $ROJO$(echo $LOSGRANDESJUEGOS|sed 's/ /\n/g'|wc -l)$CYAN paquetes..."$CIERRE"
-lacuenta=1
-for JUEGO in $LOSGRANDESJUEGOS; do
-LAGRANRUTA=$(echo "$ELGRANARCHIVO"|grep -i $JUEGO -A1|grep LOCATION|awk '{print $3}'|cut -d "." -f2|cut -d- -f2-)
-VERSION_JEUGO=$(echo $JUEGO|rev|cut -d "i" -f2|cut -d- -f2|rev)
-PRGNAM_JUEGO=$(echo $JUEGO|cut -d. -f1|rev|cut -d- -f2-|rev)
-for RUTA in $LAGRANRUTA; do
-# Si el paquete no existe se descargara de internet
-if [ ! -f $JUEGO ]; then
-echo ""
-echo "$CYAN"Descargando source nº $ROJO$lacuenta$CYAN de $PRGNAM_JUEGO-$VERSION_JEUGO"$CIERRE"
-sleep 1
-wget -N -L -c -q --show-progress --no-passive-ftp $WEB/$RUTA/$JUEGO
-fi
-let lacuenta=lacuenta+1
-done
-done
+	cd "$TMP" || exit 1
+	TOTAL=$(echo "$LOSGRANDESJUEGOS" | wc -l)
+	echo "${CYAN}Se han detectado ${ROJO}${TOTAL}${CYAN} paquetes...${CIERRE}"
+	lacuenta=1
+	for JUEGO in $LOSGRANDESJUEGOS; do
+		LAGRANRUTA=$(echo "$ELGRANARCHIVO" | grep -F "PACKAGE NAME:  $JUEGO" -A1 | grep "PACKAGE LOCATION:" | awk '{print $3}' | sed 's|^\./||')
+		PRGNAM_JUEGO=$(echo "$JUEGO" | rev | cut -d- -f4- | rev)
+		VERSION_JEUGO=$(echo "$JUEGO" | rev | cut -d- -f3 | rev)
+		if [ ! -f "$TMP/$JUEGO" ]; then
+			echo ""
+			echo "${CYAN}Descargando source nº ${ROJO}${lacuenta}/${TOTAL}${CYAN} de ${PRGNAM_JUEGO}-${VERSION_JEUGO}${CIERRE}"
+			wget -N -L -c -q --show-progress --no-passive-ftp "$WEB/$LAGRANRUTA/$JUEGO" || exit 1
+		fi
+		lacuenta=$((lacuenta + 1))
+	done
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-echo ""
-echo "$VERDE"Descomprimiendo ..."$CIERRE"
-sleep 1
-for JUEGO in $LOSGRANDESJUEGOS; do
+	echo ""
+	echo "${VERDE}Descomprimiendo ...${CIERRE}"
+	sleep 1
+	for JUEGO in $LOSGRANDESJUEGOS; do
+		installpkg --root "$PKG" "$TMP/$JUEGO" || exit 1
+	done
+	rm -rf "$PKG/var/log/packages" "$PKG/var/log/scripts" "$PKG/var/log/setup" "$PKG/install"
 
-installpkg --root $PKG $TMP/$JUEGO
-
-done
-rm -Rf $PKG/var/log/packages/*
-
-# Creamos xzm , instalamos y salimos
-echo ""
-echo "$VERDE"Instalando y creando modulo xzm ..."$CIERRE"
-sleep 1
-cd $PKG
-cleandir $PKG
-
-cd $PKG/usr/share/applications/
-for DESKTOP in $(find -type f); do
-
-cat $DESKTOP|sed "s/Education//g" >${DESKTOP}2
-rm $DESKTOP
-mv ${DESKTOP}2 ${DESKTOP}
-
-done
+	if [ -d "$PKG/usr/share/applications" ]; then
+		find "$PKG/usr/share/applications" -type f -name '*.desktop' -exec sed -i 's/Education;//g; s/Education//g' {} +
+	fi
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables

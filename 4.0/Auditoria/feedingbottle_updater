@@ -2,13 +2,13 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20241013
+SCRIPT_VERSION=20261120
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
 f_variables(){
-	. /opt/wifislax-updaters/Funciones/funciones_updater
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
@@ -16,43 +16,42 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-	PRGNAM=feedingbottle
-	EXTENSION=tar.gz
-	GESTOR=wget
-	echo -ne "\033]2;${PRGNAM}_updater\007"
-	WEB=https://github.com/ChunshengZhao/$PRGNAM
-    VERSION=$(curl -s $WEB/tags|grep $EXTENSION|head -1|cut -d/ -f7|sed 's/v//g'|cut -dt -f-1|sed 's/.$//g')
-	SOURCES=v$VERSION.$EXTENSION
-	CD=$PRGNAM-$VERSION
-	DOWNLOAD=$WEB/archive/refs/tags/$SOURCES
+PRGNAM=feedingbottle
+EXTENSION=tar.gz
+GESTOR=wget
+echo -ne "\033]2;${PRGNAM}_updater\007"
+WEB=https://github.com/ChunshengZhao/$PRGNAM
+VERSION=$(curl -fsSL "https://api.github.com/repos/ChunshengZhao/$PRGNAM/tags" | grep -oE '"name":\s*"v?[0-9.]+"' | sed -E 's/.*"v?([0-9.]+)".*/\1/' | sort -V | tail -n 1)
+SOURCES=v$VERSION.$EXTENSION
+CD=$PRGNAM-$VERSION
+DOWNLOAD=$WEB/archive/refs/tags/$SOURCES
 }
 
 # Comprobar dependencias
 F_dependencias(){
-DEPENDENCIAS=fltk
+DEPENDENCIAS="fltk"
 f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
 echo 
-echo "$VERDE"Configurando ..."$CIERRE"
+echo "${VERDE}Configurando ...${CIERRE}"
 sleep 1
-fluid -c feedingbottle.fl
+fluid -c feedingbottle.fl || exit 1
 
 echo 
-echo "$VERDE"Compilando ..."$CIERRE"
+echo "${VERDE}Compilando ...${CIERRE}"
 sleep 1
-g++ -std=c++11 feedingbottle.cxx -lfltk -o feedingbottle
-mkdir -p $PKG/usr/bin/
-cp -rf feedingbottle $PKG/usr/bin/
+g++ -std=c++11 $SLKCFLAGS $(fltk-config --cxxflags) feedingbottle.cxx $(fltk-config --ldflags) -o feedingbottle || exit 1
+install -Dm 755 feedingbottle "$PKG/usr/bin/feedingbottle" || exit 1
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
 # Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT
+trap f_exitmode SIGHUP SIGINT SIGTERM
 
 #Inicializamos las variables globales
 f_variables
@@ -70,7 +69,7 @@ f_presentacion
 f_comprobarUpdates
 #Comprobamos version instalada del paquete
 f_versionInstalada
-#Compronar dependencias
+#Comprobar dependencias
 F_dependencias
 #Si no existe el fichero se descargara
 f_download
