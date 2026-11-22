@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net (Optimizado y compatible con POSIX)
 
-FUNCIONES_VERSION=20261121
+FUNCIONES_VERSION=20261122
 
 # Colores (con fallback seguro si no hay TTY)
 if [ -t 1 ]; then
@@ -31,8 +31,9 @@ TAG=${TAG:-wifislax}
 CWD=$(pwd)
 
 # Lectura limpia de configuración del sistema
-if [ -f /root/.config/user-dirs.dirs ]; then
-    ESCRITORIO=$(awk -F'"' '/XDG_DESKTOP_DIR/{split($2,a,"/"); print a[2]}' /root/.config/user-dirs.dirs)
+USER_DIRS="${HOME}/.config/user-dirs.dirs"
+if [ -f "$USER_DIRS" ]; then
+    ESCRITORIO=$(awk -F'"' '/^[[:space:]]*XDG_DESKTOP_DIR=/{val=$2} END{sub(/\/$/, "", val); n=split(val, a, "/"); print a[n]}' "$USER_DIRS")
 fi
 ESCRITORIO=${ESCRITORIO:-Desktop}
 
