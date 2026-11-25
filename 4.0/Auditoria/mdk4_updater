@@ -101,7 +101,7 @@ echo "${VERDE}Compilando ...${CIERRE}"
 sed -e 's|/usr/local|/usr|g' -e 's|/local||g' -e 's|sbin|bin|g' -i Makefile src/Makefile || exit 1
 sed -i "s|^CFLAGS *[:?]\?=|CFLAGS += $SLKCFLAGS |" src/Makefile || exit 1
 make -j"$(nproc 2>/dev/null || echo 1)" || exit 1
-make install DESTDIR="$PKG" PREFIX=/usr SBINDIR=/usr/bin || exit 1
+install -vDm755 -t "$PKG/usr/bin" src/mdk4 || exit 1
 }
 
 ###################################

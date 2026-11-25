@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261121
+SCRIPT_VERSION=20261125
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -54,15 +54,17 @@ printf '%b\n' "${VERDE}Filtrando firmwares compatibles con el kernel ${AMARILLO}
         fi
     } | sort -u | while IFS= read -r _fc_FW; do
         [ -z "$_fc_FW" ] && continue
-        _fc_FW_CLEAN="${_fc_FW%\*}"
+        _fc_FW_CLEAN="${_fc_FW%%\**}"
         _fc_FW_CLEAN="${_fc_FW_CLEAN%/}"
 
-        set -- "$PKG/tmp_fw/lib/firmware/${_fc_FW_CLEAN}"*
-        if [ -e "$1" ] || [ -L "$1" ]; then
-            _fc_DEST_DIR="$PKG/lib/firmware/$(dirname "$_fc_FW_CLEAN")"
-            mkdir -p "$_fc_DEST_DIR"
-            cp -a "$@" "$_fc_DEST_DIR/"
-        fi
+        for _fc_ITEM in "$PKG/tmp_fw/lib/firmware/${_fc_FW_CLEAN}"*; do
+            if [ -e "$_fc_ITEM" ] || [ -L "$_fc_ITEM" ]; then
+                _fc_REL="${_fc_ITEM#"$PKG"/tmp_fw/lib/firmware/}"
+                _fc_DEST_DIR="$PKG/lib/firmware/$(dirname "$_fc_REL")"
+                mkdir -p "$_fc_DEST_DIR"
+                cp -a "$_fc_ITEM" "$_fc_DEST_DIR/"
+            fi
+        done
     done
 
 # 3. Conservamos microcódigos de CPU (Intel y AMD)
