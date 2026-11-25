@@ -9,8 +9,11 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-# Eliminamos posibles ficheros viejos de modificaciones de scripts
-rm -rf /opt/wifislax-updaters/*/*~ >/dev/null 2>&1
+# Resolver ruta absoluta del script para auto-actualización segura
+SCRIPT_PATH=$(readlink -f "$0" 2>/dev/null || printf '%s' "$0")
+
+# Eliminamos posibles ficheros viejos de modificaciones de scripts y compilaciones huérfanas anteriores
+rm -rf /opt/wifislax-updaters/*/*~ /usr/src/building-* >/dev/null 2>&1
 
 readonly SCRIPT_VERSION=20261125
 
@@ -32,10 +35,9 @@ else
     readonly CYAN=""
     readonly BLANCO=""
 fi
-readonly CIERRE="$RESET"
 
 # Verificar herramientas esenciales antes de perder tiempo compilando
-DEPENDENCIAS="curl wget tar make gcc bc bison flex sha256sum dir2xzm xzm2dir"
+DEPENDENCIAS="curl wget tar make gcc bc bison flex perl openssl zstd xz sha256sum dir2xzm xzm2dir"
 for cmd in $DEPENDENCIAS; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         printf "%bError: Falta la herramienta requerida '%s'. Instálala antes de continuar.%b\n" "$ROJO" "$cmd" "$RESET" >&2
@@ -86,24 +88,35 @@ MODNAM="Kernel"
 BUILD="1"
 WEB="https://www.kernel.org"
 
-# Variables para limpieza automática en caso de interrupción
-FUENTES=""
+# Variables de estado para limpieza y restauración al salir
+WORK_DIR=""
 CONTAINER=""
+GOV_ANTERIOR=""
+PROCESO_COMPLETADO="FALSE"
 
 limpiar_temporales() {
-    _lt_exit_code=$?
-    trap - EXIT INT TERM
-    # Restaurar gobernador de CPU a schedutil/ondemand al salir
-    if command -v cpupower >/dev/null 2>&1; then
-        cpupower frequency-set -g schedutil >/dev/null 2>&1
+    trap - EXIT INT TERM HUP QUIT
+    # Restaurar gobernador de CPU original si fue modificado
+    if [ -n "$GOV_ANTERIOR" ] && command -v cpupower >/dev/null 2>&1; then
+        cpupower frequency-set -g "$GOV_ANTERIOR" >/dev/null 2>&1
     fi
-    if [ "$_lt_exit_code" -ne 0 ]; then
-        printf "\n%bLimpiando archivos temporales tras interrupción o error...%b\n" "$AMARILLO" "$RESET" >&2
-        [ -n "$CONTAINER" ] && [ -d "$CONTAINER" ] && rm -rf "$CONTAINER"
-        [ -n "$FUENTES" ] && [ -d "$FUENTES" ] && rm -rf "$FUENTES"
+    # Si el proceso no llegó al final con éxito, limpiar cualquier carpeta temporal pendiente
+    if [ "$PROCESO_COMPLETADO" != "TRUE" ]; then
+        if [ -n "$CONTAINER" ] || [ -n "$WORK_DIR" ]; then
+            printf "\n%bLimpiando archivos temporales tras interrupción o error...%b\n" "$AMARILLO" "$RESET" >&2
+            [ -n "$CONTAINER" ] && [ -d "$CONTAINER" ] && rm -rf "$CONTAINER"
+            [ -n "$WORK_DIR" ] && [ -d "$WORK_DIR" ] && rm -rf "$WORK_DIR"
+        fi
     fi
 }
-trap limpiar_temporales EXIT INT TERM
+
+al_recibir_senal() {
+    limpiar_temporales
+    exit 1
+}
+
+trap limpiar_temporales EXIT
+trap al_recibir_senal INT TERM HUP QUIT
 
 # Detección segura de la versión de Wifislax
 if [ -r /etc/wifislax-version ]; then
@@ -202,7 +215,8 @@ if [ -n "$DIRECTORIO" ] && [ -w "$DIRECTORIO/$SCRIPTNAME" ]; then
                     chmod +x "$DIRECTORIO/$SCRIPTNAME.tmp"
                     mv -f "$DIRECTORIO/$SCRIPTNAME.tmp" "$DIRECTORIO/$SCRIPTNAME"
                     printf "%bLISTO. Reiniciando script...%b\n\n" "$VERDE" "$RESET"
-                    exec "$0" "$@"
+                    PROCESO_COMPLETADO="TRUE"
+                    exec "$SCRIPT_PATH" "$@"
                 else
                     rm -f "$DIRECTORIO/$SCRIPTNAME.tmp"
                     printf "%bNo se pudo descargar la actualización. Continuando con la versión local...%b\n\n" "$AMARILLO" "$RESET"
@@ -225,7 +239,7 @@ if command -v python3 >/dev/null 2>&1; then
 import sys, json
 data = json.load(sys.stdin)
 releases = data.get("releases", [])
-rama = sys.argv[1]
+rama = sys.argv[1] if len(sys.argv) > 1 else ""
 v_rama = next((r["version"] for r in releases if r["version"].startswith(rama + ".")), "")
 v_stable = next((r["version"] for r in releases if r.get("moniker") == "stable"), "")
 v_rc = next((r["version"] for r in releases if r.get("moniker") == "mainline"), "")
@@ -277,9 +291,16 @@ while true; do
 done
 
 if [ "$CUSTOM" = "TRUE" ]; then
-    printf "\n%bEscribe el número de kernel exacto que quieres compilar (ej. 6.12.118) y pulsa %bENTER%b:\n" "$VERDE" "$BLANCO" "$RESET"
-    read -r KERNEL_ELEGIDO
-    KERNEL_ELEGIDO=$(printf '%s' "$KERNEL_ELEGIDO" | tr -d ' ')
+    while true; do
+        printf "\n%bEscribe el número de kernel exacto que quieres compilar (ej. 6.12.118 o 6.13-rc1) y pulsa %bENTER%b:\n" "$VERDE" "$BLANCO" "$RESET"
+        read -r KERNEL_ELEGIDO
+        KERNEL_ELEGIDO=$(printf '%s' "$KERNEL_ELEGIDO" | tr -d ' ')
+        case "$KERNEL_ELEGIDO" in
+            [0-9]*.[0-9]*.*) break ;;
+            [0-9]*.[0-9]*-rc[0-9]*) break ;;
+            *) printf "%bFormato inválido. Debe ser algo como 6.12.118 o 6.13-rc1.%b\n" "$ROJO" "$RESET" ;;
+        esac
+    done
 fi
 
 if [ -z "$KERNEL_ELEGIDO" ]; then
@@ -293,54 +314,67 @@ case "$KERNEL_ELEGIDO" in
     *-rc*)
         ARCHIVO_TAR="$PRGNAM-$KERNEL_ELEGIDO.tar.gz"
         DESCARGA="https://git.kernel.org/torvalds/t/$ARCHIVO_TAR"
+        HASH_ESPERADO=""
         ;;
     *)
         ARCHIVO_TAR="$PRGNAM-$KERNEL_ELEGIDO.tar.xz"
         DESCARGA="https://cdn.kernel.org/pub/linux/kernel/v${FAMILIA}.x/$ARCHIVO_TAR"
+        URL_SHA="https://cdn.kernel.org/pub/linux/kernel/v${FAMILIA}.x/sha256sums.asc"
+        HASH_ESPERADO=$(curl -fsSL --max-time 10 "$URL_SHA" 2>/dev/null | awk -v f="$ARCHIVO_TAR" '$2 == f {print $1}')
         ;;
 esac
 
-FUENTES="/usr/src/$PRGNAM-$KERNEL_ELEGIDO"
+# Directorio temporal aislado de compilación (no toca /usr/src/linux-$KERNEL_ELEGIDO existente)
+WORK_DIR="/usr/src/building-$KERNEL_ELEGIDO"
+FUENTES="$WORK_DIR/$PRGNAM-$KERNEL_ELEGIDO"
 cd /usr/src || exit 1
 
-# Descargar fuentes si no existen previamente (barra de progreso en rosa)
-if [ ! -f "$ARCHIVO_TAR" ]; then
+# Si el tarball ya existe localmente, comprobar si está completo o reanudar/redescargar
+NECESITA_DESCARGA="TRUE"
+if [ -f "$ARCHIVO_TAR" ]; then
+    if [ -n "$HASH_ESPERADO" ]; then
+        if printf "%s  %s\n" "$HASH_ESPERADO" "$ARCHIVO_TAR" | sha256sum -c --status; then
+            printf "\n%bEl archivo %s ya existe y su SHA256 es válido. Omitiendo descarga.%b\n" "$VERDE" "$ARCHIVO_TAR" "$RESET"
+            NECESITA_DESCARGA="FALSE"
+        else
+            printf "\n%bEl archivo local %s está incompleto o corrupto. Reanudando/descargando...%b\n" "$AMARILLO" "$ARCHIVO_TAR" "$RESET"
+        fi
+    else
+        printf "\n%bEl archivo %s ya existe en /usr/src. Omitiendo descarga.%b\n" "$AMARILLO" "$ARCHIVO_TAR" "$RESET"
+        NECESITA_DESCARGA="FALSE"
+    fi
+fi
+
+# Descargar fuentes si es necesario (barra de progreso en rosa)
+if [ "$NECESITA_DESCARGA" = "TRUE" ]; then
     printf "\n%bDescargando fuentes de %s-%s ...%b\n" "$CYAN" "$PRGNAM" "$KERNEL_ELEGIDO" "$ROSA"
-    if ! wget -N -L -c -q --show-progress "$DESCARGA" -O "$ARCHIVO_TAR"; then
+    if ! wget -L -c -q --show-progress "$DESCARGA" -O "$ARCHIVO_TAR"; then
         printf "%b" "$RESET"
         rm -f "$ARCHIVO_TAR"
         printf "\n%bError al descargar %s. Verifica que la versión exista.%b\n" "$ROJO" "$DESCARGA" "$RESET" >&2
         exit 1
     fi
     printf "%b" "$RESET"
-else
-    printf "\n%bEl archivo %s ya existe en /usr/src. Omitiendo descarga.%b\n" "$AMARILLO" "$ARCHIVO_TAR" "$RESET"
+
+    # Validar integridad SHA256 tras descargar
+    if [ -n "$HASH_ESPERADO" ]; then
+        printf "%bVerificando integridad SHA256...%b\n" "$CYAN" "$RESET"
+        if ! printf "%s  %s\n" "$HASH_ESPERADO" "$ARCHIVO_TAR" | sha256sum -c --status; then
+            printf "%bError: El archivo descargado está corrupto (fallo de SHA256). Borrando...%b\n" "$ROJO" "$RESET" >&2
+            rm -f "$ARCHIVO_TAR"
+            exit 1
+        fi
+        printf "%bIntegridad verificada correctamente.%b\n" "$VERDE" "$RESET"
+    fi
 fi
 
-# Validar integridad SHA256 para versiones estándar
-case "$KERNEL_ELEGIDO" in
-    *-rc*) ;;
-    *)
-        URL_SHA="https://cdn.kernel.org/pub/linux/kernel/v${FAMILIA}.x/sha256sums.asc"
-        HASH_ESPERADO=$(curl -fsSL --max-time 10 "$URL_SHA" 2>/dev/null | awk -v f="$ARCHIVO_TAR" '$2 == f {print $1}')
-        if [ -n "$HASH_ESPERADO" ]; then
-            printf "%bVerificando integridad SHA256...%b\n" "$CYAN" "$RESET"
-            if ! printf "%s  %s\n" "$HASH_ESPERADO" "$ARCHIVO_TAR" | sha256sum -c --status; then
-                printf "%bError: El archivo descargado está corrupto (fallo de SHA256). Borrando...%b\n" "$ROJO" "$RESET" >&2
-                rm -f "$ARCHIVO_TAR"
-                exit 1
-            fi
-            printf "%bIntegridad verificada correctamente.%b\n" "$VERDE" "$RESET"
-        fi
-        ;;
-esac
+# Preparar directorio de trabajo aislado sin tocar /usr/src/linux-$KERNEL_ELEGIDO del sistema
+rm -rf "$WORK_DIR"
+mkdir -p "$WORK_DIR" || exit 1
 
-# Limpiar compilación anterior si existiera
-rm -rf "$FUENTES"
-
-# Descomprimir fichero
-printf "\n%bDescomprimiendo %s ...%b\n" "$VERDE" "$ARCHIVO_TAR" "$RESET"
-if ! tar xf "$ARCHIVO_TAR"; then
+# Descomprimir fichero dentro del directorio aislado
+printf "\n%bDescomprimiendo %s en %s ...%b\n" "$VERDE" "$ARCHIVO_TAR" "$WORK_DIR" "$RESET"
+if ! tar xf "$ARCHIVO_TAR" -C "$WORK_DIR"; then
     printf "%bError al descomprimir %s. El archivo podría estar corrupto.%b\n" "$ROJO" "$ARCHIVO_TAR" "$RESET" >&2
     exit 1
 fi
@@ -359,7 +393,7 @@ fi
 # Gestión del archivo .config
 if [ ! -f "$FUENTES/.config" ]; then
     printf "\n%bNo se detectó fichero .config personalizado.\n" "$CYAN"
-    printf "Si deseas usar uno propio, cópialo ahora a: %s/.config\n" "$FUENTES"
+    printf "Si deseas usar uno,cópialo en: %s/.config\n" "$FUENTES"
     printf "De lo contrario, se extraerá la configuración del kernel actual.\n"
     printf "Pulsa %bENTER%b para continuar...%b\n\n" "$AMARILLO" "$CYAN" "$RESET"
     read -r
@@ -380,30 +414,44 @@ else
     fi
 fi
 
-# Actualizar configuración y abrir configurador visual o de terminal
+# Actualizar configuración y evitar fallo de BTF si falta pahole
 make olddefconfig || exit 1
+if grep -q '^CONFIG_DEBUG_INFO_BTF=y' "$FUENTES/.config" && ! command -v pahole >/dev/null 2>&1; then
+    printf "%b[AVISO] 'pahole' no encontrado: desactivando CONFIG_DEBUG_INFO_BTF para evitar error de compilación.%b\n" "$AMARILLO" "$RESET"
+    ./scripts/config --disable DEBUG_INFO_BTF
+    make olddefconfig || exit 1
+fi
 
+# Abrir configurador visual o de terminal
 if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
     make xconfig || make menuconfig || exit 1
 else
     make menuconfig || exit 1
 fi
 
-# Poner la CPU en modo rendimiento máximo durante la compilación
+# Guardar gobernador actual y poner la CPU en modo rendimiento máximo durante la compilación
+if [ -r /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor ]; then
+    GOV_ANTERIOR=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
+fi
 if command -v cpupower >/dev/null 2>&1; then
     cpupower frequency-set -g performance >/dev/null 2>&1
 fi
+
+# Helper compatible POSIX para invocar make con o sin ccache
+ejecutar_make() {
+    if [ -n "$USE_CCACHE" ]; then
+        make LOCALVERSION="" CC="ccache gcc" HOSTCC="ccache gcc" "$@"
+    else
+        make LOCALVERSION="" "$@"
+    fi
+}
 
 # Inicio del cronómetro de compilación
 COMIENZO=$(date +%s)
 
 # Compilación del kernel y módulos (LOCALVERSION="" evita el sufijo '+' por cambios locales)
 printf "\n%bCompilando kernel y módulos (%s)...%b\n\n" "$CYAN" "$MAKEFLAGS" "$RESET"
-if [ -n "$USE_CCACHE" ]; then
-    make LOCALVERSION="" CC="ccache gcc" HOSTCC="ccache gcc" all || exit 1
-else
-    make LOCALVERSION="" all || exit 1
-fi
+ejecutar_make all || exit 1
 
 # Obtener versión exacta compilada desde el propio árbol de compilación
 KERNEL_VERSION=$(make -s LOCALVERSION="" kernelrelease)
@@ -418,43 +466,49 @@ make LOCALVERSION="" INSTALL_HDR_PATH="$CONTAINER/usr" headers_install || exit 1
 # Copiar imagen bzImage al escritorio
 cp -f "$FUENTES/arch/$KARCH/boot/bzImage" "$HOME/$ESCRITORIO/$VMLINUZ" || exit 1
 
-# Preparar kernel sources ligeros para compilar drivers externos
+# Preparar kernel sources ligeros para compilar drivers externos (DKMS / módulos out-of-tree)
 mv System.map ../
 make clean
 mv ../System.map .
-make LOCALVERSION="" prepare || exit 1
-make LOCALVERSION="" scripts || exit 1
-cp -f include/generated/* include/linux/ 2>/dev/null
+ejecutar_make prepare || exit 1
+ejecutar_make scripts || exit 1
+ejecutar_make modules_prepare || exit 1
 
-# Limpieza segura de archivos innecesarios en sources
+# Limpieza segura y compatible POSIX de archivos innecesarios en sources (preservando scripts/ y tools/ funcionales)
 rm -rf Documentation arch/x86/boot/bzImage arch/x86/boot/compressed/vmlinux \
        drivers firmware fs net sound .tmp_versions tools/testing/ vmlinux*
 
 find arch/ -mindepth 1 -maxdepth 1 ! -name "$KARCH" -exec rm -rf {} +
-find . -type f -regextype posix-extended \
-    -regex '.*\.(a|bin|elf|exe|o|patch|txt|xsl|xz|ko|zst|json|py)$' -delete
-find scripts -xtype l -delete
-find . \( -type f \( -name ".*" ! -name ".config" -o -name "COPYING" -o -name "CREDITS" \
-    -o -name "LICENSE*" -o -name "MAINTAINERS*" -o -name "README*" \) \) -exec rm -rf {} +
 
-find . -type f -perm -u+x -print0 | xargs -0 -r strip --strip-all \
+find . -path ./scripts -prune -o -path ./tools -prune -o \
+    -type f \( -name "*.a" -o -name "*.bin" -o -name "*.elf" -o -name "*.exe" \
+    -o -name "*.o" -o -name "*.patch" -o -name "*.txt" -o -name "*.xsl" \
+    -o -name "*.xz" -o -name "*.ko" -o -name "*.zst" -o -name "*.json" \) \
+    -exec rm -f {} +
+
+find scripts -xtype l -exec rm -f {} +
+find . \( -type f \( -name ".*" ! -name ".config" -o -name "COPYING" -o -name "CREDITS" \
+    -o -name "LICENSE*" -o -name "MAINTAINERS*" -o -name "README*" \) \) -exec rm -f {} +
+
+find . -type f -perm -u+x -exec strip --strip-all \
     -R .comment -R .eh_frame -R .eh_frame_hdr -R .eh_frame_ptr \
     -R .jcr -R .note -R .note.ABI-tag -R .note.gnu.build-id \
-    -R .note.gnu.gold-version -R .note.GNU-stack >/dev/null 2>&1
+    -R .note.gnu.gold-version -R .note.GNU-stack {} + >/dev/null 2>&1
 
 # Empaquetado final en módulo .xzm
 MODULO_FINAL="$HOME/$ESCRITORIO/$M0DNUM-$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG.xzm"
-FUENTES_BASENAME=$(basename "$FUENTES")
+FUENTES_DESTINO="$PRGNAM-$KERNEL_VERSION"
 
 mkdir -p "$CONTAINER/usr/src"
 cd /usr/src || exit 1
-mv "$FUENTES" "$CONTAINER/usr/src/"
-FUENTES=""
+mv "$FUENTES" "$CONTAINER/usr/src/$FUENTES_DESTINO"
+rm -rf "$WORK_DIR"
+WORK_DIR=""
 
 # Garantizar enlaces simbólicos válidos build y source dentro del módulo
 if [ -d "$CONTAINER/lib/modules/$KERNEL_VERSION" ]; then
-    ln -sfn "/usr/src/$FUENTES_BASENAME" "$CONTAINER/lib/modules/$KERNEL_VERSION/build"
-    ln -sfn "/usr/src/$FUENTES_BASENAME" "$CONTAINER/lib/modules/$KERNEL_VERSION/source"
+    ln -sfn "/usr/src/$FUENTES_DESTINO" "$CONTAINER/lib/modules/$KERNEL_VERSION/build"
+    ln -sfn "/usr/src/$FUENTES_DESTINO" "$CONTAINER/lib/modules/$KERNEL_VERSION/source"
 fi
 
 printf "\n%bCreando módulo comprimido .xzm ...%b\n" "$CYAN" "$RESET"
@@ -468,6 +522,9 @@ CONTAINER=""
 
 # Eliminar el archivo comprimido descargado tras empaquetar con éxito
 rm -f "/usr/src/$ARCHIVO_TAR"
+
+# Marcar el proceso de empaquetado como completado con éxito
+PROCESO_COMPLETADO="TRUE"
 
 # Cálculo exacto del tiempo total empleado
 SEGUNDOS_TOTALES=$(( $(date +%s) - COMIENZO ))
@@ -497,6 +554,10 @@ if [ -f "$MODULO_FINAL" ] && [ -f "$HOME/$ESCRITORIO/$VMLINUZ" ]; then
     
     if command -v update-grub >/dev/null 2>&1; then
         update-grub
+    elif command -v grub-mkconfig >/dev/null 2>&1 && [ -d /boot/grub ]; then
+        grub-mkconfig -o /boot/grub/grub.cfg
+    else
+        printf "%b[AVISO] No se detectó GRUB. Si usas LILO, ELILO u otro gestor de arranque, recuerda actualizarlo manualmente.%b\n" "$AMARILLO" "$RESET"
     fi
     printf "\n%bInstalación completada correctamente.%b\n" "$CYAN" "$RESET"
 else
