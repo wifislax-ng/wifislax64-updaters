@@ -15,7 +15,7 @@ SCRIPT_PATH=$(readlink -f "$0" 2>/dev/null || printf '%s' "$0")
 # Eliminamos posibles ficheros viejos de modificaciones de scripts y compilaciones huérfanas anteriores
 rm -rf /opt/wifislax-updaters/*/*~ /usr/src/building-* >/dev/null 2>&1
 
-readonly SCRIPT_VERSION=20261125
+readonly SCRIPT_VERSION=20261126
 
 # Configuración de colores (segura para cualquier terminal)
 if [ -t 1 ] && command -v tput >/dev/null 2>&1 && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
@@ -36,8 +36,8 @@ else
     readonly BLANCO=""
 fi
 
-# Verificar herramientas esenciales antes de perder tiempo compilando
-DEPENDENCIAS="curl wget tar make gcc bc bison flex perl openssl zstd xz sha256sum dir2xzm xzm2dir"
+# Verificar herramientas esenciales (incluyendo python3 para parseo seguro de JSON)
+DEPENDENCIAS="curl wget tar make gcc bc bison flex perl openssl zstd xz sha256sum strip dir2xzm xzm2dir python3"
 for cmd in $DEPENDENCIAS; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         printf "%bError: Falta la herramienta requerida '%s'. Instálala antes de continuar.%b\n" "$ROJO" "$cmd" "$RESET" >&2
@@ -100,7 +100,7 @@ limpiar_temporales() {
     if [ -n "$GOV_ANTERIOR" ] && command -v cpupower >/dev/null 2>&1; then
         cpupower frequency-set -g "$GOV_ANTERIOR" >/dev/null 2>&1
     fi
-    # Si el proceso no llegó al final con éxito, limpiar cualquier carpeta temporal pendiente
+    # Si el proceso no llegó al final con éxito, limpiar cualquier carpeta temporal o directorio de trabajo pendiente
     if [ "$PROCESO_COMPLETADO" != "TRUE" ]; then
         if [ -n "$CONTAINER" ] || [ -n "$WORK_DIR" ]; then
             printf "\n%bLimpiando archivos temporales tras interrupción o error...%b\n" "$AMARILLO" "$RESET" >&2
@@ -191,9 +191,14 @@ if ! verificar_internet; then
     exit 1
 fi
 
-# Comprobar actualizaciones del propio script
+# Comprobar actualizaciones del propio script (búsqueda compatible con POSIX)
 SERVIDOR_WEB="https://raw.githubusercontent.com/wifislax-ng/wifislax64-updaters/master/$WIFISLAX"
-DIRECTORIO=$(find /opt/wifislax-updaters -type f -name "$SCRIPTNAME" -printf '%h\n' 2>/dev/null | head -n 1)
+RUTA_ENCONTRADA=$(find /opt/wifislax-updaters -type f -name "$SCRIPTNAME" 2>/dev/null | head -n 1)
+if [ -n "$RUTA_ENCONTRADA" ]; then
+    DIRECTORIO=$(dirname "$RUTA_ENCONTRADA")
+else
+    DIRECTORIO=""
+fi
 
 SV_DIA=$(printf '%s' "$SCRIPT_VERSION" | cut -c 7-8)
 SV_MES=$(printf '%s' "$SCRIPT_VERSION" | cut -c 5-6)
@@ -233,26 +238,29 @@ if [ -z "$JSON_RELEASES" ]; then
     exit 1
 fi
 
-# Extraer versiones limpias desde el JSON (Python3 con respaldo en grep)
-if command -v python3 >/dev/null 2>&1; then
-    VERSIONES_EXTR=$(printf '%s' "$JSON_RELEASES" | python3 -c '
+# Extraer versiones limpias desde el JSON mediante Python3
+VERSIONES_EXTR=$(printf '%s' "$JSON_RELEASES" | python3 -c '
 import sys, json
-data = json.load(sys.stdin)
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    sys.exit(1)
 releases = data.get("releases", [])
 rama = sys.argv[1] if len(sys.argv) > 1 else ""
-v_rama = next((r["version"] for r in releases if r["version"].startswith(rama + ".")), "")
+v_rama = next((r["version"] for r in releases if r.get("version", "").startswith(rama + ".")), "")
 v_stable = next((r["version"] for r in releases if r.get("moniker") == "stable"), "")
 v_rc = next((r["version"] for r in releases if r.get("moniker") == "mainline"), "")
 print(f"{v_rama}|{v_stable}|{v_rc}")
 ' "$RAMA_SISTEMA")
-    VER_RAMA=$(printf '%s' "$VERSIONES_EXTR" | cut -d'|' -f1)
-    VER_STABLE=$(printf '%s' "$VERSIONES_EXTR" | cut -d'|' -f2)
-    VER_RC=$(printf '%s' "$VERSIONES_EXTR" | cut -d'|' -f3)
-else
-    VER_RAMA=$(printf '%s\n' "$JSON_RELEASES" | grep -oE '"version": "'"${RAMA_SISTEMA}"'\.[0-9]+"' | head -n 1 | cut -d'"' -f4)
-    VER_STABLE=$(printf '%s\n' "$JSON_RELEASES" | grep -A 3 '"moniker": "stable"' | grep '"version":' | head -n 1 | cut -d'"' -f4)
-    VER_RC=$(printf '%s\n' "$JSON_RELEASES" | grep -A 3 '"moniker": "mainline"' | grep '"version":' | head -n 1 | cut -d'"' -f4)
+
+if [ $? -ne 0 ] || [ -z "$VERSIONES_EXTR" ]; then
+    printf "%bError: No se pudo procesar el JSON de versiones de kernel.org.%b\n" "$ROJO" "$RESET" >&2
+    exit 1
 fi
+
+VER_RAMA=$(printf '%s' "$VERSIONES_EXTR" | cut -d'|' -f1)
+VER_STABLE=$(printf '%s' "$VERSIONES_EXTR" | cut -d'|' -f2)
+VER_RC=$(printf '%s' "$VERSIONES_EXTR" | cut -d'|' -f3)
 
 # Menú de opciones compatible POSIX
 CUSTOM="FALSE"
@@ -324,9 +332,20 @@ case "$KERNEL_ELEGIDO" in
         ;;
 esac
 
-# Directorio temporal aislado de compilación (no toca /usr/src/linux-$KERNEL_ELEGIDO existente)
-WORK_DIR="/usr/src/building-$KERNEL_ELEGIDO"
-FUENTES="$WORK_DIR/$PRGNAM-$KERNEL_ELEGIDO"
+# Lógica condicional de directorio de compilación:
+# - Si coincide con el kernel en ejecución, aislar en /usr/src/building-$KERNEL_ELEGIDO para no tocar los fuentes activos.
+# - Si es una versión distinta, compilar directamente en /usr/src/linux-$KERNEL_ELEGIDO sin subdirectorios intermedios.
+if [ "$KERNEL_ELEGIDO" = "$KERNEL_SISTEMA" ]; then
+    MODO_AISLADO="TRUE"
+    BASE_EXTRACT="/usr/src/building-$KERNEL_ELEGIDO"
+    WORK_DIR="$BASE_EXTRACT"
+else
+    MODO_AISLADO="FALSE"
+    BASE_EXTRACT="/usr/src"
+    WORK_DIR="/usr/src/$PRGNAM-$KERNEL_ELEGIDO"
+fi
+FUENTES="$BASE_EXTRACT/$PRGNAM-$KERNEL_ELEGIDO"
+
 cd /usr/src || exit 1
 
 # Si el tarball ya existe localmente, comprobar si está completo o reanudar/redescargar
@@ -368,13 +387,16 @@ if [ "$NECESITA_DESCARGA" = "TRUE" ]; then
     fi
 fi
 
-# Preparar directorio de trabajo aislado sin tocar /usr/src/linux-$KERNEL_ELEGIDO del sistema
+# Preparar directorio de trabajo
 rm -rf "$WORK_DIR"
-mkdir -p "$WORK_DIR" || exit 1
+if [ "$MODO_AISLADO" = "TRUE" ]; then
+    mkdir -p "$BASE_EXTRACT" || exit 1
+    printf "\n%b[INFO] Recompilando misma versión del sistema (%s): usando entorno aislado %s%b\n" "$AMARILLO" "$KERNEL_SISTEMA" "$BASE_EXTRACT" "$RESET"
+fi
 
-# Descomprimir fichero dentro del directorio aislado
-printf "\n%bDescomprimiendo %s en %s ...%b\n" "$VERDE" "$ARCHIVO_TAR" "$WORK_DIR" "$RESET"
-if ! tar xf "$ARCHIVO_TAR" -C "$WORK_DIR"; then
+# Descomprimir fichero
+printf "\n%bDescomprimiendo %s en %s ...%b\n" "$VERDE" "$ARCHIVO_TAR" "$BASE_EXTRACT" "$RESET"
+if ! tar xf "$ARCHIVO_TAR" -C "$BASE_EXTRACT"; then
     printf "%bError al descomprimir %s. El archivo podría estar corrupto.%b\n" "$ROJO" "$ARCHIVO_TAR" "$RESET" >&2
     exit 1
 fi
@@ -393,7 +415,7 @@ fi
 # Gestión del archivo .config
 if [ ! -f "$FUENTES/.config" ]; then
     printf "\n%bNo se detectó fichero .config personalizado.\n" "$CYAN"
-    printf "Si deseas usar uno,cópialo en: %s/.config\n" "$FUENTES"
+    printf "Si deseas usar uno, cópialo en: %s/.config\n" "$FUENTES"
     printf "De lo contrario, se extraerá la configuración del kernel actual.\n"
     printf "Pulsa %bENTER%b para continuar...%b\n\n" "$AMARILLO" "$CYAN" "$RESET"
     read -r
@@ -459,38 +481,45 @@ CONTAINER="$HOME/$ESCRITORIO/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG"
 rm -rf "$CONTAINER"
 mkdir -p "$CONTAINER"
 
-# Instalación de módulos y cabeceras en el contenedor (ZSTD_CLEVEL=9 acelera el empaquetado sin apenas aumentar tamaño)
+# Instalación de módulos y cabeceras en el contenedor
 ZSTD_CLEVEL=9 make LOCALVERSION="" modules_install INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH="$CONTAINER" || exit 1
 make LOCALVERSION="" INSTALL_HDR_PATH="$CONTAINER/usr" headers_install || exit 1
 
 # Copiar imagen bzImage al escritorio
 cp -f "$FUENTES/arch/$KARCH/boot/bzImage" "$HOME/$ESCRITORIO/$VMLINUZ" || exit 1
 
-# Preparar kernel sources ligeros para compilar drivers externos (DKMS / módulos out-of-tree)
-mv System.map ../
+# Preparar kernel sources ligeros para compilar drivers externos (preservando System.map y Module.symvers)
+mv -f System.map ../.System.map.bak 2>/dev/null
+mv -f Module.symvers ../.Module.symvers.bak 2>/dev/null
 make clean
-mv ../System.map .
+mv -f ../.System.map.bak System.map 2>/dev/null
+mv -f ../.Module.symvers.bak Module.symvers 2>/dev/null
+
 ejecutar_make prepare || exit 1
 ejecutar_make scripts || exit 1
 ejecutar_make modules_prepare || exit 1
 
-# Limpieza segura y compatible POSIX de archivos innecesarios en sources (preservando scripts/ y tools/ funcionales)
+# Limpieza segura y compatible POSIX de archivos innecesarios en sources
 rm -rf Documentation arch/x86/boot/bzImage arch/x86/boot/compressed/vmlinux \
-       drivers firmware fs net sound .tmp_versions tools/testing/ vmlinux*
+       drivers firmware fs net sound .tmp_versions tools/testing/ vmlinux vmlinux.o vmlinux.symvers
 
 find arch/ -mindepth 1 -maxdepth 1 ! -name "$KARCH" -exec rm -rf {} +
 
 find . -path ./scripts -prune -o -path ./tools -prune -o \
-    -type f \( -name "*.a" -o -name "*.bin" -o -name "*.elf" -o -name "*.exe" \
+    -type f \( -name "*.a" -o -name "*.elf" -o -name "*.exe" \
     -o -name "*.o" -o -name "*.patch" -o -name "*.txt" -o -name "*.xsl" \
-    -o -name "*.xz" -o -name "*.ko" -o -name "*.zst" -o -name "*.json" \) \
+    -o -name "*.xz" -o -name "*.ko" -o -name "*.zst" \) \
     -exec rm -f {} +
 
-find scripts -xtype l -exec rm -f {} +
+# Eliminar enlaces simbólicos rotos en scripts de forma compatible POSIX
+find scripts -type l | while IFS= read -r enlace; do
+    [ ! -e "$enlace" ] && rm -f "$enlace"
+done
+
 find . \( -type f \( -name ".*" ! -name ".config" -o -name "COPYING" -o -name "CREDITS" \
     -o -name "LICENSE*" -o -name "MAINTAINERS*" -o -name "README*" \) \) -exec rm -f {} +
 
-find . -type f -perm -u+x -exec strip --strip-all \
+find . -type f -perm -u+x -exec strip --strip-unneeded \
     -R .comment -R .eh_frame -R .eh_frame_hdr -R .eh_frame_ptr \
     -R .jcr -R .note -R .note.ABI-tag -R .note.gnu.build-id \
     -R .note.gnu.gold-version -R .note.GNU-stack {} + >/dev/null 2>&1
@@ -502,7 +531,9 @@ FUENTES_DESTINO="$PRGNAM-$KERNEL_VERSION"
 mkdir -p "$CONTAINER/usr/src"
 cd /usr/src || exit 1
 mv "$FUENTES" "$CONTAINER/usr/src/$FUENTES_DESTINO"
-rm -rf "$WORK_DIR"
+if [ "$MODO_AISLADO" = "TRUE" ]; then
+    rm -rf "$BASE_EXTRACT"
+fi
 WORK_DIR=""
 
 # Garantizar enlaces simbólicos válidos build y source dentro del módulo
@@ -549,9 +580,30 @@ read -r
 
 if [ -f "$MODULO_FINAL" ] && [ -f "$HOME/$ESCRITORIO/$VMLINUZ" ]; then
     printf "\n%bInstalando Kernel %s en el sistema ...%b\n\n" "$VERDE" "$KERNEL_VERSION" "$RESET"
+
+    # Verificar si /boot es una partición separada y asegurarse de que esté montada
+    if grep -qE '^[^#].*[[:space:]]/boot[[:space:]]' /etc/fstab && ! mountpoint -q /boot 2>/dev/null; then
+        printf "%bMontando partición /boot...%b\n" "$CYAN" "$RESET"
+        mount /boot || {
+            printf "%bError: No se pudo montar /boot. Aborting instalación.%b\n" "$ROJO" "$RESET" >&2
+            exit 1
+        }
+    fi
+
     xzm2dir "$MODULO_FINAL" /
     cp -f "$HOME/$ESCRITORIO/$VMLINUZ" "/boot/vmlinuz-${KERNEL_VERSION}"
-    
+
+    # Comprobar si el sistema utiliza initrd y generarlo o advertir al usuario
+    if ls /boot/initrd* >/dev/null 2>&1; then
+        if command -v mkinitrd >/dev/null 2>&1; then
+            printf "%b[INFO] Se detectó initrd en /boot. Generando initrd-%s.gz...%b\n" "$CYAN" "$KERNEL_VERSION" "$RESET"
+            mkinitrd -c -k "$KERNEL_VERSION" -o "/boot/initrd-${KERNEL_VERSION}.gz" >/dev/null 2>&1 || \
+                printf "%b[AVISO] Fallo al generar initrd automáticamente. Revisa /boot/initrd antes de reiniciar.%b\n" "$AMARILLO" "$RESET"
+        else
+            printf "%b[AVISO] Existen imágenes initrd en /boot pero no se encontró 'mkinitrd'. Verifica si tu configuración requiere initrd.%b\n" "$AMARILLO" "$RESET"
+        fi
+    fi
+
     if command -v update-grub >/dev/null 2>&1; then
         update-grub
     elif command -v grub-mkconfig >/dev/null 2>&1 && [ -d /boot/grub ]; then
