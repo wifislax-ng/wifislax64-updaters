@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261121
+SCRIPT_VERSION=20261127
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,50 +19,49 @@ F_variables() {
 PRGNAM=jdk
 SRCNAM=jdk-25_linux-x64_bin
 EXTENSION=tar.gz
-GESTOR=wget
-echo -ne "\033]2;${PRGNAM}_updater\007"
+GESTOR=curl
+printf '\033]2;%s_updater\007' "$PRGNAM"
 WEB=https://www.oracle.com/java/technologies/downloads/
 VERSION=$(curl -fsSL -A "Mozilla/5.0" "$WEB" | grep -oE '25\.[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -V | tail -n 1)
+
 SOURCES=$SRCNAM.$EXTENSION
-CD=$PRGNAM-$VERSION
+CD="jdk-25*"
 DOWNLOAD=https://download.oracle.com/java/25/latest/$SOURCES
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-echo 
-echo "${VERDE}Configurando ...${CIERRE}"
+printf '\n%bConfigurando ...%b\n' "$VERDE" "$CIERRE"
 sleep 1
 
 mkdir -p "$PKG/etc/profile.d" "$PKG/usr/bin" "$PKG/usr/lib${LIBDIRSUFFIX}/$PRGNAM-$VERSION"
 
-echo 
-echo "${VERDE}Compilando ...${CIERRE}"
+printf '\n%bCompilando ...%b\n' "$VERDE" "$CIERRE"
 sleep 1
 
-cp -a --no-preserve=ownership bin conf include jmods lib "$PKG/usr/lib${LIBDIRSUFFIX}/$PRGNAM-$VERSION/" || exit 1
+cp -a bin conf include jmods lib "$PKG/usr/lib${LIBDIRSUFFIX}/$PRGNAM-$VERSION/" || exit 1
 
 cd "$PKG/usr/lib${LIBDIRSUFFIX}" || exit 1
-ln -sf "$PRGNAM-$VERSION/lib/libjawt.so"
-ln -sf "$PRGNAM-$VERSION/lib/server/libjvm.so"
-ln -sf "$PRGNAM-$VERSION/lib/libjava.so"
-ln -sf "$PRGNAM-$VERSION/lib/libawt.so"
-ln -sf "$PRGNAM-$VERSION/lib/libawt_xawt.so"
-ln -sf "$PRGNAM-$VERSION/lib/libverify.so"
+for _lib in libjawt.so server/libjvm.so libjava.so libawt.so libawt_xawt.so libverify.so; do
+	[ -e "$PRGNAM-$VERSION/lib/$_lib" ] && ln -sf "$PRGNAM-$VERSION/lib/$_lib" .
+done
 
 cd "$PKG/usr/bin" || exit 1
-for b in ../lib${LIBDIRSUFFIX}/$PRGNAM-$VERSION/bin/*; do
-	[ -x "$b" ] && ln -sf "$b" .
+for _bin in "$PKG/usr/lib${LIBDIRSUFFIX}/$PRGNAM-$VERSION/bin/"*; do
+	if [ -x "$_bin" ]; then
+		_bin_name="${_bin##*/}"
+		ln -sf "/usr/lib${LIBDIRSUFFIX}/$PRGNAM-$VERSION/bin/$_bin_name" "$_bin_name"
+	fi
 done
 
 cd "$PKG" || exit 1
-cat > etc/profile.d/$PRGNAM.sh << EOF
+cat > "etc/profile.d/$PRGNAM.sh" << EOF
 #!/bin/sh
 export JAVA_HOME=/usr/lib${LIBDIRSUFFIX}/$PRGNAM-$VERSION
 export PATH=\${PATH}:\${JAVA_HOME}/bin
 EOF
 
-cat > etc/profile.d/$PRGNAM.csh << EOF
+cat > "etc/profile.d/$PRGNAM.csh" << EOF
 #!/bin/csh
 setenv JAVA_HOME /usr/lib${LIBDIRSUFFIX}/$PRGNAM-$VERSION
 setenv PATH \${PATH}:\${JAVA_HOME}/bin
@@ -74,32 +73,29 @@ chmod 755 etc/profile.d/*
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT SIGTERM
-
-#Inicializamos las variables globales
+# 1. Inicializamos variables globales, trap y autodetección de PRGNAM
 f_variables
-#Asignamos o detectamos arquitectura
+# 2. Detectamos arquitectura del sistema
 f_arquitectura
-#Comprobamos conexion a Internet
+# 3. Comprobamos conexión a Internet
 f_comprobarConexion
-#Inicializamos las variables del script
-F_variables
-#Creamos directorio de trabajo
-f_directorioTemporal
-#Mostramos el mensaje de presentacion
+# 4. Mostramos el mensaje de presentación
 f_presentacion
-#Comprobamos updates del script
-f_comprobarUpdates
-#Comprobamos version instalada del paquete
+# 5. Comprobamos updates del propio script
+f_comprobarUpdates "$@"
+# 6. Inicializamos las variables propias del paquete (consulta WEB/VERSION/DOWNLOAD)
+F_variables
+# 7. Comprobamos versión instalada en el sistema y pedimos confirmación
 f_versionInstalada
-#Si no existe el fichero se descargara
+# 8. Creamos directorio temporal de trabajo
+f_directorioTemporal
+# 9. Descargamos sources
 f_download
-#Descomprimir sources
+# 10. Descomprimimos sources
 f_descomprimir
-#Cd a ruta
+# 11. Entramos en el directorio descomprimido y ajustamos permisos
 f_cd
-#Descomprimir fichero descargado y compilamos
+# 12. Configuramos y compilamos
 F_compilar
-#Creamos xzm , instalamos y salimos
+# 13. Creamos paquete (xzm/txz), instalamos, limpiamos y salimos
 f_tareasFinales

@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261120
+SCRIPT_VERSION=20261127
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -20,7 +20,7 @@ PRGNAM=teamviewer
 SRCNAM=teamviewer_amd64
 EXTENSION=deb
 GESTOR=wget
-echo -ne "\033]2;${PRGNAM}_updater\007"
+printf '\033]2;%s_updater\007' "$PRGNAM"
 WEB=https://www.teamviewer.com/en/download/portal/linux
 VERSION=$(curl -sLA "Mozilla/5.0" "$WEB/" | grep -oE '15\.[0-9]+\.[0-9]+' | sort -V | tail -n 1)
 SOURCES=$SRCNAM.$EXTENSION
@@ -29,18 +29,17 @@ DOWNLOAD=https://download.teamviewer.com/download/linux/$SOURCES
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-echo 
-echo "${VERDE}Descomprimiendo ...${CIERRE}"
+printf '\n%bDescomprimiendo ...%b\n' "$VERDE" "$CIERRE"
 sleep 1
 cd "$PKG" || exit 1
 ar p "$TMP/$SOURCES" data.tar.xz | tar xJ || exit 1
 
 # Creamos simbolicos
-for link in $(find . -lname '/*'); do
+find . -lname '/*' | while IFS= read -r link; do
   target=$(readlink "$link")
   link=${link#./}
-  root=$(echo "$link" | sed -E 's|[^/](.[^/]*)|..|g'); root=${root#/}; root=${root%..}
-  rm "$link"
+  root=$(printf '%s' "$link" | sed -E 's|[^/](.[^/]*)|..|g'); root=${root#/}; root=${root%..}
+  rm -f "$link"
   ln -s "$root${target#/}" "$link"
 done
 
@@ -69,14 +68,14 @@ cat << 'EOF' > "$PKG/etc/rc.d/rc.teamviewerd"
 
 teamviewerd_start() {
   if [ -x /opt/teamviewer/tv_bin/teamviewerd ]; then
-    echo "[1;37m[[1;32m+[1;37m] Starting [1;36mTeamViewer [1;37mDaemon [0m"
+    printf '\033[1;37m[\033[1;32m+\033[1;37m] Starting \033[1;36mTeamViewer \033[1;37mDaemon \033[0m\n'
     /opt/teamviewer/tv_bin/teamviewerd --daemon start
   fi
 }
 
 teamviewerd_stop() {
-  echo "Terminating TeamViewer Daemon"
-  killall teamviewerd
+  printf 'Terminating TeamViewer Daemon\n'
+  killall teamviewerd 2>/dev/null || true
 }
 
 teamviewerd_restart() {
@@ -96,7 +95,7 @@ case "$1" in
   teamviewerd_restart
   ;;
 *)
-  echo "usage $0 start|stop|restart"
+  printf 'usage %s start|stop|restart\n' "$0"
 esac
 EOF
 
@@ -113,28 +112,25 @@ rm -rf "$PKG/etc/apt/"
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT SIGTERM
-
-#Inicializamos las variables globales
+# 1. Inicializamos variables globales, trap y autodetección de PRGNAM
 f_variables
-#Asignamos o detectamos arquitectura
+# 2. Detectamos arquitectura del sistema
 f_arquitectura
-#Comprobamos conexion a Internet
+# 3. Comprobamos conexión a Internet
 f_comprobarConexion
-#Inicializamos las variables del script
-F_variables
-#Creamos directorio de trabajo
-f_directorioTemporal
-#Mostramos el mensaje de presentacion
+# 4. Mostramos el mensaje de presentación
 f_presentacion
-#Comprobamos updates del script
-f_comprobarUpdates
-#Comprobamos version instalada del paquete
+# 5. Comprobamos updates del propio script
+f_comprobarUpdates "$@"
+# 6. Inicializamos las variables propias del paquete (consulta WEB/VERSION/DOWNLOAD)
+F_variables
+# 7. Comprobamos versión instalada en el sistema y pedimos confirmación
 f_versionInstalada
-#Si no existe el fichero se descargara
+# 8. Creamos directorio temporal de trabajo
+f_directorioTemporal
+# 9. Descargamos sources
 f_download
-#Descomprimir fichero descargado y compilamos
+# 10. Configuramos y compilamos
 F_compilar
-#Creamos xzm , instalamos y salimos
+# 11. Creamos paquete (xzm/txz), instalamos, limpiamos y salimos
 f_tareasFinales

@@ -17,7 +17,7 @@ f_variables() {
 F_variables() {
 PRGNAM=wifijammer
 GESTOR=git
-echo -ne "\033]2;${PRGNAM}_updater\007"
+printf '\033]2;%s_updater\007' "$PRGNAM"
 WEB=https://github.com/Theelx/$PRGNAM
 VERSION="0.1_$(git ls-remote "$WEB.git" HEAD | cut -c 1-7)"
 SOURCES=$PRGNAM
@@ -43,18 +43,29 @@ fi
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-trap f_exitmode SIGHUP SIGINT SIGTERM
-
+# 1. Inicializamos variables globales, trap y autodetección de PRGNAM
 f_variables
-f_comprobarConexion
-F_variables
-f_directorioTemporal
-f_presentacion
-f_comprobarUpdates
+# 2. Detectamos arquitectura del sistema
 f_arquitectura noarch
+# 3. Comprobamos conexión a Internet
+f_comprobarConexion
+# 4. Mostramos el mensaje de presentación
+f_presentacion
+# 5. Comprobamos updates del propio script
+f_comprobarUpdates "$@"
+# 6. Inicializamos las variables propias del paquete (consulta WEB/VERSION/DOWNLOAD)
+F_variables
+# 7. Comprobamos versión instalada en el sistema y pedimos confirmación
 f_versionInstalada
+# 8. Comprobamos e instalamos dependencias
 F_dependencias
+# 9. Creamos directorio temporal de trabajo
+f_directorioTemporal
+# 10. Descargamos sources
 f_download
+# 11. Entramos en el directorio descomprimido y ajustamos permisos
 f_cd
+# 12. Configuramos y compilamos
 F_compilar
+# 13. Creamos paquete (xzm/txz), instalamos, limpiamos y salimos
 f_tareasFinales

@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261120
+SCRIPT_VERSION=20261127
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,7 +19,7 @@ F_variables() {
 PRGNAM=wireshark
 EXTENSION=tar.xz
 GESTOR=wget
-echo -ne "\033]2;${PRGNAM}_updater\007"
+printf '\033]2;%s_updater\007' "$PRGNAM"
 WEB=https://www.wireshark.org/download/src
 VERSION=$(curl -fsSL -A "Mozilla/5.0" "$WEB/" | grep -oE 'wireshark-[0-9]+\.[0-9]+\.[0-9]+\.tar\.xz' | sed -E 's/wireshark-([0-9.]+)\.tar\.xz/\1/' | sort -V | tail -n 1)
 SOURCES=$PRGNAM-$VERSION.$EXTENSION
@@ -65,7 +65,7 @@ cd build || exit 1
 echo ""
 echo "${VERDE}Compilando ...${CIERRE}"
 sleep 1
-make -j$(nproc) || exit 1
+make || exit 1
 make install DESTDIR="$PKG" || exit 1
 
 # Creamos una config basica
@@ -84,36 +84,33 @@ EOF
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT SIGTERM
-
-#Inicializamos las variables globales
+# 1. Inicializamos variables globales, trap y autodetección de PRGNAM
 f_variables
-#Asignamos o detectamos arquitectura
+# 2. Detectamos arquitectura del sistema
 f_arquitectura
-#Comprobamos conexion a Internet
+# 3. Comprobamos conexión a Internet
 f_comprobarConexion
-#Inicializamos las variables del script
-F_variables
-#Creamos directorio de trabajo
-f_directorioTemporal
-#Mostramos el mensaje de presentacion
+# 4. Mostramos el mensaje de presentación
 f_presentacion
-#Comprobamos updates del script
-f_comprobarUpdates
-#Comprobamos version instalada del paquete
+# 5. Comprobamos updates del propio script
+f_comprobarUpdates "$@"
+# 6. Inicializamos las variables propias del paquete (consulta WEB/VERSION/DOWNLOAD)
+F_variables
+# 7. Comprobamos versión instalada en el sistema y pedimos confirmación
 f_versionInstalada
-# Comprobar dependencias
+# 8. Comprobamos e instalamos dependencias
 F_dependencias
-#Si no existe el fichero se descargara
+# 9. Creamos directorio temporal de trabajo
+f_directorioTemporal
+# 10. Descargamos sources
 f_download
-#Descomprimir sources
+# 11. Descomprimimos sources
 f_descomprimir
-#Cd a ruta
+# 12. Entramos en el directorio descomprimido y ajustamos permisos
 f_cd
-#Descomprimir fichero descargado y compilamos
+# 13. Configuramos y compilamos
 F_compilar
-#Hacemos strip sobre el paquete
+# 14. Hacemos strip sobre el paquete
 f_strip
-#Creamos xzm , instalamos y salimos
+# 15. Creamos paquete (xzm/txz), instalamos, limpiamos y salimos
 f_tareasFinales

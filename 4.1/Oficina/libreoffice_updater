@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261121
+SCRIPT_VERSION=20261127
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -22,14 +22,28 @@ EXTENSION=tar.gz
 GESTOR=wget
 printf '\033]2;%s_updater\007' "$PRGNAM"
 WEB=https://es.libreoffice.org/descarga
-VERSION=$(curl -sL --connect-timeout 15 "$WEB/" | grep "${SRCNAM}_" | head -1 | cut -d "/" -f 9 | cut -d "_" -f2)
+VERSION=$(curl -sL --connect-timeout 15 "$WEB/" | grep -oE "${SRCNAM}_[0-9]+\.[0-9]+\.[0-9]+" | head -1 | cut -d "_" -f2)
 SOURCES=${SRCNAM}_${VERSION}_Linux_x86-64_rpm.$EXTENSION
-CD=${SRCNAM}_${VERSION}*_Linux_x86-64_rpm/RPMS/
+CD=${SRCNAM}_${VERSION}*_Linux_x86-64_rpm/RPMS
 DOWNLOAD=https://download.documentfoundation.org/libreoffice/stable/$VERSION/rpm/x86_64/$SOURCES
 }
 
-# Comprobar dependencias
+# Comprobar dependencias (asegurando sincronización de versión con langpack y helppack)
 F_dependencias(){
+for _lo_subpkg in libreoffice-langpack libreoffice-helppack; do
+    _lo_installed_full=$(_get_installed_pkg "$_lo_subpkg" || true)
+    if [ -n "$_lo_installed_full" ]; then
+        _lo_rest="${_lo_installed_full#"${_lo_subpkg}-"}"
+        _lo_sin_build="${_lo_rest%-*}"
+        _lo_ver="${_lo_sin_build%-*}"
+        if [ "$_lo_ver" != "$VERSION" ]; then
+            printf '%sEliminando %s (%s) por desfase con versión %s...%s\n' "$AMARILLO" "$_lo_subpkg" "$_lo_ver" "$VERSION" "$CIERRE"
+            removepkg "$_lo_installed_full"
+        fi
+    fi
+done
+unset _lo_subpkg _lo_installed_full _lo_rest _lo_sin_build _lo_ver
+
 DEPENDENCIAS="rpm cpio jdk libreoffice-langpack libreoffice-helppack"
 f_dependencias
 }
@@ -40,14 +54,19 @@ SRCSHORT=$(printf '%s' "$VERSION" | cut -d. -f1-2)
 rm -f *onlineupdate*.rpm
 
 for FILE in *.rpm; do
-[ -f "$FILE" ] || continue
-rpm2cpio < "$FILE" | cpio -imdv || exit 1
+    [ -f "$FILE" ] || continue
+    rpm2cpio < "$FILE" | cpio -imdv || exit 1
 done
 
 for FILE in desktop-integration/*freedesktop-menus*.rpm; do
-[ -f "$FILE" ] || continue
-rpm2cpio < "$FILE" | cpio -imdv || exit 1
+    [ -f "$FILE" ] || continue
+    rpm2cpio < "$FILE" | cpio -imdv || exit 1
 done
+
+if [ ! -d opt ] || [ ! -d usr ]; then
+    printf '%sError: No se extrajo el contenido esperado (opt/usr) de los paquetes RPM.%s\n' "$ROJO" "$CIERRE"
+    exit 1
+fi
 
 rm -rf desktop-integration ./*.rpm
 cp -a opt usr "$PKG/" || exit 1
@@ -55,8 +74,8 @@ cp -a opt usr "$PKG/" || exit 1
 mkdir -p "$PKG/usr/bin"
 cd "$PKG/usr/bin" || exit 1
 for FILE in sbase scalc sdraw simpress smath soffice swriter unopkg; do
-rm -f "$FILE"
-ln -sf "../../opt/libreoffice${SRCSHORT}/program/${FILE}" "$FILE"
+    rm -f "$FILE"
+    ln -sf "../../opt/libreoffice${SRCSHORT}/program/${FILE}" "$FILE"
 done
 
 ln -sf "../../opt/libreoffice${SRCSHORT}/program/sbase" lobase
@@ -69,22 +88,22 @@ ln -sf "../../opt/libreoffice${SRCSHORT}/program/swriter" lowriter
 mkdir -p "$PKG/usr/share/applications"
 cd "$PKG/usr/share/applications" || exit 1
 for APP in base calc draw impress math startcenter writer xsltfilter; do
-rm -f "${PRGNAM}${SRCSHORT}-${APP}.desktop" "${PRGNAM}-${APP}.desktop"
-ln -sf "../../../opt/libreoffice${SRCSHORT}/share/xdg/${APP}.desktop" "${PRGNAM}-${APP}.desktop"
+    rm -f "${PRGNAM}${SRCSHORT}-${APP}.desktop" "${PRGNAM}-${APP}.desktop"
+    ln -sf "../../../opt/libreoffice${SRCSHORT}/share/xdg/${APP}.desktop" "${PRGNAM}-${APP}.desktop"
 done
 
 rm -f "$PKG/opt/libreoffice${SRCSHORT}/share/fonts/truetype"/DejaVu*.ttf
 rm -f "$PKG/opt/libreoffice${SRCSHORT}/share/fonts/truetype"/Liberation*.ttf
 
 if [ -d "$PKG/opt/libreoffice${SRCSHORT}/share/xdg" ]; then
-cd "$PKG/opt/libreoffice${SRCSHORT}/share/xdg" || exit 1
-for APP in base calc draw impress math writer; do
-[ -f "${APP}.desktop" ] && sed -i "s%Exec=libreoffice -%Exec=/opt/libreoffice${SRCSHORT}/program/s%" "${APP}.desktop"
-done
-for MENU in *.desktop; do
-[ -f "$MENU" ] || continue
-sed -i 's/^Categories=.*/Categories=Office;/' "$MENU"
-done
+    cd "$PKG/opt/libreoffice${SRCSHORT}/share/xdg" || exit 1
+    for APP in base calc draw impress math writer; do
+        [ -f "${APP}.desktop" ] && sed -i "s%Exec=libreoffice -%Exec=/opt/libreoffice${SRCSHORT}/program/s%" "${APP}.desktop"
+    done
+    for MENU in *.desktop; do
+        [ -f "$MENU" ] || continue
+        sed -i 's/^Categories=.*/Categories=Office;/' "$MENU"
+    done
 fi
 
 chown -R root:root "$PKG"
@@ -93,34 +112,31 @@ chown -R root:root "$PKG"
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT SIGTERM
-
-#Inicializamos las variables globales
+# 1. Inicializamos variables globales, trap y autodetección de PRGNAM
 f_variables
-#Asignamos o detectamos arquitectura
+# 2. Detectamos arquitectura del sistema
 f_arquitectura
-#Comprobamos conexion a Internet
+# 3. Comprobamos conexión a Internet
 f_comprobarConexion
-#Inicializamos las variables del script
-F_variables
-#Creamos directorio de trabajo
-f_directorioTemporal
-#Mostramos el mensaje de presentacion
+# 4. Mostramos el mensaje de presentación
 f_presentacion
-#Comprobamos updates del script
-f_comprobarUpdates
-#Comprobamos version instalada del paquete
+# 5. Comprobamos updates del propio script
+f_comprobarUpdates "$@"
+# 6. Inicializamos las variables propias del paquete (consulta WEB/VERSION/DOWNLOAD)
+F_variables
+# 7. Comprobamos versión instalada en el sistema y pedimos confirmación
 f_versionInstalada
-#Compronar dependencias
+# 8. Comprobamos e instalamos dependencias
 F_dependencias
-#Si no existe el fichero se descargara
+# 9. Creamos directorio temporal de trabajo
+f_directorioTemporal
+# 10. Descargamos sources
 f_download
-#Descomprimir sources
+# 11. Descomprimimos sources
 f_descomprimir
-#Cd a ruta
+# 12. Entramos en el directorio descomprimido y ajustamos permisos
 f_cd
-#Descomprimir fichero descargado y compilamos
+# 13. Configuramos y compilamos
 F_compilar
-#Creamos xzm , instalamos y salimos
+# 14. Creamos paquete (xzm/txz), instalamos, limpiamos y salimos
 f_tareasFinales

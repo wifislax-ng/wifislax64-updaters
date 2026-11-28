@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261121
+SCRIPT_VERSION=20261127
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -20,7 +20,7 @@ PRGNAM=google-chrome
 GESTOR=wget
 printf '\033]2;%s_updater\007' "$PRGNAM"
 WEB=https://dl.google.com/linux/chrome/deb/dists/stable/main/binary-amd64/Packages
-VER_FULL=$(curl -sL --connect-timeout 15 "$WEB" | sed -n '/^Package: google-chrome-stable$/,/^$/s/^Version: \([0-9][0-9.]*-[0-9]*\).*/\1/p' | head -1)
+VER_FULL=$(curl -fsSL --connect-timeout 10 --max-time 30 "$WEB" | sed -n '/^Package: google-chrome-stable$/,/^$/s/^Version: \([0-9][0-9.]*-[0-9]*\).*/\1/p' | head -1)
 VERSION=${VER_FULL%-*}
 RAMA=${VER_FULL#*-}
 SOURCES=google-chrome-stable_${VERSION}-${RAMA}_amd64.deb
@@ -29,29 +29,37 @@ DOWNLOAD=https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-echo "$VERDE"
-echo "Extrayendo contenido del fichero .deb"
-echo "$CIERRE"
+printf '\n%bExtrayendo contenido del fichero .deb%b\n\n' "$VERDE" "$CIERRE"
 mkdir -p "$TMP/deb"
-deb2dir "$TMP/$SOURCES" "$TMP/deb" || exit 1
+(
+    cd "$TMP/deb" || exit 1
+    _data_tar=$(ar t "$TMP/$SOURCES" | grep '^data\.tar' | head -n 1)
+    [ -n "$_data_tar" ] || exit 1
+    case "$_data_tar" in
+        *.xz)  ar p "$TMP/$SOURCES" "$_data_tar" | tar xJf - ;;
+        *.zst) ar p "$TMP/$SOURCES" "$_data_tar" | zstd -dc | tar xf - ;;
+        *.gz)  ar p "$TMP/$SOURCES" "$_data_tar" | tar xzf - ;;
+        *.bz2) ar p "$TMP/$SOURCES" "$_data_tar" | tar xjf - ;;
+        *)     ar p "$TMP/$SOURCES" "$_data_tar" | tar xf - ;;
+    esac
+) || exit 1
+
 rm -rf "$TMP/deb/etc" "$TMP/deb/usr/share/man" "$TMP/deb/usr/share/doc" "$TMP/deb/usr/share/menu" "$TMP/deb/usr/share/gnome-control-center"
 rm -rf "$TMP/deb"/usr/share/applications/*.desktop
 rm -f "$TMP/deb/usr/bin/google-chrome"
 
 # Symlink desktop environment icons hicolor
-for png in "$TMP/deb"/opt/google/chrome/product_logo_*.png; do
-[ -f "$png" ] || continue
-pngsize="${png##*/product_logo_}"
-mkdir -p "$TMP/deb/usr/share/icons/hicolor/${pngsize%.png}x${pngsize%.png}/apps"
-ln -s "../../../../../../opt/google/chrome/product_logo_${pngsize}" "$TMP/deb/usr/share/icons/hicolor/${pngsize%.png}x${pngsize%.png}/apps/google-chrome.png"
+for pngsize in 16 24 32 48 64 128 256; do
+[ -f "$TMP/deb/opt/google/chrome/product_logo_${pngsize}.png" ] || continue
+mkdir -p "$TMP/deb/usr/share/icons/hicolor/${pngsize}x${pngsize}/apps"
+ln -s "../../../../../../opt/google/chrome/product_logo_${pngsize}.png" "$TMP/deb/usr/share/icons/hicolor/${pngsize}x${pngsize}/apps/google-chrome.png"
 done
 
 # Symlink desktop environment icons oxygen
-for png in "$TMP/deb"/opt/google/chrome/product_logo_*.png; do
-[ -f "$png" ] || continue
-pngsize="${png##*/product_logo_}"
-mkdir -p "$TMP/deb/usr/share/icons/oxygen/base/${pngsize%.png}x${pngsize%.png}/apps"
-ln -s "../../../../../../../opt/google/chrome/product_logo_${pngsize}" "$TMP/deb/usr/share/icons/oxygen/base/${pngsize%.png}x${pngsize%.png}/apps/google-chrome.png"
+for pngsize in 16 24 32 48 64 128 256; do
+[ -f "$TMP/deb/opt/google/chrome/product_logo_${pngsize}.png" ] || continue
+mkdir -p "$TMP/deb/usr/share/icons/oxygen/base/${pngsize}x${pngsize}/apps"
+ln -s "../../../../../../../opt/google/chrome/product_logo_${pngsize}.png" "$TMP/deb/usr/share/icons/oxygen/base/${pngsize}x${pngsize}/apps/google-chrome.png"
 done
 
 install -Dm 644 "$TMP/deb/opt/google/chrome/product_logo_64.png" "$PKG/usr/share/pixmaps/google-chrome.png"
@@ -70,7 +78,7 @@ chmod 0755 "$PKG/usr/bin/google-chrome"
 
 cat << 'EOF' > "$TMP/deb/usr/share/applications/$PRGNAM.desktop"
 [Desktop Entry]
-Categories=Application;Network;
+Categories=Network;WebBrowser;
 Encoding=UTF-8
 Exec=google-chrome %u
 GenericName[es_ES]=Navegador Web
@@ -96,28 +104,25 @@ cp -rfp "$TMP"/deb/* "$PKG/" || exit 1
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT SIGTERM
-
-#Inicializamos las variables globales
+# 1. Inicializamos variables globales, trap y autodetección de PRGNAM
 f_variables
-#Asignamos o detectamos arquitectura
+# 2. Detectamos arquitectura del sistema
 f_arquitectura
-#Comprobamos conexion a Internet
+# 3. Comprobamos conexión a Internet
 f_comprobarConexion
-#Inicializamos las variables del script
-F_variables
-#Creamos directorio de trabajo
-f_directorioTemporal
-#Mostramos el mensaje de presentacion
+# 4. Mostramos el mensaje de presentación
 f_presentacion
-#Comprobamos updates del script
-f_comprobarUpdates
-#Comprobamos version instalada del script
+# 5. Comprobamos updates del propio script
+f_comprobarUpdates "$@"
+# 6. Inicializamos las variables propias del paquete (consulta WEB/VERSION/DOWNLOAD)
+F_variables
+# 7. Comprobamos versión instalada en el sistema y pedimos confirmación
 f_versionInstalada
-#Si no existe el fichero se descargara
+# 8. Creamos directorio temporal de trabajo
+f_directorioTemporal
+# 9. Descargamos sources
 f_download
-#Descomprimir fichero descargado y compilamos
+# 10. Configuramos y compilamos
 F_compilar
-#Creamos xzm , instalamos y salimos
+# 11. Creamos paquete (xzm/txz), instalamos, limpiamos y salimos
 f_tareasFinales

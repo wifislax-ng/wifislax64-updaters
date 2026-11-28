@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261120
+SCRIPT_VERSION=20261127
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,9 +19,9 @@ F_variables() {
 PRGNAM=airgeddon
 EXTENSION=tar.gz
 GESTOR=wget
-echo -ne "\033]2;${PRGNAM}_updater\007"
+printf '\033]2;%s_updater\007' "$PRGNAM"
 WEB=https://github.com/v1s1t0r1sh3r3/$PRGNAM
-VERSION=$(curl -fsSLI -o /dev/null -w '%{url_effective}' "$WEB/releases/latest" | sed -E 's|.*/tag/v?||')
+VERSION=$(curl -fsSLI -o /dev/null -w '%{url_effective}' "$WEB/releases/latest" | sed -E 's|.*/tag/v?([0-9.]+).*|\1|')
 SOURCES=v$VERSION.$EXTENSION
 CD=$PRGNAM-$VERSION
 DOWNLOAD=$WEB/archive/refs/tags/$SOURCES
@@ -33,7 +33,7 @@ DEPENDENCIAS="aircrack-ng arping-th reaver bully ccze crunch hashcat hcxdumptool
 f_dependencias
 }
 
-# Descomprimimos el fichero descargado y compilamos
+# Preparamos e instalamos los ficheros en PKG
 F_compilar(){
 echo 
 echo "${VERDE}Compilando ...${CIERRE}"
@@ -42,13 +42,12 @@ sleep 1
 mkdir -p "$PKG/usr/bin"
 mkdir -p "$PKG/usr/share/airgeddon"
 
-rm -rf *.md .git* .editor* binaries imgs Dockerfile pindb_checksum.txt
+rm -rf -- *.md .git* .editor* binaries imgs Dockerfile pindb_checksum.txt
 
-cp -a --no-preserve=ownership * "$PKG/usr/share/airgeddon/"
+cp -a --no-preserve=ownership . "$PKG/usr/share/airgeddon/"
 find "$PKG/usr/share/airgeddon" -type f -name "*.sh" -exec chmod +x {} +
 
-if [ -f .airgeddonrc ]; then
-    cp -a --no-preserve=ownership .airgeddonrc "$PKG/usr/share/airgeddon/"
+if [ -f "$PKG/usr/share/airgeddon/.airgeddonrc" ]; then
     sed -i -E 's/^(AIRGEDDON_AUTO_UPDATE=)"?true"?/\1false/' "$PKG/usr/share/airgeddon/.airgeddonrc"
 fi
 
@@ -64,34 +63,31 @@ chmod a+x "$PKG/usr/bin/airgeddon"
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT SIGTERM
-
-#Inicializamos las variables globales
+# 1. Inicializamos variables globales, trap y autodetección de PRGNAM
 f_variables
-#Asignamos o detectamos arquitectura
+# 2. Detectamos arquitectura del sistema
 f_arquitectura
-#Comprobamos conexion a Internet
+# 3. Comprobamos conexión a Internet
 f_comprobarConexion
-#Inicializamos las variables del script
-F_variables
-#Creamos directorio de trabajo
-f_directorioTemporal
-#Mostramos el mensaje de presentacion
+# 4. Mostramos el mensaje de presentación
 f_presentacion
-#Comprobamos updates del script
-f_comprobarUpdates
-#Comprobamos version instalada del paquete
+# 5. Comprobamos updates del propio script
+f_comprobarUpdates "$@"
+# 6. Inicializamos las variables propias del paquete (consulta WEB/VERSION/DOWNLOAD)
+F_variables
+# 7. Comprobamos versión instalada en el sistema y pedimos confirmación
 f_versionInstalada
-#Compronar dependencias
+# 8. Comprobamos e instalamos dependencias
 F_dependencias
-#Si no existe el fichero se descargara
+# 9. Creamos directorio temporal de trabajo
+f_directorioTemporal
+# 10. Descargamos sources
 f_download
-#Descomprimir sources
+# 11. Descomprimimos sources
 f_descomprimir
-#Cd a ruta
+# 12. Entramos en el directorio descomprimido y ajustamos permisos
 f_cd
-#Descomprimir fichero descargado y compilamos
+# 13. Configuramos y compilamos
 F_compilar
-#Creamos xzm , instalamos y salimos
+# 14. Creamos paquete (xzm/txz), instalamos, limpiamos y salimos
 f_tareasFinales

@@ -2,34 +2,34 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261121
-CATEGORIA="Reproductores multimedia"
+SCRIPT_VERSION=20261127
+SUBCATEGORIA="Reproductores multimedia"
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
 ############################################################
-f_variables(){
+f_variables() {
 . /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
 ## Funciones propias del script. Su nombre empieza por F_ ##
 ############################################################
-# Definicion de variables
+# Definición de variables
 F_variables() {
 PRGNAM=vlc
 EXTENSION=tar.xz
 GESTOR=wget
-echo -ne "\033]2;${PRGNAM}_updater\007"
+printf '\033]2;%s_updater\007' "$PRGNAM"
 WEB=https://get.videolan.org/vlc/last
 VERSION=$(wget -qO- "$WEB/" | grep -oE 'vlc-[0-9]+\.[0-9]+(\.[0-9]+)?\.tar\.xz' | sed -E 's/vlc-([0-9.]+)\.tar\.xz/\1/' | sort -V | tail -n 1)
-CD=$PRGNAM-$VERSION
-SOURCES=$PRGNAM-$VERSION.$EXTENSION
-DOWNLOAD=https://download.videolan.org/pub/videolan/$PRGNAM/$VERSION/$SOURCES
+CD="$PRGNAM-$VERSION"
+SOURCES="$PRGNAM-$VERSION.$EXTENSION"
+DOWNLOAD="https://download.videolan.org/pub/videolan/$PRGNAM/$VERSION/$SOURCES"
 }
 
 # Comprobar dependencias
-F_dependencias(){
+F_dependencias() {
 DEPENDENCIAS="
 libsidplay2
 zvbi
@@ -62,12 +62,10 @@ f_dependencias
 }
 
 # Descomprimimos el fichero descargado y compilamos
-F_compilar(){
-echo 
-echo "${VERDE}Configurando ...${CIERRE}"
+F_compilar() {
+printf '\n%sConfigurando ...%s\n' "$VERDE" "$CIERRE"
 
-echo "
-/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Av/Ag9dADgYSu7FL5n6pvg745dpgzgztyjlznaup/Ke
+printf '%s' "/Td6WFoAAATm1rRGAgAhARYAAAB0L+Wj4Av/Ag9dADgYSu7FL5n6pvg745dpgzgztyjlznaup/Ke
 xmcw6hscA46jeLPjahmr3sLXjaUJlHL60YiPWDZBkEp/BKC97GdmenZOC7oAz/o9rphcjimovbj4
 XApdsquiAwjUHKIa0UW4A+2EdtSirC6eYMljpUY8g+X+d1evESOjmapW3hE/QEwgSITEPBJnd+aS
 RKAUXkiLEFeA4+0oSfCdlrQJ9TP9dp805beUQCm8fY2qjXQ11aPZp85wJMZYY+HP1wcr9irWTtef
@@ -89,7 +87,6 @@ autoreconf -fiv || exit 1
 
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
-LDFLAGS="$SLKLDFLAGS" \
 ./configure \
     --prefix=/usr \
     --libdir=/usr/lib${LIBDIRSUFFIX} \
@@ -187,14 +184,13 @@ LDFLAGS="$SLKLDFLAGS" \
     --enable-x264 \
     --enable-x265 \
     --enable-zvbi \
-    --build=$ARCH-slackware-linux || exit 1
-  
-echo 
-echo "${VERDE}Compilando ...${CIERRE}"
+    --build="$ARCH-slackware-linux" || exit 1
+
+printf '\n%sCompilando ...%s\n' "$VERDE" "$CIERRE"
 sed -i -e '/^#define _FORTIFY_SOURCE/d' config.h
-make -j$(nproc) || exit 1
+make || exit 1
 make install DESTDIR="$PKG" || exit 1
-install -D -m0644 extras/analyser/vlc.vim "$PKG/usr/share/vim/vimfiles/syntax/vlc.vim"
+install -D -m0644 extras/analyser/vlc.vim "$PKG/usr/share/vim/vimfiles/syntax/vlc.vim" || exit 1
 rm -rf "$PKG/usr/lib${LIBDIRSUFFIX}/vlc/plugins/plugins.dat"
 rm -rf "$PKG/usr/lib${LIBDIRSUFFIX}"/*.la
 }
@@ -202,36 +198,33 @@ rm -rf "$PKG/usr/lib${LIBDIRSUFFIX}"/*.la
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT SIGTERM
-
-#Inicializamos las variables globales
+# 1. Inicializamos variables globales, trap y autodetección de PRGNAM
 f_variables
-#Asignamos o detectamos arquitectura
+# 2. Detectamos arquitectura del sistema
 f_arquitectura
-#Comprobamos conexion a Internet
+# 3. Comprobamos conexión a Internet
 f_comprobarConexion
-#Inicializamos las variables del script
-F_variables
-#Creamos directorio de trabajo
-f_directorioTemporal
-#Mostramos el mensaje de presentacion
+# 4. Mostramos el mensaje de presentación
 f_presentacion
-#Comprobamos updates del script
-f_comprobarUpdates
-#Comprobamos version instalada del paquete
+# 5. Comprobamos updates del propio script
+f_comprobarUpdates "$@"
+# 6. Inicializamos las variables propias del paquete (consulta WEB/VERSION/DOWNLOAD)
+F_variables
+# 7. Comprobamos versión instalada en el sistema y pedimos confirmación
 f_versionInstalada
-# Comprobar dependencias
+# 8. Comprobamos e instalamos dependencias
 F_dependencias
-#Si no existe el fichero se descargara
+# 9. Creamos directorio temporal de trabajo
+f_directorioTemporal
+# 10. Descargamos sources
 f_download
-#Descomprimir sources
+# 11. Descomprimimos sources
 f_descomprimir
-#Cd a ruta
+# 12. Entramos en el directorio descomprimido y ajustamos permisos
 f_cd
-#Descomprimir fichero descargado y compilamos
+# 13. Configuramos y compilamos
 F_compilar
-#Hacemos strip sobre el paquete
+# 14. Hacemos strip sobre el paquete
 f_strip
-#Creamos xzm , instalamos y salimos
+# 15. Creamos paquete (xzm/txz), instalamos, limpiamos y salimos
 f_tareasFinales

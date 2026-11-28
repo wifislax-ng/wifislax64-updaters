@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261121
+SCRIPT_VERSION=20261127
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -22,9 +22,9 @@ EXTENSION=tar.gz
 GESTOR=wget
 printf '\033]2;%s_updater\007' "$PRGNAM"
 WEB=https://es.libreoffice.org/descarga
-VERSION=$(curl -sL --connect-timeout 15 "$WEB/" | grep "${SRCNAM}_" | head -1 | cut -d "/" -f 9 | cut -d "_" -f2)
+VERSION=$(curl -sL --connect-timeout 15 "$WEB/" | grep -oE "${SRCNAM}_[0-9]+\.[0-9]+\.[0-9]+" | head -1 | cut -d "_" -f2)
 SOURCES=${SRCNAM}_${VERSION}_Linux_x86-64_rpm_helppack_$IDIOMA.$EXTENSION
-CD=${SRCNAM}_${VERSION}*_rpm_helppack_$IDIOMA/RPMS/
+CD=${SRCNAM}_${VERSION}*_rpm_helppack_$IDIOMA/RPMS
 DOWNLOAD=https://download.documentfoundation.org/libreoffice/stable/$VERSION/rpm/x86_64/$SOURCES
 }
 
@@ -38,9 +38,15 @@ f_dependencias
 F_compilar(){
 rm -f *onlineupdate*.rpm
 for FILE in *.rpm; do
-[ -f "$FILE" ] || continue
-rpm2cpio < "$FILE" | cpio -imdv || exit 1
+    [ -f "$FILE" ] || continue
+    rpm2cpio < "$FILE" | cpio -imdv || exit 1
 done
+
+if [ ! -d opt ]; then
+    printf '%sError: No se extrajo ningún contenido válido de los paquetes RPM.%s\n' "$ROJO" "$CIERRE"
+    exit 1
+fi
+
 cp -a opt "$PKG/" || exit 1
 chown -R root:root "$PKG"
 }
@@ -48,34 +54,31 @@ chown -R root:root "$PKG"
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT SIGTERM
-
-#Inicializamos las variables globales
+# 1. Inicializamos variables globales, trap y autodetección de PRGNAM
 f_variables
-#Asignamos o detectamos arquitectura
+# 2. Detectamos arquitectura del sistema
 f_arquitectura
-#Comprobamos conexion a Internet
+# 3. Comprobamos conexión a Internet
 f_comprobarConexion
-#Inicializamos las variables del script
-F_variables
-#Creamos directorio de trabajo
-f_directorioTemporal
-#Mostramos el mensaje de presentacion
+# 4. Mostramos el mensaje de presentación
 f_presentacion
-#Comprobamos updates del script
-f_comprobarUpdates
-#Comprobamos version instalada del paquete
+# 5. Comprobamos updates del propio script
+f_comprobarUpdates "$@"
+# 6. Inicializamos las variables propias del paquete (consulta WEB/VERSION/DOWNLOAD)
+F_variables
+# 7. Comprobamos versión instalada en el sistema y pedimos confirmación
 f_versionInstalada
-#Compronar dependencias
+# 8. Comprobamos e instalamos dependencias
 F_dependencias
-#Si no existe el fichero se descargara
+# 9. Creamos directorio temporal de trabajo
+f_directorioTemporal
+# 10. Descargamos sources
 f_download
-#Descomprimir sources
+# 11. Descomprimimos sources
 f_descomprimir
-#Cd a ruta
+# 12. Entramos en el directorio descomprimido y ajustamos permisos
 f_cd
-#Descomprimir fichero descargado y compilamos
+# 13. Configuramos y compilamos
 F_compilar
-#Creamos xzm , instalamos y salimos
+# 14. Creamos paquete (xzm/txz), instalamos, limpiamos y salimos
 f_tareasFinales

@@ -1,222 +1,272 @@
 #!/bin/sh
 
-# Script for www.seguridadwireless.net by vk496
+# Script for www.seguridadwireless.net by vk496 (Optimizado POSIX)
 
-SCRIPT_VERSION=20261121
+SCRIPT_VERSION=20261127
 
 ############################################################
-## Funciones comunes. Su nombre empieza por f_ ##
+## Funciones comunes. Su nombre empieza por f_             ##
 ############################################################
-f_variables(){
-   . /opt/wifislax-updaters/Funciones/funciones_updater
+f_variables() {
+. /opt/wifislax-updaters/Funciones/funciones_updater
 }
 
 ############################################################
 ## Funciones propias del script. Su nombre empieza por F_ ##
 ############################################################
+
 # Si el repositorio no responde, salimos del script
 F_ping() {
 if ! curl -fsI --connect-timeout 5 "$WEB" >/dev/null 2>&1; then
-echo "$ROJO"
-echo "Parece que el repositorio no responde, intentalo mas tarde."
-echo "$CIERRE"
-sleep 1
-exit 0
+    printf '\n%bParece que el repositorio no responde, intentalo mas tarde.%b\n\n' "$ROJO" "$CIERRE"
+    sleep 1
+    exit 0
 fi
 }
 
 # Definicion de variables
 F_variables() {
-PRGNAM=wifislax-updaters
-WIFISLAX=$(cut -d ' ' -f2 /etc/wifislax-version|cut -d- -f1)
+PRGNAM="wifislax-updaters"
+WIFISLAX=$(awk -F'[ -]' 'NR==1{print $2}' /etc/wifislax-version 2>/dev/null || true)
 WEB="https://github.com/wifislax-ng/wifislax64-updaters"
-echo -ne "\033]2;${PRGNAM}_updater\007"
+printf '\033]2;%s_updater\007' "$PRGNAM"
 VERSION=$(date +"%Y%m%d")
-GESTOR=git
-CREAR_MODULO=NO
+GESTOR="git"
+CREAR_MODULO="NO"
 }
 
+# Helper interno para extraer version de un script local o remoto
+_F_get_ver() {
+    _fgv_file="$1"
+    _fgv_var="$2"
+    awk -F'=' -v var="$_fgv_var" '$1 == var {gsub(/[^0-9]/, "", $2); print $2; exit}' "$_fgv_file" 2>/dev/null || true
+}
 
-# Directorios de trabajo y actualizar
-F_actualizar(){
+# Helper interno para generar el .desktop respetando SUBCATEGORIA
+_F_crear_desktop() {
+    _fcd_file="$1"
+    _fcd_carpeta="$2"
+    _fcd_archivo="$3"
 
-# Creamos la carpeta donde van a estar los scripts
-mkdir -p "$PKG" "$PKG/usr/share/applications/wifislax/Actualizadores"
-if [ ! -d "$PKG/opt/$PRGNAM" ]; then
-   mkdir -p "$PKG/opt/$PRGNAM"
-fi
+    case "$_fcd_archivo" in
+        *_updater)
+            _fcd_prgnam="${_fcd_archivo%_updater}"
+            _fcd_subcat=$(awk -F'=' '/^SUBCATEGORIA=/{gsub(/^["[:space:]]+|["[:space:]]+$/, "", $2); print $2; exit}' "$_fcd_file" 2>/dev/null || true)
 
-# Creamos directorio temporal de trabajo limpio
-rm -rf "/tmp/$PRGNAM"
-mkdir -p "/tmp/$PRGNAM"
+            _fcd_base_dir="$PKG/usr/share/applications/wifislax/Actualizadores/$_fcd_carpeta"
 
-# Necesario para que funciones calcule el tiempo
-COMIENZO=$(date +%s)
-
-git clone --depth 1 "$WEB" "/tmp/$PRGNAM" 2>/dev/null || { rm -rf "/tmp/$PRGNAM"; exit 1; }
-
-if [ ! -d "/tmp/$PRGNAM/$WIFISLAX" ]; then
-   echo "$ROJO"
-   echo "No se encontro la rama para Wifislax $WIFISLAX en el repositorio."
-   echo "$CIERRE"
-   rm -rf "/tmp/$PRGNAM"
-   exit 1
-fi
-
-echo
-# Contador de todos los scripts
-contador=0
-
-carpetas="$(find "/tmp/$PRGNAM/$WIFISLAX" -mindepth 1 -maxdepth 1 -type d ! -name '.git' -printf '%f\n' | sort)"
-# Obtenemos la carpeta del server, y la usamos como carpeta local
-for carpeta in $carpetas; do
-   archivos="$(find "/tmp/$PRGNAM/$WIFISLAX/$carpeta" -maxdepth 1 -type f -printf '%f\n' | sort)"
-   # Obtenemos el archivo del server, y la usamos como archivo local
-   for archivo in $archivos; do
-      contador=$((contador + 1))
-      echo -n "${CYAN}Buscando $archivo... $CIERRE"
-         
-         # Comprobamos si ya existe ese script
-         if [ -f "/opt/$PRGNAM/$carpeta/$archivo" ]; then
-        
-            # Si se trata de funciones_updater, usamos variables distintas al habitual
-            if [ "${archivo}" = "funciones_updater" ]; then
-               LOCAL_VERSION=$(grep -m1 "^FUNCIONES_VERSION=" "/opt/$PRGNAM/$carpeta/$archivo" | cut -d "=" -f2 | tr -d '[:space:]')
-               WEB_VERSION=$(grep -m1 "^FUNCIONES_VERSION=" "/tmp/$PRGNAM/$WIFISLAX/$carpeta/$archivo" | cut -d "=" -f2 | tr -d '[:space:]')
+            if [ -n "$_fcd_subcat" ]; then
+                _fcd_dest_dir="$_fcd_base_dir/$_fcd_subcat"
+                _fcd_cats="$_fcd_carpeta;$_fcd_subcat;"
+                rm -f "$_fcd_base_dir/$_fcd_prgnam.desktop"
             else
-               LOCAL_VERSION=$(grep -m1 "^SCRIPT_VERSION=" "/opt/$PRGNAM/$carpeta/$archivo" | cut -d "=" -f2 | tr -d '[:space:]')
-               WEB_VERSION=$(grep -m1 "^SCRIPT_VERSION=" "/tmp/$PRGNAM/$WIFISLAX/$carpeta/$archivo" | cut -d "=" -f2 | tr -d '[:space:]')
+                _fcd_dest_dir="$_fcd_base_dir"
+                _fcd_cats="$_fcd_carpeta;"
             fi
 
-            LOCAL_VERSION=${LOCAL_VERSION:-0}
-            WEB_VERSION=${WEB_VERSION:-0}
-            
-         echo -n "${VERDE}EXISTE$CIERRE"
-	    # Ademas de mirar si existe, comprobamos si existe version mas nueva a la que tenemos nosotros
-	    if [ "$LOCAL_VERSION" -lt "$WEB_VERSION" ] 2>/dev/null; then
-		CREAR_MODULO=SI
-		mkdir -p "$PKG/opt/$PRGNAM/$carpeta"
-		cp -f "/tmp/$PRGNAM/$WIFISLAX/$carpeta/$archivo" "$PKG/opt/$PRGNAM/$carpeta/$archivo"
-		echo " + ${AMARILLO}ACTUALIZADO $ROSA(${WEB_VERSION:6}/${WEB_VERSION:4:2}/${WEB_VERSION:0:4})$CIERRE"
-		chmod +x "$PKG/opt/$PRGNAM/$carpeta/$archivo"
-	    else
-		echo -e " $BLANCO(${LOCAL_VERSION:6}/${LOCAL_VERSION:4:2}/${LOCAL_VERSION:0:4})$CIERRE"
-	    fi
-	    
-      # Si no existe ese script en nuestro sistema, procedemos a descargarlo
-	else
-		CREAR_MODULO=SI
-		mkdir -p "$PKG/opt/$PRGNAM/$carpeta"
-		cp -f "/tmp/$PRGNAM/$WIFISLAX/$carpeta/$archivo" "$PKG/opt/$PRGNAM/$carpeta/$archivo"
-		LOCAL_VERSION=$(grep -m1 "^SCRIPT_VERSION=" "$PKG/opt/$PRGNAM/$carpeta/$archivo" | cut -d "=" -f2 | tr -d '[:space:]')
-		LOCAL_VERSION=${LOCAL_VERSION:-0}
-		chmod +x "$PKG/opt/$PRGNAM/$carpeta/$archivo"
-		echo "${ROJO}DESCARGADO$CIERRE $BLANCO($ROSA${LOCAL_VERSION:6}/${LOCAL_VERSION:4:2}/${LOCAL_VERSION:0:4}$BLANCO)$CIERRE"
+            mkdir -p "$_fcd_dest_dir"
 
-		case "$archivo" in
-			*_updater)
-				PRGNAM_CORTO=${archivo%_updater}
-				mkdir -p "$PKG/usr/share/applications/wifislax/Actualizadores/$carpeta"
-				
-				CATEGORIA="$(grep -m1 "^CATEGORIA=" "/tmp/$PRGNAM/$WIFISLAX/$carpeta/$archivo" | cut -d"=" -f2 | tr -d '"[:space:]')"
-				if [ -z "$CATEGORIA" ]; then
-				  CATEGORIA=$carpeta
-				fi
-				
-# Creamos el desktop del menu
-cat << EOF > "$PKG/usr/share/applications/wifislax/Actualizadores/$carpeta/$PRGNAM_CORTO.desktop"
+            cat << EOF > "$_fcd_dest_dir/$_fcd_prgnam.desktop"
 [Desktop Entry]
-Categories=$CATEGORIA;
+Categories=$_fcd_cats
 Comment=Updater/Installer
 Comment[es]=Actualizador/Instalador
 Comment[it]=Aggiornamento/Installazione
 Comment[fr]=Programme de mise à jour/installateur
 Comment[ge]=Updater/Installer
-Exec=sh -c "/opt/wifislax-updaters/$carpeta/$archivo;bash"
+Exec=sh -c "/opt/wifislax-updaters/$_fcd_carpeta/$_fcd_archivo;bash"
 Icon=wifislax-updater
 MimeType=
-Name=$PRGNAM_CORTO
-Path=/opt/wifislax-updaters/$carpeta/
+Name=$_fcd_prgnam
+Path=/opt/wifislax-updaters/$_fcd_carpeta/
 Terminal=true
 TerminalOptions=
 Type=Application
 EOF
-				chmod 644 "$PKG/usr/share/applications/wifislax/Actualizadores/$carpeta/$PRGNAM_CORTO.desktop"
-			;;
-		esac
+            chmod 644 "$_fcd_dest_dir/$_fcd_prgnam.desktop"
+            ;;
+    esac
+}
 
-      fi
-   done
+# Directorios de trabajo y actualizar
+F_actualizar() {
+    # Creamos la carpeta donde van a estar los scripts
+    mkdir -p "$PKG/usr/share/applications/wifislax/Actualizadores" "$PKG/opt/$PRGNAM"
 
-done
+    # Creamos directorio temporal de trabajo limpio
+    _repo_dir="$TMP/repo"
+    rm -rf -- "$_repo_dir"
 
-rm -rf "/tmp/$PRGNAM"
-sleep 2
-echo
+    # Necesario para que funciones calcule el tiempo
+    COMIENZO=$(date +%s)
+
+    if ! git clone --depth 1 --single-branch "$WEB" "$_repo_dir" >/dev/null 2>&1; then
+        printf '\n%bError al clonar el repositorio.%b\n\n' "$ROJO" "$CIERRE"
+        exit 1
+    fi
+
+    if [ -z "$WIFISLAX" ] || [ ! -d "$_repo_dir/$WIFISLAX" ]; then
+        printf '\n%bNo se encontro la rama para Wifislax %s en el repositorio.%b\n\n' "$ROJO" "${WIFISLAX:-desconocida}" "$CIERRE"
+        exit 1
+    fi
+
+    printf '\n'
+    # Contador de todos los scripts
+    contador=0
+
+    # Obtenemos la carpeta del server, y la usamos como carpeta local
+    for _dir_path in "$_repo_dir/$WIFISLAX"/*; do
+        [ -d "$_dir_path" ] || continue
+        carpeta="${_dir_path##*/}"
+        [ "$carpeta" = ".git" ] && continue
+
+        # Obtenemos el archivo del server, y la usamos como archivo local
+        for _file_path in "$_dir_path"/*; do
+            [ -f "$_file_path" ] || continue
+            archivo="${_file_path##*/}"
+            contador=$((contador + 1))
+
+            printf '%bBuscando %s... %b' "$CYAN" "$archivo" "$CIERRE"
+
+            # Si se trata de funciones_updater, usamos variables distintas al habitual
+            if [ "$archivo" = "funciones_updater" ]; then
+                _ver_key="FUNCIONES_VERSION"
+            else
+                _ver_key="SCRIPT_VERSION"
+            fi
+
+            _local_file="/opt/$PRGNAM/$carpeta/$archivo"
+
+            # Comprobamos si ya existe ese script
+            if [ -f "$_local_file" ]; then
+                LOCAL_VERSION=$(_F_get_ver "$_local_file" "$_ver_key")
+                WEB_VERSION=$(_F_get_ver "$_file_path" "$_ver_key")
+                LOCAL_VERSION=${LOCAL_VERSION:-0}
+                WEB_VERSION=${WEB_VERSION:-0}
+
+                printf '%bEXISTE%b' "$VERDE" "$CIERRE"
+
+                # Ademas de mirar si existe, comprobamos si existe version mas nueva a la que tenemos nosotros
+                if [ "$LOCAL_VERSION" -lt "$WEB_VERSION" ] 2>/dev/null; then
+                    CREAR_MODULO="SI"
+                    mkdir -p "$PKG/opt/$PRGNAM/$carpeta"
+                    cp -f "$_file_path" "$PKG/opt/$PRGNAM/$carpeta/$archivo"
+                    chmod +x "$PKG/opt/$PRGNAM/$carpeta/$archivo"
+                    _F_crear_desktop "$_file_path" "$carpeta" "$archivo"
+                    _fecha_web=$(_format_fecha_posix "$WEB_VERSION")
+                    printf ' + %bACTUALIZADO %b(%s)%b\n' "$AMARILLO" "$ROSA" "$_fecha_web" "$CIERRE"
+                else
+                    _fecha_loc=$(_format_fecha_posix "$LOCAL_VERSION")
+                    printf ' %b(%s)%b\n' "$BLANCO" "$_fecha_loc" "$CIERRE"
+                fi
+            # Si no existe ese script en nuestro sistema, procedemos a descargarlo
+            else
+                CREAR_MODULO="SI"
+                mkdir -p "$PKG/opt/$PRGNAM/$carpeta"
+                cp -f "$_file_path" "$PKG/opt/$PRGNAM/$carpeta/$archivo"
+                chmod +x "$PKG/opt/$PRGNAM/$carpeta/$archivo"
+                _F_crear_desktop "$_file_path" "$carpeta" "$archivo"
+
+                LOCAL_VERSION=$(_F_get_ver "$PKG/opt/$PRGNAM/$carpeta/$archivo" "$_ver_key")
+                LOCAL_VERSION=${LOCAL_VERSION:-0}
+                _fecha_loc=$(_format_fecha_posix "$LOCAL_VERSION")
+                printf '%bDESCARGADO%b %b(%b%s%b)%b\n' "$ROJO" "$CIERRE" "$BLANCO" "$ROSA" "$_fecha_loc" "$BLANCO" "$CIERRE"
+            fi
+        done
+    done
+
+    rm -rf -- "$_repo_dir"
+    sleep 2
+    printf '\n'
+}
+
+# Helper POSIX para copiar sin sobrescribir (-n) ni degradar archivos mas recientes (-u)
+_F_merge_tree() {
+    _fmt_src="$1"
+    _fmt_dst="$2"
+    [ -d "$_fmt_src" ] || return 0
+    mkdir -p "$_fmt_dst"
+    (
+        cd "$_fmt_src" || exit 1
+        find . -mindepth 1 | while IFS= read -r _item; do
+            _rel="${_item#./}"
+            if [ -d "$_fmt_src/$_rel" ]; then
+                mkdir -p "$_fmt_dst/$_rel"
+            elif [ -e "$_fmt_src/$_rel" ] && [ ! -e "$_fmt_dst/$_rel" ]; then
+                cp -p "$_fmt_src/$_rel" "$_fmt_dst/$_rel" 2>/dev/null || true
+            fi
+        done
+    )
 }
 
 # Crear estructura
-F_estructura(){
-if [ "$CREAR_MODULO" = "SI" ]; then
-   
-   echo -n "${CYAN}Creando logs e instalando....$CIERRE"
-   echo -ne "${CYAN} $ROJO$contador${CYAN} scripts$CIERRE"
-   sleep 1
+F_estructura() {
+    if [ "$CREAR_MODULO" = "SI" ]; then
+        printf '%bCreando logs e instalando.... %b%s%b scripts%b\n' "$CYAN" "$ROJO" "$contador" "$CYAN" "$CIERRE"
+        sleep 1
 
-   mkdir -p "$PKG/usr/bin/" "$PKG/usr/share/applications/wifislax/Actualizadores/Tools" "$PKG/opt/wifislax-updaters" "$PKG/etc/wifislax-updaters" "$PKG/usr/share/pixmaps"
-   cp -Rn /usr/share/applications/wifislax/Actualizadores/* "$PKG/usr/share/applications/wifislax/Actualizadores/" 2>/dev/null
-   cp -Rn /opt/wifislax-updaters/* "$PKG/opt/wifislax-updaters/" 2>/dev/null
-   cp -Ru /usr/share/pixmaps/{Blacklist_updaters.png,wifislax-updater.png,buscador_updaters.png,Config_updaters.png} "$PKG/usr/share/pixmaps/" 2>/dev/null
-   cp -Ru /etc/wifislax-updaters/* "$PKG/etc/wifislax-updaters/" 2>/dev/null
-   cp -Ru /usr/bin/{buscador_updaters,Config_updaters,Blacklist_updaters,slackbuilds.txt_updater,base_updater} "$PKG/usr/bin/" 2>/dev/null
-   
-if [ -d "$PKG/usr/share/applications/wifislax/Actualizadores/Funciones" ]; then
-   rm -rf "$PKG/usr/share/applications/wifislax/Actualizadores/Funciones"
-fi
-fi
-cd ..
+        mkdir -p \
+            "$PKG/usr/bin" \
+            "$PKG/usr/share/applications/wifislax/Actualizadores/Tools" \
+            "$PKG/opt/wifislax-updaters" \
+            "$PKG/etc/wifislax-updaters" \
+            "$PKG/usr/share/pixmaps"
+
+        _F_merge_tree "/usr/share/applications/wifislax/Actualizadores" "$PKG/usr/share/applications/wifislax/Actualizadores"
+        _F_merge_tree "/opt/wifislax-updaters" "$PKG/opt/wifislax-updaters"
+        _F_merge_tree "/etc/wifislax-updaters" "$PKG/etc/wifislax-updaters"
+
+        # Evita duplicados si un .desktop se movio de una categoria raiz a una subcategoria
+        find "$PKG/usr/share/applications/wifislax/Actualizadores" -mindepth 3 -maxdepth 3 -name "*.desktop" | while IFS= read -r _sub_desk; do
+            _desk_name="${_sub_desk##*/}"
+            _cat_dir="${_sub_desk%/*/*}"
+            rm -f "$_cat_dir/$_desk_name"
+        done
+
+        for _pixmap in Blacklist_updaters.png wifislax-updater.png buscador_updaters.png Config_updaters.png; do
+            if [ -f "/usr/share/pixmaps/$_pixmap" ] && [ ! -e "$PKG/usr/share/pixmaps/$_pixmap" ]; then
+                cp -p "/usr/share/pixmaps/$_pixmap" "$PKG/usr/share/pixmaps/" 2>/dev/null || true
+            fi
+        done
+
+        for _bin in buscador_updaters Config_updaters Blacklist_updaters slackbuilds.txt_updater base_updater; do
+            if [ -f "/usr/bin/$_bin" ] && [ ! -e "$PKG/usr/bin/$_bin" ]; then
+                cp -p "/usr/bin/$_bin" "$PKG/usr/bin/" 2>/dev/null || true
+            fi
+        done
+
+        if [ -d "$PKG/usr/share/applications/wifislax/Actualizadores/Funciones" ]; then
+            rm -rf -- "$PKG/usr/share/applications/wifislax/Actualizadores/Funciones"
+        fi
+    fi
+    cd "$TMP" || true
 }
 
-F_final(){
-if [ "$CREAR_MODULO" != "SI" ]; then
-echo "$VERDE"
-echo "No hay actualizaciones para los updaters"
-sleep 1
-echo
-echo "Bye Bye"
-echo "$CIERRE"
-f_exitmode
-exit 1
-fi
+F_final() {
+    if [ "$CREAR_MODULO" != "SI" ]; then
+        printf '\n%bNo hay actualizaciones para los updaters%b\n\n' "$VERDE" "$CIERRE"
+        sleep 1
+        printf '%bBye Bye%b\n\n' "$VERDE" "$CIERRE"
+        exit 0
+    fi
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT SIGTERM
-
-# Inicializamos las variables globales
+# 1. Inicializamos variables globales, trap y autodetección de PRGNAM
 f_variables
-# Comprobamos conexion a Internet
-f_comprobarConexion
-# Inicializamos las variables del script
-F_variables
-# Creamos directorio de trabajo
-f_directorioTemporal
-# Mostramos el mensaje de presentacion
-f_presentacion
-# Si el repositorio no responde, salimos del script
-F_ping
-# Comprobamos updates del script
-f_comprobarUpdates
-# Asignamos o detectamos arquitectura
+# 2. Detectamos arquitectura del sistema
 f_arquitectura noarch
-# Directorios de trabajo y actualizar
-F_actualizar
-# Crear estructura
-F_estructura
-# Creamos xzm , instalamos y salimos
-F_final
-# Creamos xzm , instalamos y salimos
+# 3. Comprobamos conexión a Internet
+f_comprobarConexion
+# 4. Mostramos el mensaje de presentación
+f_presentacion
+# 5. Comprobamos updates del propio script
+f_comprobarUpdates "$@"
+# 6. Inicializamos las variables propias del paquete (consulta WEB/VERSION/DOWNLOAD)
+F_variables
+# 7. Creamos directorio temporal de trabajo
+f_directorioTemporal
+# 8. Creamos paquete (xzm/txz), instalamos, limpiamos y salimos
 f_tareasFinales

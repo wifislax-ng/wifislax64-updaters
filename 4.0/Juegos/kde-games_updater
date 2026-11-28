@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261120
+SCRIPT_VERSION=20261127
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -17,76 +17,74 @@ f_variables(){
 # Definicion de variables
 F_variables() {
 PRGNAM=kde-games
-echo -ne "\033]2;${PRGNAM}_updater\007"
+printf '\033]2;%s_updater\007' "$PRGNAM"
 WEB=https://ftp.osuosl.org/.2/slackware/slackware64-current
 ELGRANARCHIVO=$(curl -fsSL "$WEB/slackware${LIBDIRSUFFIX}/PACKAGES.TXT")
-ELPACK=$(echo "$ELGRANARCHIVO" | grep -i game -B5 | grep "PACKAGE NAME:" | awk '{print $3}' | grep -viE 'kanagram|khangman|xgames|bsd-games|kig|nethack')
-LOSEXTRAS=$(echo "$ELGRANARCHIVO" | grep "PACKAGE NAME:" | grep -E '(libkmahjongg|kmines)' | awk '{print $3}')
+ELPACK=$(printf '%s\n' "$ELGRANARCHIVO" | grep -i game -B5 | grep "PACKAGE NAME:" | awk '{print $3}' | grep -viE 'kanagram|khangman|xgames|bsd-games|kig|nethack')
+LOSEXTRAS=$(printf '%s\n' "$ELGRANARCHIVO" | grep "PACKAGE NAME:" | grep -E '(libkmahjongg|kmines)' | awk '{print $3}')
 LOSGRANDESJUEGOS=$(printf "%s\n%s\n" "$ELPACK" "$LOSEXTRAS" | grep -v '^$' | sort -u)
-VERSION=$(echo "$ELGRANARCHIVO" | grep -E '^PACKAGE NAME:  libplasma-[0-9]' | head -n 1 | sed -E 's/.*libplasma-([0-9.]+)-.*/\1/')
+VERSION=$(printf '%s\n' "$ELGRANARCHIVO" | grep -E '^PACKAGE NAME:  libplasma-[0-9]' | head -n 1 | sed -E 's/.*libplasma-([0-9.]+)-.*/\1/')
 }
 
 # Si el paquete no existe se descargara de internet
 F_download(){
 	cd "$TMP" || exit 1
-	TOTAL=$(echo "$LOSGRANDESJUEGOS" | wc -l)
-	echo "${CYAN}Se han detectado ${ROJO}${TOTAL}${CYAN} paquetes...${CIERRE}"
+	printf '%s\n' "$ELGRANARCHIVO" > "$TMP/PACKAGES.TXT"
+	TOTAL=$(printf '%s\n' "$LOSGRANDESJUEGOS" | grep -c .)
+	printf '%bSe han detectado %b%s%b paquetes...%b\n' "$CYAN" "$ROJO" "$TOTAL" "$CYAN" "$CIERRE"
 	lacuenta=1
 	for JUEGO in $LOSGRANDESJUEGOS; do
-		LAGRANRUTA=$(echo "$ELGRANARCHIVO" | grep -F "PACKAGE NAME:  $JUEGO" -A1 | grep "PACKAGE LOCATION:" | awk '{print $3}' | sed 's|^\./||')
-		PRGNAM_JUEGO=$(echo "$JUEGO" | rev | cut -d- -f4- | rev)
-		VERSION_JEUGO=$(echo "$JUEGO" | rev | cut -d- -f3 | rev)
+		LAGRANRUTA=$(grep -F "PACKAGE NAME:  $JUEGO" -A1 "$TMP/PACKAGES.TXT" | grep "PACKAGE LOCATION:" | awk '{print $3}' | sed 's|^\./||')
+		PRGNAM_JUEGO="${JUEGO%-*-*-*}"
+		_rest_juego="${JUEGO#"${PRGNAM_JUEGO}-"}"
+		VERSION_JUEGO="${_rest_juego%-*-*}"
 		if [ ! -f "$TMP/$JUEGO" ]; then
-			echo ""
-			echo "${CYAN}Descargando source nº ${ROJO}${lacuenta}/${TOTAL}${CYAN} de ${PRGNAM_JUEGO}-${VERSION_JEUGO}${CIERRE}"
+			printf '\n%bDescargando source nº %b%s/%s%b de %s-%s%b\n' "$CYAN" "$ROJO" "$lacuenta" "$TOTAL" "$CYAN" "$PRGNAM_JUEGO" "$VERSION_JUEGO" "$CIERRE"
 			wget -N -L -c -q --show-progress --no-passive-ftp "$WEB/$LAGRANRUTA/$JUEGO" || exit 1
 		fi
 		lacuenta=$((lacuenta + 1))
 	done
+	rm -f "$TMP/PACKAGES.TXT"
 }
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-	echo ""
-	echo "${VERDE}Descomprimiendo ...${CIERRE}"
+	printf '\n%bDescomprimiendo ...%b\n' "$VERDE" "$CIERRE"
 	sleep 1
 	for JUEGO in $LOSGRANDESJUEGOS; do
 		installpkg --root "$PKG" "$TMP/$JUEGO" || exit 1
 	done
-	rm -rf "$PKG/var/log/packages" "$PKG/var/log/scripts" "$PKG/var/log/setup" "$PKG/install"
+	rm -rf "$PKG/var/log/packages" "$PKG/var/log/scripts" "$PKG/var/log/setup" "$PKG/var/lib/pkgtools" "$PKG/install"
 
 	if [ -d "$PKG/usr/share/applications" ]; then
-		find "$PKG/usr/share/applications" -type f -name '*.desktop' -exec sed -i 's/Education;//g; s/Education//g' {} +
+		find "$PKG/usr/share/applications" -type f -name '*.desktop' -exec sed -i 's/Education;//g; s/;Education//g; s/Education//g' {} +
 	fi
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT SIGTERM
-
-#Inicializamos las variables globales
+# 1. Inicializamos variables globales, trap y autodetección de PRGNAM
 f_variables
-#Asignamos o detectamos arquitectura
+# 2. Detectamos arquitectura del sistema
 f_arquitectura
-#Comprobamos conexion a Internet
+# 3. Comprobamos conexión a Internet
 f_comprobarConexion
-#Inicializamos las variables del script
-F_variables
-#Creamos directorio de trabajo
-f_directorioTemporal
-#Mostramos el mensaje de presentacion
+# 4. Mostramos el mensaje de presentación
 f_presentacion
-#Comprobamos updates del script
-f_comprobarUpdates
-#Comprobamos version instalada del script
+# 5. Comprobamos updates del propio script
+f_comprobarUpdates "$@"
+# 6. Inicializamos las variables propias del paquete (consulta WEB/VERSION/DOWNLOAD)
+F_variables
+# 7. Comprobamos versión instalada en el sistema y pedimos confirmación
 f_versionInstalada
-#Si no existe el fichero se descargara
-F_download
-#Descomprimir fichero descargado y compilamos
+# 8. Creamos directorio temporal de trabajo
+f_directorioTemporal
+# 9. Configuramos y compilamos
 F_compilar
-#Hacemos strip sobre el paquete
+# 10. Hacemos strip sobre el paquete
 f_strip
-#Creamos xzm , instalamos y salimos
+# 11. Función personalizada del paquete
+F_download
+# 12. Creamos paquete (xzm/txz), instalamos, limpiamos y salimos
 f_tareasFinales

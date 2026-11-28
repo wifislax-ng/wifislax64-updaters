@@ -2,8 +2,8 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261121
-CATEGORIA="Reproductores multimedia"
+SCRIPT_VERSION=20261127
+SUBCATEGORIA="Reproductores multimedia"
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -21,7 +21,7 @@ PRGNAM=bluray-keys
 SRCNAM=keydb_eng
 EXTENSION=zip
 GESTOR=wget
-echo -ne "\033]2;${PRGNAM}_updater\007"
+printf '\033]2;%s_updater\007' "$PRGNAM"
 WEB=http://fvonline-db.bplaced.net/export
 VERSION=1.0
 SOURCES=$SRCNAM.$EXTENSION
@@ -45,32 +45,29 @@ install -Dm644 "${TMP}/keydb.cfg" "${PKG}/etc/xdg/aacs/KEYDB.cfg" || return 1
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT SIGTERM
-
-#Inicializamos las variables globales
+# 1. Inicializamos variables globales, trap y autodetección de PRGNAM
 f_variables
-#Comprobamos conexion a Internet
-f_comprobarConexion
-#Inicializamos las variables del script
-F_variables
-#Creamos directorio de trabajo
-f_directorioTemporal
-#Mostramos el mensaje de presentacion
-f_presentacion
-#Comprobamos updates del script
-f_comprobarUpdates
-#Asignamos o detectamos arquitectura
+# 2. Detectamos arquitectura del sistema
 f_arquitectura noarch
-#Comprobamos version instalada del paquete
+# 3. Comprobamos conexión a Internet
+f_comprobarConexion
+# 4. Mostramos el mensaje de presentación
+f_presentacion
+# 5. Comprobamos updates del propio script
+f_comprobarUpdates "$@"
+# 6. Inicializamos las variables propias del paquete (consulta WEB/VERSION/DOWNLOAD)
+F_variables
+# 7. Comprobamos versión instalada en el sistema y pedimos confirmación
 f_versionInstalada
-#Compronar dependencias
+# 8. Comprobamos e instalamos dependencias
 F_dependencias
-#Si no existe el fichero se descargara
+# 9. Creamos directorio temporal de trabajo
+f_directorioTemporal
+# 10. Descargamos sources
 f_download
-#Descomprimir sources
+# 11. Descomprimimos sources
 f_descomprimir
-#Descomprimir fichero descargado y compilamos
+# 12. Configuramos y compilamos
 F_compilar
-#Creamos xzm , instalamos y salimos
+# 13. Creamos paquete (xzm/txz), instalamos, limpiamos y salimos
 f_tareasFinales

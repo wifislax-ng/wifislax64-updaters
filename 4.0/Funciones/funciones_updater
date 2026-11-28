@@ -2,7 +2,8 @@
 
 # Script by www.seguridadwireless.net (Optimizado y compatible con POSIX)
 
-FUNCIONES_VERSION=20261122
+FUNCIONES_VERSION=20261128
+COMIENZO=${COMIENZO:-$(date +%s)}
 
 # Colores (con fallback seguro si no hay TTY)
 if [ -t 1 ]; then
@@ -23,9 +24,23 @@ else
     ROSA=""
 fi
 
+# Comprobación temprana de privilegios de superusuario
+if [ "$(id -u)" -ne 0 ]; then
+    printf '\n%sEste script debe ejecutarse como root.%s\n\n' "$ROJO" "$CIERRE"
+    exit 1
+fi
+
+# Auto-detección de PRGNAM desde el nombre del script en ejecución si no está definido
+if [ -z "$PRGNAM" ]; then
+    _script_base="${0##*/}"
+    case "$_script_base" in
+        *_updater) PRGNAM="${_script_base%_updater}" ;;
+        *)         PRGNAM="funciones" ;;
+    esac
+    unset _script_base
+fi
+
 # Variables globales
-PRGNAM=${PRGNAM:-funciones}
-VERSION=${VERSION:-$FUNCIONES_VERSION}
 BUILD=${BUILD:-1}
 TAG=${TAG:-wifislax}
 CWD=$(pwd)
@@ -37,44 +52,74 @@ if [ -f "$USER_DIRS" ]; then
 fi
 ESCRITORIO=${ESCRITORIO:-Desktop}
 
-WIFISLAX=$(awk -F'[ -]' 'NR==1{print $2}' /etc/wifislax-version 2>/dev/null || true)
+WIFISLAX=$(awk 'NR==1{for(i=1;i<=NF;i++){if($i ~ /^[0-9]+(\.[0-9]+)*$/){print $i; exit}}}' /etc/wifislax-version 2>/dev/null || true)
+[ -z "$WIFISLAX" ] && WIFISLAX=$(awk -F'[ -]' 'NR==1{print $2}' /etc/wifislax-version 2>/dev/null || true)
 
 CONFIG="/etc/wifislax-updaters/wifislax-updaters.conf"
 if [ -z "$PACKAGETYPE" ] && [ -f "$CONFIG" ]; then
-    PACKAGETYPE=$(awk -F'=' '/^PACKAGETYPE=/{print $2}' "$CONFIG")
+    PACKAGETYPE=$(awk -F'=' '/^[[:space:]]*PACKAGETYPE=/{sub(/#.*/, "", $2); gsub(/["'\''[:space:]]/, "", $2); print $2; exit}' "$CONFIG")
 fi
 PACKAGETYPE=${PACKAGETYPE:-xzm}
 
 # Variables de compilación e idioma
-export MAKEFLAGS="-j$(nproc 2>/dev/null || echo 1)"
+export MAKEFLAGS="${MAKEFLAGS:--j$(nproc 2>/dev/null || echo 1)}"
 export PYTHON3=yes
 _lang_base="${LANG%%_*}"
 case "$_lang_base" in
     ""|C|POSIX) export IDIOMA="es" ;;
     *) export IDIOMA="$_lang_base" ;;
 esac
+unset _lang_base
 
-# Eliminamos posibles ficheros viejos de respaldo (~)
-rm -f /opt/wifislax-updaters/*/*~ 2>/dev/null || true
+# Configuración automática de ccache si está disponible (en disco o Live persistente)
+if command -v ccache >/dev/null 2>&1; then
+    if [ ! -d /mnt/live ]; then
+        export CCACHE_DIR="${CCACHE_DIR:-/var/cache/ccache}"
+        mkdir -p "$CCACHE_DIR" 2>/dev/null || true
+    elif [ -n "$CCACHE_DIR" ]; then
+        mkdir -p "$CCACHE_DIR" 2>/dev/null || true
+    fi
 
-# Función auxiliar para formatear fechas AAAAMMDD a DD/MM/AAAA en POSIX
-_format_fecha_posix() {
-    _ff_val="$1"
-    _ff_anio=$(printf '%s' "$_ff_val" | cut -c1-4)
-    _ff_mes=$(printf '%s' "$_ff_val" | cut -c5-6)
-    _ff_dia=$(printf '%s' "$_ff_val" | cut -c7-8)
-    printf '%s/%s/%s' "$_ff_dia" "$_ff_mes" "$_ff_anio"
-}
+    if [ -n "$CCACHE_DIR" ] && [ -d "$CCACHE_DIR" ] && [ -w "$CCACHE_DIR" ]; then
+        export CMAKE_C_COMPILER_LAUNCHER=ccache
+        export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+        export CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-4G}"
 
-# Función de limpieza unificada (EXIT captura salidas normales, errores y señales)
+        for _cc_dir in /usr/libexec/ccache /usr/lib64/ccache/bin /usr/lib/ccache/bin; do
+            if [ -d "$_cc_dir" ]; then
+                case ":$PATH:" in
+                    *":$_cc_dir:"*) ;;
+                    *) export PATH="$_cc_dir:$PATH" ;;
+                esac
+                break
+            fi
+        done
+        unset _cc_dir
+    fi
+fi
+
+# Eliminamos posibles ficheros viejos de respaldo (~) de forma segura
+find /opt/wifislax-updaters -maxdepth 3 -type f -name '*~' -delete 2>/dev/null || true
+
+# Función de limpieza unificada (con protección contra rutas críticas y salida POSIX segura)
 f_exitmode() {
     _em_code=$?
-    if [ -n "$TMP" ] && [ -d "$TMP" ]; then
-        rm -rf -- "$TMP"
+    trap - EXIT
+    if [ -n "$TMP" ]; then
+        case "$TMP" in
+            /|/bin|/boot|/dev|/etc|/home|/lib|/lib64|/mnt|/opt|/proc|/root|/run|/sbin|/srv|/sys|/tmp|/usr|/var|/var/tmp)
+                ;;
+            /tmp/*|/var/tmp/*)
+                [ -d "$TMP" ] && rm -rf -- "$TMP"
+                ;;
+        esac
     fi
     exit "$_em_code"
 }
-trap f_exitmode EXIT INT TERM HUP
+trap f_exitmode EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
 
 # Función que muestra Presentación
 f_presentacion() {
@@ -94,18 +139,22 @@ f_presentacion() {
     printf '\n'
 }
 
-# Comprobar conexión (usando timeout corto y ping)
+# Comprobar conexión (usando petición HEAD con fallback a portal cautivo y ping)
 f_comprobarConexion() {
-    if ! ping -c1 -W3 google.com >/dev/null 2>&1 && ! ping -c1 -W3 1.1.1.1 >/dev/null 2>&1; then
-        printf '\n%bNo hay conexión a internet... el script se cerrará.%b\n\n' "$BLANCO" "$CIERRE"
+    if ! curl -sI --connect-timeout 3 https://1.1.1.1 >/dev/null 2>&1 && \
+       ! curl -sI --connect-timeout 3 http://detectportal.firefox.com/success.txt >/dev/null 2>&1 && \
+       ! ping -c1 -W3 1.1.1.1 >/dev/null 2>&1; then
+        printf '\n%sNo hay conexión a internet... el script se cerrará.%s\n\n' "$BLANCO" "$CIERRE"
         exit 1
     fi
 }
 
-# Comprobación de updates para el script (descarga atómica y segura)
+# Comprobación de updates para el script (descarga atómica, segura y sin bucles)
+# Nota: Invocar siempre como `f_comprobarUpdates "$@"` desde los scripts *_updater
 f_comprobarUpdates() {
+    [ -z "$WIFISLAX" ] && return 0
     _cu_servidor_web="https://raw.githubusercontent.com/wifislax-ng/wifislax64-updaters/master/${WIFISLAX}"
-    _cu_ruta_updater=$(find /opt/wifislax-updaters -maxdepth 3 -type f -name "${PRGNAM}_updater" -print -quit)
+    _cu_ruta_updater=$(find /opt/wifislax-updaters -maxdepth 3 -type f -name "${PRGNAM}_updater" 2>/dev/null | head -n 1)
 
     [ -z "$_cu_ruta_updater" ] && return 0
 
@@ -113,37 +162,47 @@ f_comprobarUpdates() {
     _cu_categoria_dir="${_cu_directorio##*/}"
     _cu_url_script="${_cu_servidor_web}/${_cu_categoria_dir}/${PRGNAM}_updater"
 
-    _cu_local_ver=$(printf '%s' "$SCRIPT_VERSION" | tr -cd '0-9')
-    _cu_sv_dia=$(printf '%s' "$_cu_local_ver" | cut -c7-8)
-    _cu_sv_mes=$(printf '%s' "$_cu_local_ver" | cut -c5-6)
-    _cu_sv_anio=$(printf '%s' "$_cu_local_ver" | cut -c1-4)
-    printf '%bVersión Script%b: %b%s%b/%b%s%b/%b%s%b\n' \
+    _cu_local_ver=$(printf '%s' "$SCRIPT_VERSION" | sed 's/#.*//' | tr -cd '0-9')
+    _cu_sv_dia="${_cu_local_ver#??????}"
+    _cu_sv_mes_dia="${_cu_local_ver#????}"
+    _cu_sv_mes="${_cu_sv_mes_dia%??}"
+    _cu_sv_anio="${_cu_local_ver%????}"
+    printf '%sVersión Script%s: %s%s%s/%s%s%s/%s%s%s\n' \
         "$CYAN" "$CIERRE" "$ROJO" "$_cu_sv_dia" "$BLANCO" "$AMARILLO" "$_cu_sv_mes" "$BLANCO" "$ROJO" "$_cu_sv_anio" "$CIERRE"
 
-    _cu_srv_ver=$(curl -sL --connect-timeout 5 --max-time 10 "$_cu_url_script" 2>/dev/null | awk -F'=' '/^SCRIPT_VERSION=/{print $2; exit}' | tr -cd '0-9' || true)
+    [ "${_UPDATER_REEXEC:-0}" -eq 1 ] && return 0
 
-    if [ -n "$_cu_local_ver" ] && [ -n "$_cu_srv_ver" ] && [ "$_cu_local_ver" -lt "$_cu_srv_ver" ]; then
-        _cu_srv_dia=$(printf '%s' "$_cu_srv_ver" | cut -c7-8)
-        _cu_srv_mes=$(printf '%s' "$_cu_srv_ver" | cut -c5-6)
-        _cu_srv_anio=$(printf '%s' "$_cu_srv_ver" | cut -c1-4)
+    _cu_srv_ver=$(curl -sL --connect-timeout 5 --max-time 10 "$_cu_url_script" 2>/dev/null | awk -F'=' '/^[[:space:]]*SCRIPT_VERSION=/{sub(/#.*/, "", $2); print $2; exit}' | tr -cd '0-9' || true)
 
-        printf '\n%bComprobando si hay actualizaciones para el script...%b\n' "$ROSA" "$CIERRE"
-        printf '%bNUEVA VERSIÓN DISPONIBLE%b\n\n' "$ROJO" "$CIERRE"
-        printf '%bVersión Server%b: %b%s%b/%b%s%b/%b%s%b\n\n' \
-            "$ROSA" "$CIERRE" "$ROJO" "$_cu_srv_dia" "$BLANCO" "$AMARILLO" "$_cu_srv_mes" "$BLANCO" "$ROJO" "$_cu_srv_anio" "$CIERRE"
-        printf '%bActualizando %s_updater...%b\n' "$CYAN" "$PRGNAM" "$CIERRE"
+    case "$_cu_local_ver:$_cu_srv_ver" in
+        [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]:[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9])
+            if [ "$_cu_local_ver" -lt "$_cu_srv_ver" ]; then
+                _cu_srv_dia="${_cu_srv_ver#??????}"
+                _cu_srv_mes_dia="${_cu_srv_ver#????}"
+                _cu_srv_mes="${_cu_srv_mes_dia%??}"
+                _cu_srv_anio="${_cu_srv_ver%????}"
 
-        if curl -fsSL --connect-timeout 5 --max-time 15 "$_cu_url_script" -o "${_cu_ruta_updater}.tmp" && [ -s "${_cu_ruta_updater}.tmp" ]; then
-            chmod +x "${_cu_ruta_updater}.tmp"
-            mv -f "${_cu_ruta_updater}.tmp" "$_cu_ruta_updater"
-            printf '%bLISTO. Reiniciando script...%b\n\n' "$VERDE" "$CIERRE"
-            TMP=""
-            exec "$_cu_ruta_updater" "$@"
-        else
-            rm -f "${_cu_ruta_updater}.tmp"
-            printf '%bError al descargar la actualización. Continuando con la versión actual.%b\n\n' "$ROJO" "$CIERRE"
-        fi
-    fi
+                printf '\n%sComprobando si hay actualizaciones para el script...%s\n' "$ROSA" "$CIERRE"
+                printf '%sNUEVA VERSIÓN DISPONIBLE%s\n\n' "$ROJO" "$CIERRE"
+                printf '%sVersión Server%s: %s%s%s/%s%s%s/%s%s%s\n\n' \
+                    "$ROSA" "$CIERRE" "$ROJO" "$_cu_srv_dia" "$BLANCO" "$AMARILLO" "$_cu_srv_mes" "$BLANCO" "$ROJO" "$_cu_srv_anio" "$CIERRE"
+                printf '%sActualizando %s_updater...%s\n' "$CYAN" "$PRGNAM" "$CIERRE"
+
+                if curl -fsSL --connect-timeout 5 --max-time 15 "$_cu_url_script" -o "${_cu_ruta_updater}.tmp" && [ -s "${_cu_ruta_updater}.tmp" ]; then
+                    chmod +x "${_cu_ruta_updater}.tmp"
+                    mv -f "${_cu_ruta_updater}.tmp" "$_cu_ruta_updater"
+                    printf '%sLISTO. Reiniciando script...%s\n\n' "$VERDE" "$CIERRE"
+                    TMP=""
+                    trap - EXIT
+                    export _UPDATER_REEXEC=1
+                    exec "$_cu_ruta_updater" "$@"
+                else
+                    rm -f "${_cu_ruta_updater}.tmp"
+                    printf '%sError al descargar la actualización. Continuando con la versión actual.%s\n\n' "$ROJO" "$CIERRE"
+                fi
+            fi
+            ;;
+    esac
 }
 
 # Definimos arquitectura del sistema
@@ -174,125 +233,149 @@ f_arquitectura() {
 # Helper interno para obtener el nombre completo del paquete instalado en Slackware
 _get_installed_pkg() {
     _gip_pkg_name="$1"
-    for _gip_f in /var/lib/pkgtools/packages/"${_gip_pkg_name}"-*; do
+    _gip_prefix="${_gip_pkg_name}-"
+    for _gip_f in /var/lib/pkgtools/packages/"${_gip_pkg_name}"-[0-9]*; do
         [ -e "$_gip_f" ] || continue
         _gip_base="${_gip_f##*/}"
-        case "$_gip_base" in
-            "${_gip_pkg_name}"-[0-9]*)
-                _gip_rest="${_gip_base#"${_gip_pkg_name}-"}"
-                _gip_without_build="${_gip_rest%-*}"
-                _gip_without_arch="${_gip_without_build%-*}"
-                if [ -n "$_gip_without_arch" ] && [ "$_gip_without_arch" != "$_gip_rest" ]; then
+        _gip_rest="${_gip_base#"$_gip_prefix"}"
+        _gip_without_build="${_gip_rest%-*}"
+        _gip_without_arch="${_gip_without_build%-*}"
+        if [ -n "$_gip_without_arch" ] && [ "$_gip_without_arch" != "$_gip_rest" ] && [ "$_gip_without_arch" != "$_gip_without_build" ]; then
+            case "$_gip_without_arch" in
+                *-*) ;;
+                [0-9]*)
                     printf '%s\n' "$_gip_base"
                     return 0
-                fi
-                ;;
-        esac
+                    ;;
+            esac
+        fi
     done
     return 1
 }
 
+# Helper interno seguro para ejecutar comandos con argumentos en xterm o TTY actual
+_run_cmd() {
+    _rc_script="$1"
+    shift
+    if [ -n "$DISPLAY" ] && command -v xterm >/dev/null 2>&1; then
+        xterm -e sh -c "$_rc_script" _ "$@"
+    else
+        sh -c "$_rc_script" _ "$@"
+    fi
+}
+
 # Detecta la versión instalada en el sistema
 f_versionInstalada() {
+    if [ -z "$VERSION" ]; then
+        printf '\n%sError: No se pudo determinar la versión remota de %s%s%s.\n\n' "$ROJO" "$AMARILLO" "$PRGNAM" "$CIERRE"
+        exit 1
+    fi
+
     _vi_pkg_full=$(_get_installed_pkg "$PRGNAM" || true)
+    _vi_prefix="${PRGNAM}-"
 
     if [ -z "$_vi_pkg_full" ]; then
         INSTALADA="NO INSTALADA"
         VERSIONLOCAL="$INSTALADA"
     else
-        _vi_rest="${_vi_pkg_full#"${PRGNAM}-"}"
+        _vi_rest="${_vi_pkg_full#"$_vi_prefix"}"
         _vi_sin_build="${_vi_rest%-*}"
         INSTALADA="${_vi_sin_build%-*}"
         VERSIONLOCAL="${PRGNAM}-${INSTALADA}"
     fi
 
-    printf '\n%bLa versión del sistema es... %b%s%b\n' "$AMARILLO" "$CYAN" "$VERSIONLOCAL" "$CIERRE"
+    printf '\n%sLa versión del sistema es... %s%s%s\n' "$AMARILLO" "$CYAN" "$VERSIONLOCAL" "$CIERRE"
     printf '\n__________________________________________\n\n'
-    printf '%bLa versión más nueva en su página web es... %b%s-%s%b\n\n' "$AMARILLO" "$CYAN" "$PRGNAM" "$VERSION" "$CIERRE"
+    printf '%sLa versión más nueva en su página web es... %s%s-%s%s\n\n' "$AMARILLO" "$CYAN" "$PRGNAM" "$VERSION" "$CIERRE"
 
     if [ "$PRGNAM" = "x265" ]; then
-        printf '%bADVERTENCIA:\n' "$ROJO"
-        printf '%bActualizar este paquete puede romper %bffmpeg\n' "$BLANCO" "$AMARILLO"
-        printf '%bEs posible que necesites recompilar %bffmpeg%b\n\n' "$BLANCO" "$AMARILLO" "$CIERRE"
+        printf '%sADVERTENCIA:\n' "$ROJO"
+        printf '%sActualizar este paquete puede romper %sffmpeg\n' "$BLANCO" "$AMARILLO"
+        printf '%sEs posible que necesites recompilar %sffmpeg%s\n\n' "$BLANCO" "$AMARILLO" "$CIERRE"
     fi
 
-    printf '%bPulsa %bENTER%b si deseas actualizarla (o Ctrl+C para salir)%b\n' "$BLANCO" "$ROJO" "$BLANCO" "$CIERRE"
+    printf '%sPulsa %sENTER%s si deseas actualizarla (o Ctrl+C para salir)%s\n' "$BLANCO" "$ROJO" "$BLANCO" "$CIERRE"
     read -r _vi_dummy
 
     # Si el paquete está instalado y es la misma versión, subimos el número de build
     if [ "$INSTALADA" = "$VERSION" ] && [ -n "$_vi_pkg_full" ]; then
         _vi_build_tag="${_vi_pkg_full##*-}"
-        _vi_buildlocal=$(printf '%s' "$_vi_build_tag" | tr -cd '0-9')
+        _vi_buildlocal=$(printf '%s' "$_vi_build_tag" | awk '{match($0, /^[0-9]+/); print substr($0, RSTART, RLENGTH)}')
         BUILD=$(( ${_vi_buildlocal:-0} + 1 ))
+    else
+        BUILD=${BUILD:-1}
     fi
 
     COMIENZO=$(date +%s)
 }
 
-# Resolución de dependencias
+# Resolución de dependencias (priorizando registro de paquetes de Slackware)
 f_dependencias() {
     [ -z "$DEPENDENCIAS" ] && return 0
-    printf '%bComprobando dependencias ...%b\n\n' "$ROSA" "$CIERRE"
+    printf '%sComprobando dependencias ...%s\n\n' "$ROSA" "$CIERRE"
 
     for _dep_d in $DEPENDENCIAS; do
-        if command -v "$_dep_d" >/dev/null 2>&1 || _get_installed_pkg "$_dep_d" >/dev/null; then
-            printf '%bDependencia %b%s %bINSTALADA%b.\n' "$BLANCO" "$AMARILLO" "$_dep_d" "$VERDE" "$CIERRE"
+        if _get_installed_pkg "$_dep_d" >/dev/null || command -v "$_dep_d" >/dev/null 2>&1; then
+            printf '%sDependencia %s%s %sINSTALADA%s.\n' "$BLANCO" "$AMARILLO" "$_dep_d" "$VERDE" "$CIERRE"
             continue
         fi
 
-        printf '%bDependencia %b%s %bNO INSTALADA%b ...resolviendo%b.\n' "$BLANCO" "$AMARILLO" "$_dep_d" "$ROJO" "$BLANCO" "$CIERRE"
-        _dep_updater=$(find /opt/wifislax-updaters -maxdepth 3 -type f -name "${_dep_d}_updater" -print -quit)
+        printf '%sDependencia %s%s %sNO INSTALADA%s ...resolviendo%s.\n' "$BLANCO" "$AMARILLO" "$_dep_d" "$ROJO" "$BLANCO" "$CIERRE"
+        _dep_updater=$(find /opt/wifislax-updaters -maxdepth 3 -type f -name "${_dep_d}_updater" 2>/dev/null | head -n 1)
 
         if [ -z "$_dep_updater" ]; then
-            if ping -c1 -W3 www.slackbuilds.org >/dev/null 2>&1; then
+            if curl -sI --connect-timeout 3 https://slackbuilds.org >/dev/null 2>&1 || \
+               ping -c1 -W3 www.slackbuilds.org >/dev/null 2>&1; then
                 slapt-src -u >/dev/null 2>&1
             else
-                printf '\n%bParece que slackbuilds.org no responde ... inténtalo más tarde%b\n\n' "$ROJO" "$CIERRE"
+                printf '\n%sParece que slackbuilds.org no responde ... inténtalo más tarde%s\n\n' "$ROJO" "$CIERRE"
                 exit 1
             fi
 
             if [ "$_dep_d" = "pylast" ]; then
-                xterm -e sh -c "TAG=slackbuilds PYTHON3=no slapt-src -y -n -i ${_dep_d}"
+                _run_cmd 'TAG=slackbuilds PYTHON3=no slapt-src -y -n -i "$1" || { printf "\nError instalando %s. Pulsa ENTER...\n" "$1"; read -r _; exit 1; }' "$_dep_d"
             else
-                xterm -e sh -c "TAG=slackbuilds slapt-src -y -n -i ${_dep_d}"
+                _run_cmd 'TAG=slackbuilds slapt-src -y -n -i "$1" || { printf "\nError instalando %s. Pulsa ENTER...\n" "$1"; read -r _; exit 1; }' "$_dep_d"
             fi
 
-            _dep_packdir=$(find /usr/src/slapt-src/ -type f -name "${_dep_d}-*.txz" -print -quit)
+            _dep_packdir=$(find /usr/src/slapt-src/ -type f -iname "${_dep_d}-*.txz" 2>/dev/null | head -n 1)
             _dep_xzmpack=""
             _dep_group=""
+            _dep_dest_dir=""
             if [ -n "$_dep_packdir" ]; then
                 _dep_xzmpack="${_dep_packdir##*/}"
                 _dep_xzmpack="${_dep_xzmpack%.txz}.xzm"
                 _dep_group=$(printf '%s\n' "$_dep_packdir" | awk -F'/' '{print $(NF-2)}')
+                _dep_dest_dir="${OUTPUT:-${HOME}/${ESCRITORIO}/${PRGNAM}_depends}/${_dep_group}"
 
                 if [ "$PACKAGETYPE" != "disable" ]; then
-                    mkdir -p "${HOME}/${ESCRITORIO}/${PRGNAM}_depends/${_dep_group}"
+                    mkdir -p "$_dep_dest_dir"
                 fi
             fi
 
-            if ! command -v "$_dep_d" >/dev/null 2>&1 && ! _get_installed_pkg "$_dep_d" >/dev/null; then
-                printf '\n%bNo se pudo resolver la dependencia %b%s%b.\n\n' "$ROJO" "$AMARILLO" "$_dep_d" "$CIERRE"
+            if ! _get_installed_pkg "$_dep_d" >/dev/null && ! command -v "$_dep_d" >/dev/null 2>&1; then
+                printf '\n%sNo se pudo resolver la dependencia %s%s%s.\n\n' "$ROJO" "$AMARILLO" "$_dep_d" "$CIERRE"
                 exit 1
             fi
 
             if [ "$PACKAGETYPE" = "txz" ] && [ -n "$_dep_packdir" ]; then
-                mv -f "$_dep_packdir" "${HOME}/${ESCRITORIO}/${PRGNAM}_depends/${_dep_group}/"
+                mv -f -- "$_dep_packdir" "${_dep_dest_dir}/"
             elif [ "$PACKAGETYPE" = "xzm" ] && [ -n "$_dep_packdir" ]; then
-                xterm -e sh -c "txz2xzm \"$_dep_packdir\" \"${HOME}/${ESCRITORIO}/${PRGNAM}_depends/${_dep_group}/${_dep_xzmpack}\""
+                _run_cmd 'txz2xzm "$1" "$2"' "$_dep_packdir" "${_dep_dest_dir}/${_dep_xzmpack}"
             fi
 
             if [ -n "$_dep_group" ]; then
-                rm -rf "/usr/src/slapt-src/${_dep_group}/${_dep_d}"
+                rm -rf -- "/usr/src/slapt-src/${_dep_group}/${_dep_d}"
             fi
             find /usr/src/slapt-src -empty -type d -delete 2>/dev/null || true
-            printf '%bDependencia %b%s %bRESUELTA%b.\n' "$BLANCO" "$AMARILLO" "$_dep_d" "$CYAN" "$CIERRE"
+            printf '%sDependencia %s%s %sRESUELTA%s.\n' "$BLANCO" "$AMARILLO" "$_dep_d" "$CYAN" "$CIERRE"
         else
-            xterm -e sh -c "yes y | \"$_dep_updater\""
-            if ! command -v "$_dep_d" >/dev/null 2>&1 && ! _get_installed_pkg "$_dep_d" >/dev/null; then
-                printf '\n%bNo se pudo resolver la dependencia %b%s%b.\n\n' "$ROJO" "$AMARILLO" "$_dep_d" "$CIERRE"
+            _run_cmd 'printf "\n" | "$1" || { printf "\nError ejecutando %s. Pulsa ENTER...\n" "$1"; read -r _; exit 1; }' "$_dep_updater"
+            if ! _get_installed_pkg "$_dep_d" >/dev/null && ! command -v "$_dep_d" >/dev/null 2>&1; then
+                printf '\n%sNo se pudo resolver la dependencia %s%s%s.\n\n' "$ROJO" "$AMARILLO" "$_dep_d" "$CIERRE"
                 exit 1
             fi
-            printf '%bDependencia %b%s %bRESUELTA%b.\n' "$BLANCO" "$AMARILLO" "$_dep_d" "$CYAN" "$CIERRE"
+            printf '%sDependencia %s%s %sRESUELTA%s.\n' "$BLANCO" "$AMARILLO" "$_dep_d" "$CYAN" "$CIERRE"
         fi
     done
 }
@@ -305,8 +388,8 @@ f_elimina() {
 
     _el_pkg_full=$(_get_installed_pkg "$PRGNAM" || true)
     if [ -n "$_el_pkg_full" ]; then
-        printf '\n%bEliminando la versión del sistema (%s)...%b\n' "$ROJO" "$_el_pkg_full" "$CIERRE"
-        removepkg "$_el_pkg_full"
+        printf '\n%sEliminando la versión del sistema (%s)...%s\n' "$ROJO" "$_el_pkg_full" "$CIERRE"
+        removepkg "$_el_pkg_full" || exit 1
     fi
 }
 
@@ -314,182 +397,260 @@ f_elimina() {
 f_directorioTemporal() {
     TMP=${TMP:-/tmp/build/$PRGNAM}
     PKG="$TMP/package-$PRGNAM"
-    OUTPUT=${OUTPUT:-/tmp}
 
     if [ "$GESTOR" = "git" ]; then
         rm -rf -- "$TMP"
     fi
     rm -rf -- "$PKG"
-    mkdir -p "$TMP" "$PKG" "$OUTPUT"
+    mkdir -p "$TMP" "$PKG"
+    [ -n "$OUTPUT" ] && mkdir -p "$OUTPUT"
     cd "$TMP" || exit 1
 }
 
-# Hace strip al paquete
+# Hace strip al paquete (sin alterar el directorio actual del llamador)
 f_strip() {
-    cd "$PKG" || return 1
-    stripdir "$PKG" 2>/dev/null || true
+    (
+        cd "$PKG" || exit 1
+        stripdir "$PKG" 2>/dev/null || true
+    )
 }
 
 # Descargar sources
 f_download() {
-    _dl_args=""
     case "$GESTOR" in
-        wget) _dl_args="-N -L -c -q --show-progress --no-passive-ftp" ;;
-        curl) _dl_args="-fL --progress-bar" ;;
-        git)  _dl_args="clone --depth 1 --single-branch" ;;
-    esac
-
-    if [ ! -s "$SOURCES" ]; then
-        rm -f "$SOURCES"
-        printf '\n%bDescargando sources de %s-%s%b\n' "$CYAN" "$PRGNAM" "$VERSION" "$CIERRE"
-        printf '%b' "$ROSA"
-        case "$GESTOR" in
-            curl)
-                if ! curl $_dl_args -o "$SOURCES" "$DOWNLOAD" || [ ! -s "$SOURCES" ]; then
-                    rm -f "$SOURCES"
-                    printf '%b' "$CIERRE"
+        git)
+            printf '\n%sClonando repositorio de %s (%s)...%s\n' "$CYAN" "$PRGNAM" "$DOWNLOAD" "$ROSA"
+            if [ -n "$SOURCES" ]; then
+                rm -rf -- "$SOURCES"
+                if ! git clone --depth 1 --single-branch "$DOWNLOAD" "$SOURCES"; then
+                    printf '%s' "$CIERRE"
                     exit 1
                 fi
-                ;;
-            *)
-                case "$DOWNLOAD" in
-                    */download|*/download\?*)
-                        if ! wget -L -c -q --show-progress --no-passive-ftp -O "$SOURCES" "$DOWNLOAD" || [ ! -s "$SOURCES" ]; then
-                            rm -f "$SOURCES"
-                            printf '%b' "$CIERRE"
-                            exit 1
-                        fi
-                        ;;
-                    *)
-                        # shellcheck disable=SC2086
-                        if ! $GESTOR $_dl_args "$DOWNLOAD"; then
-                            printf '%b' "$CIERRE"
-                            exit 1
-                        fi
-                        ;;
-                esac
-                ;;
-        esac
-        printf '%b' "$CIERRE"
-    fi
+            else
+                _git_dir="${DOWNLOAD##*/}"
+                _git_dir="${_git_dir%.git}"
+                [ -n "$_git_dir" ] && rm -rf -- "$_git_dir"
+                if ! git clone --depth 1 --single-branch "$DOWNLOAD"; then
+                    printf '%s' "$CIERRE"
+                    exit 1
+                fi
+            fi
+            printf '%s' "$CIERRE"
+            ;;
+        *)
+            if [ -z "$SOURCES" ]; then
+                SOURCES="${DOWNLOAD##*/}"
+                SOURCES="${SOURCES%%\?*}"
+                [ -z "$SOURCES" ] && SOURCES="${PRGNAM}-${VERSION}.${EXTENSION:-tar.gz}"
+            fi
+
+            printf '\n%sDescargando fuentes de %s-%s ...%s\n' "$CYAN" "$PRGNAM" "$VERSION" "$ROSA"
+            rm -f -- "$SOURCES"
+            if ! wget -L --tries=3 --timeout=15 -q --show-progress "$DOWNLOAD" -O "$SOURCES" || [ ! -s "$SOURCES" ]; then
+                printf '%s' "$CIERRE"
+                rm -f -- "$SOURCES"
+                printf '\n%sError al descargar %s.%s\n' "$ROJO" "$DOWNLOAD" "$CIERRE" >&2
+                exit 1
+            fi
+            printf '%s' "$CIERRE"
+            ;;
+    esac
 }
 
-# Preparamos entorno
+# Preparamos entorno limpiando carpetas previas extraídas para evitar colisiones
 f_descomprimir() {
-    printf '\n%bDescomprimiendo ...%b\n\n' "$VERDE" "$CIERRE"
+    [ "$GESTOR" = "git" ] && return 0
+
+    printf '\n%sDescomprimiendo ...%s\n\n' "$VERDE" "$CIERRE"
     sleep 1
-    rm -rf -- "${PRGNAM}-${VERSION}"
 
-    if [ "$EXTENSION" = "zip" ]; then
-        unzip -q "$SOURCES" || exit 1
-    elif [ "$EXTENSION" = "7z" ]; then
-        7z x -y "$SOURCES" || exit 1
+    # Limpiamos cualquier carpeta extraída previamente dentro de $TMP excepto $PKG
+    for _clean_d in "$TMP"/*; do
+        [ -d "$_clean_d" ] || continue
+        [ "$_clean_d" = "$PKG" ] && continue
+        rm -rf -- "$_clean_d"
+    done
+
+    _desc_file=""
+    if [ -n "$SOURCES" ] && [ -f "$SOURCES" ]; then
+        _desc_file="$SOURCES"
+    elif [ -f "${SRCNAM}-${VERSION}.${EXTENSION}" ]; then
+        _desc_file="${SRCNAM}-${VERSION}.${EXTENSION}"
+    elif [ -f "${PRGNAM}-src-${VERSION}.${EXTENSION}" ]; then
+        _desc_file="${PRGNAM}-src-${VERSION}.${EXTENSION}"
     else
-        if [ -f "$SOURCES" ]; then
-            tar xfv "$SOURCES" || exit 1
-        elif [ -f "${SRCNAM}-${VERSION}.${EXTENSION}" ]; then
-            tar xfv "${SRCNAM}-${VERSION}.${EXTENSION}" || exit 1
-        elif [ -f "${PRGNAM}-src-${VERSION}.${EXTENSION}" ]; then
-            tar xfv "${PRGNAM}-src-${VERSION}.${EXTENSION}" || exit 1
-        else
-            printf '%bError: No se encontró el archivo comprimido.%b\n' "$ROJO" "$CIERRE"
-            exit 1
-        fi
+        _desc_file=$(find . -maxdepth 1 -type f \( -name "*.tar.*" -o -name "*.tgz" -o -name "*.txz" -o -name "*.tzst" -o -name "*.zip" -o -name "*.7z" \) 2>/dev/null | head -n 1)
+        _desc_file="${_desc_file#./}"
     fi
-}
 
-f_cd() {
-    if [ -z "$CD" ]; then
-        printf '\n%bLa variable CD no existe o está vacía.%b\n\n' "$ROJO" "$CIERRE"
+    if [ -z "$_desc_file" ] || [ ! -f "$_desc_file" ]; then
+        printf '%sError: No se encontró el archivo comprimido.%s\n' "$ROJO" "$CIERRE"
         exit 1
     fi
 
-    _cd_target=""
-    if [ -d "$TMP/$CD" ]; then
-        _cd_target="$TMP/$CD"
+    if [ "$EXTENSION" = "zip" ] || [ "${_desc_file##*.}" = "zip" ]; then
+        unzip -q -- "$_desc_file" || exit 1
+    elif [ "$EXTENSION" = "7z" ] || [ "${_desc_file##*.}" = "7z" ]; then
+        7z x -y -- "$_desc_file" >/dev/null || exit 1
     else
-        for _cd_match in "$TMP"/$CD; do
-            if [ -d "$_cd_match" ]; then
-                _cd_target="$_cd_match"
-                break
-            fi
+        case "$_desc_file" in
+            *.tar.zst|*.tzst)
+                if command -v zstd >/dev/null 2>&1; then
+                    zstd -dc -- "$_desc_file" | tar xf - || exit 1
+                else
+                    tar xf "$_desc_file" || exit 1
+                fi
+                ;;
+            *)
+                tar xf "$_desc_file" || exit 1
+                ;;
+        esac
+    fi
+}
+
+# Entra al directorio de compilación soportando subrutas y comodines
+f_cd() {
+    _cd_target=""
+    if [ -n "$CD" ]; then
+        while [ "${CD%/}" != "$CD" ]; do
+            CD="${CD%/}"
         done
+        if [ -d "$TMP/$CD" ]; then
+            _cd_target="$TMP/$CD"
+        else
+            case "$CD" in
+                */*) _cd_target=$(find "$TMP" -mindepth 1 -type d -path "$TMP/$CD" 2>/dev/null | head -n 1) ;;
+                *)   _cd_target=$(find "$TMP" -mindepth 1 -maxdepth 1 -type d -name "$CD" 2>/dev/null | head -n 1) ;;
+            esac
+        fi
+    fi
+
+    # Fallback: si CD no existe o está vacío, detectar el único directorio extraído
+    if [ -z "$_cd_target" ]; then
+        _cd_count=0
+        _cd_candidate=""
+        for _cd_d in "$TMP"/*; do
+            [ -d "$_cd_d" ] || continue
+            [ "$_cd_d" = "$PKG" ] && continue
+            _cd_candidate="$_cd_d"
+            _cd_count=$(( _cd_count + 1 ))
+        done
+        if [ "$_cd_count" -eq 1 ]; then
+            _cd_target="$_cd_candidate"
+        fi
     fi
 
     if [ -z "$_cd_target" ] || ! cd "$_cd_target"; then
-        printf '%bError al entrar en el directorio %s/%s.%b\n' "$ROJO" "$TMP" "$CD" "$CIERRE"
+        printf '%sError al entrar en el directorio %s/%s.%s\n' "$ROJO" "$TMP" "${CD:-<auto>}" "$CIERRE"
         exit 1
     fi
 
     chown -R root:root .
-    find -L . \
-        \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 -o -perm 511 \) -exec chmod 755 {} + -o \
-        \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) -exec chmod 644 {} +
+    chmod -R u+rwX,go+rX,go-w .
 }
 
 f_categoria() {
-    cd .. || return 1
-    _cat_ruta_updater=$(find /opt/wifislax-updaters -maxdepth 3 -type f -name "${PRGNAM}_updater" -print -quit)
-    CATEGORIA=$(printf '%s\n' "$_cat_ruta_updater" | awk -F'/' '{print $4}')
+    cd "$TMP" || return 1
+    _cat_ruta_updater=$(find /opt/wifislax-updaters -maxdepth 3 -type f -name "${PRGNAM}_updater" 2>/dev/null | head -n 1)
+    if [ -n "$_cat_ruta_updater" ]; then
+        _cat_dir="${_cat_ruta_updater%/*}"
+        CATEGORIA="${_cat_dir##*/}"
+    fi
     CATEGORIA=${CATEGORIA:-otros}
-    mkdir -p "${HOME}/${ESCRITORIO}/${CATEGORIA}"
+    _cat_out_dir="${OUTPUT:-${HOME}/${ESCRITORIO}/${CATEGORIA}}"
+    mkdir -p "$_cat_out_dir"
 }
 
 f_xzm() {
-    printf '\n%bInstalando y creando módulo %bxzm ...%b\n' "$VERDE" "$AMARILLO" "$CIERRE"
+    printf '\n%sCreando e instalando módulo %sxzm ...%s\n' "$VERDE" "$AMARILLO" "$CIERRE"
     sleep 1
-    f_categoria
+    f_categoria || exit 1
 
-    _xzm_destino="${HOME}/${ESCRITORIO}/${CATEGORIA}/${PRGNAM}-${VERSION}-${ARCH}-${BUILD}${TAG}.xzm"
+    _xzm_destino="${_cat_out_dir}/${PRGNAM}-${VERSION}-${ARCH}-${BUILD}${TAG}.xzm"
+
+    cd "$PKG" || exit 1
     cleandir "$PKG" >/dev/null 2>&1 || true
-    dir2xzm "$PKG" "$_xzm_destino"
-    xzm2dir "$_xzm_destino" /
+    dir2xzm "$PKG" "$_xzm_destino" >/dev/null 2>&1 || exit 1
+    [ -s "$_xzm_destino" ] || exit 1
+
+    if [ "$INSTALADA" != "NO INSTALADA" ]; then
+        f_elimina
+    fi
+
+    xzm2dir "$_xzm_destino" / || exit 1
 }
 
 f_txz() {
-    printf '\n%bInstalando y creando paquete %btxz ...%b\n' "$VERDE" "$AMARILLO" "$CIERRE"
+    printf '\n%sCreando e instalando paquete %stxz ...%s\n' "$VERDE" "$AMARILLO" "$CIERRE"
     sleep 1
-    f_categoria
+    f_categoria || exit 1
 
-    # Variables de búsqueda para slack-desc
-    if [ -f /etc/wifislax-updaters/SLACKBUILDS.TXT ] && ping -c1 -W3 www.slackbuilds.org >/dev/null 2>&1; then
-        _txz_slackweb="https://slackbuilds.org"
-        _txz_slackver=$(curl -sL "$_txz_slackweb/" 2>/dev/null | awk -F'/' '/repository\/[0-9]/ && !v {v=$3} END{print v}' || true)
-        _txz_section=$(awk -F'/' -v pkg="$PRGNAM" '/LOCATION/ && $NF==pkg {print $(NF-1); exit}' /etc/wifislax-updaters/SLACKBUILDS.TXT || true)
-        if [ -n "$_txz_section" ] && [ -n "$_txz_slackver" ]; then
-            _txz_desc=$(curl -sL "${_txz_slackweb}/slackbuilds/${_txz_slackver}/${_txz_section}/${PRGNAM}/slack-desc" 2>/dev/null || true)
-            if [ -n "$_txz_desc" ]; then
-                mkdir -p "$PKG/install"
-                printf '%s\n' "$_txz_desc" > "$PKG/install/slack-desc"
+    # Variables de búsqueda para slack-desc en SLACKBUILDS.TXT
+    if [ -f /etc/wifislax-updaters/SLACKBUILDS.TXT ]; then
+        _txz_sbo_match=$(awk -v pkg="$PRGNAM" '
+            /^LOCATION:/ {
+                sub(/\r$/, "")
+                n = split($0, a, "/")
+                if (tolower(a[n]) == tolower(pkg)) {
+                    print a[n-1] "/" a[n]
+                    exit
+                }
+            }
+        ' /etc/wifislax-updaters/SLACKBUILDS.TXT)
+
+        if [ -n "$_txz_sbo_match" ]; then
+            _txz_slackweb="https://slackbuilds.org"
+            _txz_slackver=$(awk '{print $2}' /etc/slackware-version 2>/dev/null | tr -d '+' || true)
+
+            case "$_txz_slackver" in
+                14.*|15.*) ;;
+                *) _txz_slackver=$(curl -fsSL --connect-timeout 3 "$_txz_slackweb/" 2>/dev/null | sed -n 's/.*repository\/\([0-9][0-9.]*\)\/.*/\1/p' | head -n 1) ;;
+            esac
+
+            if [ -n "$_txz_slackver" ]; then
+                _txz_sbo_pkg="${_txz_sbo_match#*/}"
+                _txz_desc=$(curl -fsSL --connect-timeout 4 --max-time 8 "${_txz_slackweb}/slackbuilds/${_txz_slackver}/${_txz_sbo_match}/slack-desc" 2>/dev/null || true)
+                if printf '%s\n' "$_txz_desc" | grep -q "^${_txz_sbo_pkg}:"; then
+                    mkdir -p "$PKG/install"
+                    printf '%s\n' "$_txz_desc" | sed "s/^${_txz_sbo_pkg}:/${PRGNAM}:/" > "$PKG/install/slack-desc"
+                fi
             fi
         fi
     fi
 
-    _txz_destino="${HOME}/${ESCRITORIO}/${CATEGORIA}/${PRGNAM}-${VERSION}-${ARCH}-${BUILD}${TAG}.txz"
+    _txz_destino="${_cat_out_dir}/${PRGNAM}-${VERSION}-${ARCH}-${BUILD}${TAG}.txz"
     cd "$PKG" || exit 1
     cleandir "$PKG" >/dev/null 2>&1 || true
-    /sbin/makepkg -l y -c n "$_txz_destino"
-    installpkg "$_txz_destino"
+    /sbin/makepkg -l y -c n "$_txz_destino" || exit 1
+    [ -s "$_txz_destino" ] || exit 1
+
+    if [ "$INSTALADA" != "NO INSTALADA" ]; then
+        f_elimina
+    fi
+
+    installpkg "$_txz_destino" || exit 1
 }
 
 f_disable() {
-    printf '\n%bInstalando ...%b\n' "$VERDE" "$CIERRE"
+    printf '\n%sInstalando ...%s\n' "$VERDE" "$CIERRE"
     sleep 1
 
     _dis_tmp_pkg="/tmp/${PRGNAM}-${VERSION}-${ARCH}-${BUILD}${TAG}.txz"
     cd "$PKG" || exit 1
     cleandir "$PKG" >/dev/null 2>&1 || true
-    /sbin/makepkg -l y -c n "$_dis_tmp_pkg"
-    installpkg "$_dis_tmp_pkg"
-    rm -f "$_dis_tmp_pkg"
-}
+    /sbin/makepkg -l y -c n "$_dis_tmp_pkg" || exit 1
+    [ -s "$_dis_tmp_pkg" ] || exit 1
 
-# Creamos paquete, instalamos y salimos
-f_tareasFinales() {
     if [ "$INSTALADA" != "NO INSTALADA" ]; then
         f_elimina
     fi
 
+    installpkg "$_dis_tmp_pkg" || exit 1
+    rm -f -- "$_dis_tmp_pkg"
+}
+
+# Creamos paquete, instalamos y salimos
+f_tareasFinales() {
     case "$PACKAGETYPE" in
         xzm) f_xzm ;;
         txz) f_txz ;;
@@ -497,7 +658,7 @@ f_tareasFinales() {
     esac
 
     clear
-    printf '%bActualizando sistema%b...%b\n' "$VERDE" "$BLANCO" "$CIERRE"
+    printf '%sActualizando sistema%s...%s\n' "$VERDE" "$BLANCO" "$CIERRE"
     cacheupdater || true
 
     if [ "$PRGNAM" = "teamviewer" ] && [ -x /etc/rc.d/rc.teamviewerd ]; then
@@ -506,19 +667,20 @@ f_tareasFinales() {
 
     clear
     if [ "$PACKAGETYPE" = "disable" ]; then
-        printf '%bInstalado paquete %b%s-%s%b\n\n' "$VERDE" "$AMARILLO" "$PRGNAM" "$VERSION" "$CIERRE"
+        printf '%sInstalado paquete %s%s-%s%s\n\n' "$VERDE" "$AMARILLO" "$PRGNAM" "$VERSION" "$CIERRE"
     else
-        printf '%bInstalado y Creado paquete %b%s-%s%b\n\n' "$VERDE" "$AMARILLO" "$PRGNAM" "$VERSION" "$CIERRE"
+        printf '%sInstalado y Creado paquete %s%s-%s%s\n\n' "$VERDE" "$AMARILLO" "$PRGNAM" "$VERSION" "$CIERRE"
     fi
 
     _tf_ahora=$(date +%s)
     _tf_diff=$(( _tf_ahora - COMIENZO ))
-    _tf_tiempo=$(date -u -d @"$_tf_diff" +%H:%M:%S)
+    _tf_horas=$(( _tf_diff / 3600 ))
+    _tf_minutos=$(( (_tf_diff % 3600) / 60 ))
+    _tf_segundos=$(( _tf_diff % 60 ))
+    _tf_tiempo=$(printf '%02d:%02d:%02d' "$_tf_horas" "$_tf_minutos" "$_tf_segundos")
 
-    printf '%bTiempo empleado%b: %s\n\n' "$AMARILLO" "$BLANCO" "$_tf_tiempo"
-    printf '%bBye Bye%b\n\n' "$VERDE" "$CIERRE"
+    printf '%sTiempo empleado%s: %s\n\n' "$AMARILLO" "$BLANCO" "$_tf_tiempo"
+    printf '%sBye Bye%s\n\n' "$VERDE" "$CIERRE"
 
-    rm -rf -- "$TMP" >/dev/null 2>&1 || true
-    TMP=""
     exit 0
 }

@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261120
+SCRIPT_VERSION=20261127
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -18,7 +18,7 @@ f_variables(){
 F_variables() {
 PRGNAM=xampp
 GESTOR=wget
-echo -ne "\033]2;${PRGNAM}_updater\007"
+printf '\033]2;%s_updater\007' "$PRGNAM"
 WEB=https://sourceforge.net/projects/xampp/files/XAMPP%20Linux
 VERSION=$(wget -qO- "$WEB/" | grep -oE 'XAMPP Linux/[0-9.]+' | cut -d/ -f2 | sort -V | tail -n 1)
 SOURCES=$(wget -qO- "$WEB/$VERSION/" | grep -oE 'xampp-linux-x64-[0-9.-]+-installer\.run' | head -n 1)
@@ -27,9 +27,8 @@ DOWNLOAD=$WEB/$VERSION/$SOURCES
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-mkdir -p "$PKG"/{opt,usr/bin,usr/share/pixmaps,usr/share/applications/wifislax/Servidores}
-echo ""
-echo "${VERDE}Instalando en directorio temporal ...${CIERRE}"
+mkdir -p "$PKG/opt" "$PKG/usr/bin" "$PKG/usr/share/pixmaps" "$PKG/usr/share/applications/wifislax/Servidores"
+printf '\n%bInstalando en directorio temporal ...%b\n' "$VERDE" "$CIERRE"
 sleep 1
 
 [ -x /opt/lampp/lampp ] && /opt/lampp/lampp stop 2>/dev/null
@@ -38,8 +37,7 @@ rm -rf /opt/lampp /tmp/bitrock*.log
 chmod +x "$TMP/$SOURCES"
 "$TMP/$SOURCES" --mode unattended || exit 1
 
-echo ""
-echo "${AMARILLO}Deteniendo el servicio xampp y moviendo ficheros ...${CIERRE}"
+printf '\n%bDeteniendo el servicio xampp y moviendo ficheros ...%b\n' "$AMARILLO" "$CIERRE"
 /opt/lampp/lampp stop 2>/dev/null
 mv -f /opt/lampp "$PKG/opt/lampp" || exit 1
 rm -f /tmp/bitrock*.log
@@ -88,7 +86,7 @@ Type=Application
 EOF
 
 # Icono del panel control
-echo "
+base64 -d << 'EOF' > "$PKG/usr/share/pixmaps/xampp-stop.png"
 iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABHNCSVQICAgIfAhkiAAAAAlwSFlz
 AAAOxAAADsQBlSsOGwAADoRJREFUaIGtmWtwVeV6x3/vu9a+5bZzIUIiIdyFAI63Uu9z7AEOBGFo
 R1qPdUY6nWk7c6Z6HEVbp1gYqs7IOY5OrW0/9UPH8YNHEQigHCVwHJGpY9UCAQ8Ww81AAkn2zmXv
@@ -156,10 +154,10 @@ df/u7bfb/sb3By/B4CDgA/rHEHCAFKTrQUwHOc11nZvWrv2jJxYvvuUuz/OE4zhhG34Do/BqMpFI
 CIEwxhbmLM4dHTNs+FlE53NhhcB6nu+dPNnZ8fvfnz4GdghEL9iL4F+EoQyhCmPKO5GlExRtVJGC
 WApkCnQSZAJsHEwMHBesAzggCxWzZGgDwgAGhAKtQAYgfdAe6Dy4OVDDMJAnXPnCtjMuuMmM0nI/
 SqQj4DaKEbfaMKSBPkv0Pi2KAlDDlTcoExr/B0nVYCG2fRLtAAAAAElFTkSuQmCC
-" | base64 -d > "$PKG/usr/share/pixmaps/xampp-stop.png"
+EOF
 
 # Icono desktop xampp
-echo "
+base64 -d << 'EOF' > "$PKG/usr/share/pixmaps/xampp.png"
 iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABHNCSVQICAgIfAhkiAAAAAlwSFlz
 AAAOxAAADsQBlSsOGwAADMxJREFUaIG9mmtsHNd1x3/n3pnd5VsURZGSaDkK9YhrObJiWXGi1EHq
 GFXd5tW6tZs6QB9okQ+Bm35Ik/RD0aYtUKBtCuSbG6ABgtatg9hNYruO5RhJ7DiSH5FiS6KiSKJe
@@ -220,35 +218,32 @@ nIhQPQDxUvhF3i5jaN2c/tlL4IT0vxl4K0ROiSr3xCHtPdeD0uz4o84WPrkcLw4E1gdvoo7QCIHT
 Vk4Cq2nUm+H/IQRSF/LMJwrOeebLibKcKMvkIroHn5TIPCYA3/67BweS0yPbgsD+aU7im4Jy0Zp8
 +/bAGGMM2Faa/7+QRLOWcIBzQoSgcWk8lmC2bApzGnYekKD9Pz7yz09f+h8vyfPYNv/ETwAAAABJ
 RU5ErkJggg==
-" | base64 -d > "$PKG/usr/share/pixmaps/xampp.png"
+EOF
 chmod -R a+rwX "$PKG/opt/lampp/htdocs"
 }
 
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT SIGTERM
-
-#Inicializamos las variables globales
+# 1. Inicializamos variables globales, trap y autodetección de PRGNAM
 f_variables
-#Asignamos o detectamos arquitectura
+# 2. Detectamos arquitectura del sistema
 f_arquitectura
-#Comprobamos conexion a Internet
+# 3. Comprobamos conexión a Internet
 f_comprobarConexion
-#Inicializamos las variables del script
-F_variables
-#Creamos directorio de trabajo
-f_directorioTemporal
-#Mostramos el mensaje de presentacion
+# 4. Mostramos el mensaje de presentación
 f_presentacion
-#Comprobamos updates del script
-f_comprobarUpdates
-#Comprobamos version instalada del paquete
+# 5. Comprobamos updates del propio script
+f_comprobarUpdates "$@"
+# 6. Inicializamos las variables propias del paquete (consulta WEB/VERSION/DOWNLOAD)
+F_variables
+# 7. Comprobamos versión instalada en el sistema y pedimos confirmación
 f_versionInstalada
-#Si no existe el fichero se descargara
+# 8. Creamos directorio temporal de trabajo
+f_directorioTemporal
+# 9. Descargamos sources
 f_download
-#Descomprimir fichero descargado y compilamos
+# 10. Configuramos y compilamos
 F_compilar
-#Creamos xzm , instalamos y salimos
+# 11. Creamos paquete (xzm/txz), instalamos, limpiamos y salimos
 f_tareasFinales

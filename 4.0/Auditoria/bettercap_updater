@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261121
+SCRIPT_VERSION=20261127
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -19,9 +19,9 @@ F_variables() {
 PRGNAM=bettercap
 EXTENSION=tar.gz
 GESTOR=wget
-echo -ne "\033]2;${PRGNAM}_updater\007"
+printf '\033]2;%s_updater\007' "$PRGNAM"
 WEB=https://github.com/$PRGNAM/$PRGNAM
-VERSION=$(curl -fsSL -o /dev/null -w '%{url_effective}' "$WEB/releases/latest" | sed -E 's/.*\/tag\/v?([0-9.]+).*/\1/')
+VERSION=$(curl -fsSLI -o /dev/null -w '%{url_effective}' "$WEB/releases/latest" | sed -E 's|.*/tag/v?([0-9.]+).*|\1|')
 SOURCES=v$VERSION.$EXTENSION
 CD=$PRGNAM-$VERSION
 DOWNLOAD=$WEB/archive/refs/tags/$SOURCES
@@ -33,7 +33,7 @@ DEPENDENCIAS="google-go-lang libpcap libnetfilter_queue libusb"
 f_dependencias
 }
 
-# Descomprimimos el fichero descargado y compilamos
+# Compilamos e instalamos en PKG
 F_compilar(){
 echo 
 echo "${VERDE}Compilando ...${CIERRE}"
@@ -42,9 +42,12 @@ sleep 1
 GO_TMP="$PWD/.go-tmp"
 mkdir -p "$GO_TMP"
 
+GO_MOD_FLAG=""
+[ -d "vendor" ] && GO_MOD_FLAG="-mod=vendor"
+
 CGO_ENABLED=1 GOPATH="$GO_TMP/go" GOCACHE="$GO_TMP/cache" go build \
   -buildmode=pie \
-  -mod=readonly \
+  $GO_MOD_FLAG \
   -modcacherw \
   -ldflags '-s -w -compressdwarf=false -linkmode=external' \
   . || { rm -rf "$GO_TMP"; exit 1; }
@@ -60,36 +63,31 @@ install -Dm 755 bettercap "$PKG/usr/bin/bettercap" || exit 1
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT SIGTERM
-
-#Inicializamos las variables globales
+# 1. Inicializamos variables globales, trap y autodetección de PRGNAM
 f_variables
-#Asignamos o detectamos arquitectura
+# 2. Detectamos arquitectura del sistema
 f_arquitectura
-#Comprobamos conexion a Internet
+# 3. Comprobamos conexión a Internet
 f_comprobarConexion
-#Inicializamos las variables del script
-F_variables
-#Creamos directorio de trabajo
-f_directorioTemporal
-#Mostramos el mensaje de presentacion
+# 4. Mostramos el mensaje de presentación
 f_presentacion
-#Comprobamos updates del script
-f_comprobarUpdates
-#Comprobamos version instalada del paquete
+# 5. Comprobamos updates del propio script
+f_comprobarUpdates "$@"
+# 6. Inicializamos las variables propias del paquete (consulta WEB/VERSION/DOWNLOAD)
+F_variables
+# 7. Comprobamos versión instalada en el sistema y pedimos confirmación
 f_versionInstalada
-#Comprobar dependencias
+# 8. Comprobamos e instalamos dependencias
 F_dependencias
-#Si no existe el fichero se descargara
+# 9. Creamos directorio temporal de trabajo
+f_directorioTemporal
+# 10. Descargamos sources
 f_download
-#Descomprimir sources
+# 11. Descomprimimos sources
 f_descomprimir
-#Cd a ruta
+# 12. Entramos en el directorio descomprimido y ajustamos permisos
 f_cd
-#Descomprimir fichero descargado y compilamos
+# 13. Configuramos y compilamos
 F_compilar
-#Hacemos strip sobre el paquete
-f_strip
-#Creamos xzm , instalamos y salimos
+# 14. Creamos paquete (xzm/txz), instalamos, limpiamos y salimos
 f_tareasFinales

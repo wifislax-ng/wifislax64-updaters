@@ -15,7 +15,7 @@ SCRIPT_PATH=$(readlink -f "$0" 2>/dev/null || printf '%s' "$0")
 # Eliminamos posibles ficheros viejos de modificaciones de scripts y compilaciones huérfanas anteriores
 rm -rf /opt/wifislax-updaters/*/*~ /usr/src/building-* >/dev/null 2>&1
 
-readonly SCRIPT_VERSION=20261126
+readonly SCRIPT_VERSION=20261127
 
 # Configuración de colores (segura para cualquier terminal)
 if [ -t 1 ] && command -v tput >/dev/null 2>&1 && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
@@ -125,14 +125,19 @@ else
     WIFISLAX="desconocida"
 fi
 
-# Detección robusta del directorio Escritorio
+# Detección robusta del directorio Escritorio (compatible con espacios en el nombre)
 if command -v xdg-user-dir >/dev/null 2>&1; then
-    ESCRITORIO=$(basename "$(xdg-user-dir DESKTOP)")
+    ESCRITORIO=$(xdg-user-dir DESKTOP)
+    ESCRITORIO=${ESCRITORIO%/}
+    ESCRITORIO=${ESCRITORIO##*/}
 elif [ -r /root/.config/user-dirs.dirs ]; then
-    ESCRITORIO=$(awk -F'"' '/XDG_DESKTOP_DIR/{print $2}' /root/.config/user-dirs.dirs | xargs basename)
+    ESCRITORIO=$(awk -F'"' '/XDG_DESKTOP_DIR/{print $2}' /root/.config/user-dirs.dirs)
+    ESCRITORIO=${ESCRITORIO%/}
+    ESCRITORIO=${ESCRITORIO##*/}
 else
     ESCRITORIO="Desktop"
 fi
+[ -z "$ESCRITORIO" ] && ESCRITORIO="Desktop"
 
 # Detección limpia del kernel y rama actuales
 KERNEL_ACTUAL=$(uname -r)
@@ -143,7 +148,10 @@ export MAKEFLAGS="-j$(nproc)"
 
 # Usar ccache automáticamente si está disponible en el sistema (solo si no estamos en modo Live sin persistencia)
 if command -v ccache >/dev/null 2>&1 && [ ! -d /mnt/live ]; then
-    export CCACHE_DIR="/root/.ccache"
+    export CCACHE_DIR="${CCACHE_DIR:-/var/cache/ccache}"
+    export CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-15G}"
+    export CCACHE_SLOPPINESS="time_macros,include_file_mtime"
+    export KBUILD_BUILD_TIMESTAMP="Wifislax-Kernel"
     USE_CCACHE="TRUE"
 else
     USE_CCACHE=""
@@ -165,7 +173,7 @@ ${AMARILLO}   ##### By USUARIONUEVO @ www.seguridadwireless.net #####${RESET}
 EOF
 
 if [ -n "$USE_CCACHE" ]; then
-    printf "\n%b[INFO] ccache detectado (%s): acelerando compilación con caché.%b\n" "$VERDE" "$CCACHE_DIR" "$RESET"
+    printf "\n%b[INFO] ccache detectado (%s, máx. %s): acelerando compilación con caché.%b\n" "$VERDE" "$CCACHE_DIR" "$CCACHE_MAXSIZE" "$RESET"
 fi
 
 # Configuración y comprobación de red
@@ -221,7 +229,7 @@ if [ -n "$DIRECTORIO" ] && [ -w "$DIRECTORIO/$SCRIPTNAME" ]; then
                     mv -f "$DIRECTORIO/$SCRIPTNAME.tmp" "$DIRECTORIO/$SCRIPTNAME"
                     printf "%bLISTO. Reiniciando script...%b\n\n" "$VERDE" "$RESET"
                     PROCESO_COMPLETADO="TRUE"
-                    exec "$SCRIPT_PATH" "$@"
+                    exec sh "$DIRECTORIO/$SCRIPTNAME" "$@"
                 else
                     rm -f "$DIRECTORIO/$SCRIPTNAME.tmp"
                     printf "%bNo se pudo descargar la actualización. Continuando con la versión local...%b\n\n" "$AMARILLO" "$RESET"
@@ -238,14 +246,14 @@ if [ -z "$JSON_RELEASES" ]; then
     exit 1
 fi
 
-# Extraer versiones limpias desde el JSON mediante Python3
+# Extraer versiones limpias y activas desde el JSON mediante Python3
 VERSIONES_EXTR=$(printf '%s' "$JSON_RELEASES" | python3 -c '
 import sys, json
 try:
     data = json.load(sys.stdin)
 except Exception:
     sys.exit(1)
-releases = data.get("releases", [])
+releases = [r for r in data.get("releases", []) if not r.get("iseol", False)]
 rama = sys.argv[1] if len(sys.argv) > 1 else ""
 v_rama = next((r["version"] for r in releases if r.get("version", "").startswith(rama + ".")), "")
 v_stable = next((r["version"] for r in releases if r.get("moniker") == "stable"), "")
@@ -266,9 +274,9 @@ VER_RC=$(printf '%s' "$VERSIONES_EXTR" | cut -d'|' -f3)
 CUSTOM="FALSE"
 while true; do
     printf "\n1) %bSeguir rama del sistema (%s) %b(recomendado)%b\n" "$VERDE" "${VER_RAMA:-rama EOL / no disponible}" "$AMARILLO" "$RESET"
-    printf "2) %bÚltimo disponible como estable (%s)%b\n" "$VERDE" "${VER_STABLE:-desconocido}" "$RESET"
+    printf "2) %bÚltimo disponible como estable (%s)%b\n" "$VERDE" "${VER_STABLE:-no disponible}" "$RESET"
     printf "3) %bElegir uno custom (manual)%b\n" "$VERDE" "$RESET"
-    printf "4) %bÚltimo disponible mainline/rcX (%s)%b\n" "$VERDE" "${VER_RC:-desconocido}" "$RESET"
+    printf "4) %bÚltimo disponible mainline/rcX (%s)%b\n" "$VERDE" "${VER_RC:-no disponible}" "$RESET"
     printf "\nSelecciona una opción: "
     read -r REPLY
     case "$REPLY" in
@@ -281,6 +289,10 @@ while true; do
             break
             ;;
         2)
+            if [ -z "$VER_STABLE" ]; then
+                printf "%bNo se encontró una versión estable activa en kernel.org. Elige otra opción.%b\n" "$ROJO" "$RESET"
+                continue
+            fi
             KERNEL_ELEGIDO="$VER_STABLE"
             break
             ;;
@@ -289,6 +301,10 @@ while true; do
             break
             ;;
         4)
+            if [ -z "$VER_RC" ]; then
+                printf "%bNo hay versión mainline/rcX disponible actualmente en kernel.org. Elige otra opción.%b\n" "$ROJO" "$RESET"
+                continue
+            fi
             KERNEL_ELEGIDO="$VER_RC"
             break
             ;;
@@ -488,12 +504,17 @@ make LOCALVERSION="" INSTALL_HDR_PATH="$CONTAINER/usr" headers_install || exit 1
 # Copiar imagen bzImage al escritorio
 cp -f "$FUENTES/arch/$KARCH/boot/bzImage" "$HOME/$ESCRITORIO/$VMLINUZ" || exit 1
 
-# Preparar kernel sources ligeros para compilar drivers externos (preservando System.map y Module.symvers)
+# Preparar kernel sources ligeros para compilar drivers externos (preservando System.map, Module.symvers y scripts/module.lds)
 mv -f System.map ../.System.map.bak 2>/dev/null
 mv -f Module.symvers ../.Module.symvers.bak 2>/dev/null
+mv -f scripts/module.lds ../.module.lds.bak 2>/dev/null
 make clean
 mv -f ../.System.map.bak System.map 2>/dev/null
 mv -f ../.Module.symvers.bak Module.symvers 2>/dev/null
+if [ -f ../.module.lds.bak ]; then
+    mkdir -p scripts
+    mv -f ../.module.lds.bak scripts/module.lds
+fi
 
 ejecutar_make prepare || exit 1
 ejecutar_make scripts || exit 1
@@ -519,7 +540,8 @@ done
 find . \( -type f \( -name ".*" ! -name ".config" -o -name "COPYING" -o -name "CREDITS" \
     -o -name "LICENSE*" -o -name "MAINTAINERS*" -o -name "README*" \) \) -exec rm -f {} +
 
-find . -type f -perm -u+x -exec strip --strip-unneeded \
+# Hacer strip únicamente sobre binarios ejecutables en scripts/ y tools/
+find scripts tools -type f -perm -u+x -exec strip --strip-unneeded \
     -R .comment -R .eh_frame -R .eh_frame_hdr -R .eh_frame_ptr \
     -R .jcr -R .note -R .note.ABI-tag -R .note.gnu.build-id \
     -R .note.gnu.gold-version -R .note.GNU-stack {} + >/dev/null 2>&1
@@ -585,7 +607,7 @@ if [ -f "$MODULO_FINAL" ] && [ -f "$HOME/$ESCRITORIO/$VMLINUZ" ]; then
     if grep -qE '^[^#].*[[:space:]]/boot[[:space:]]' /etc/fstab && ! mountpoint -q /boot 2>/dev/null; then
         printf "%bMontando partición /boot...%b\n" "$CYAN" "$RESET"
         mount /boot || {
-            printf "%bError: No se pudo montar /boot. Aborting instalación.%b\n" "$ROJO" "$RESET" >&2
+            printf "%bError: No se pudo montar /boot. Abortando instalación.%b\n" "$ROJO" "$RESET" >&2
             exit 1
         }
     fi
@@ -593,12 +615,17 @@ if [ -f "$MODULO_FINAL" ] && [ -f "$HOME/$ESCRITORIO/$VMLINUZ" ]; then
     xzm2dir "$MODULO_FINAL" /
     cp -f "$HOME/$ESCRITORIO/$VMLINUZ" "/boot/vmlinuz-${KERNEL_VERSION}"
 
-    # Comprobar si el sistema utiliza initrd y generarlo o advertir al usuario
+    # Comprobar si el sistema utiliza initrd y generarlo de forma segura
     if ls /boot/initrd* >/dev/null 2>&1; then
         if command -v mkinitrd >/dev/null 2>&1; then
             printf "%b[INFO] Se detectó initrd en /boot. Generando initrd-%s.gz...%b\n" "$CYAN" "$KERNEL_VERSION" "$RESET"
-            mkinitrd -c -k "$KERNEL_VERSION" -o "/boot/initrd-${KERNEL_VERSION}.gz" >/dev/null 2>&1 || \
-                printf "%b[AVISO] Fallo al generar initrd automáticamente. Revisa /boot/initrd antes de reiniciar.%b\n" "$AMARILLO" "$RESET"
+            if [ -r /etc/mkinitrd.conf ]; then
+                mkinitrd -F -k "$KERNEL_VERSION" -o "/boot/initrd-${KERNEL_VERSION}.gz" || \
+                    printf "%b[AVISO] Fallo al generar initrd con /etc/mkinitrd.conf. Revisa /boot/initrd antes de reiniciar.%b\n" "$AMARILLO" "$RESET"
+            else
+                mkinitrd -c -k "$KERNEL_VERSION" -o "/boot/initrd-${KERNEL_VERSION}.gz" || \
+                    printf "%b[AVISO] Fallo al generar initrd automáticamente. Revisa /boot/initrd antes de reiniciar.%b\n" "$AMARILLO" "$RESET"
+            fi
         else
             printf "%b[AVISO] Existen imágenes initrd en /boot pero no se encontró 'mkinitrd'. Verifica si tu configuración requiere initrd.%b\n" "$AMARILLO" "$RESET"
         fi

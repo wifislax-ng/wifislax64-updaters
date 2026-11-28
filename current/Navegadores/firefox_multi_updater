@@ -2,7 +2,7 @@
 
 # Script by www.seguridadwireless.net
 
-SCRIPT_VERSION=20261121
+SCRIPT_VERSION=20261127
 
 ############################################################
 ## Funciones comunes. Su nombre empieza por f_ ##
@@ -16,27 +16,25 @@ f_variables(){
 ############################################################
 # Definicion de variables
 F_variables() {
-echo "$VERDE"
-echo "Please write the language you want for your firefox:"
-echo
-echo "Some options are:"
-echo
-echo "$AMARILLO Spanish -->$VERDE es-ES"
-echo "$AMARILLO English -->$VERDE en-US"
-echo "$AMARILLO Rumania -->$VERDE ro"
-echo "$AMARILLO Italian -->$VERDE it"
-echo "$AMARILLO French  -->$VERDE fr"
-echo "$AMARILLO Deutsch -->$VERDE de"
-echo "$CYAN"
-echo "If you dont know what letters write to your lang"
-echo "Visit firefox homepage to see."
-echo "$AMARILLO"
-echo "Now write letters for your lang (default: en-US) and press ENTER to continue ..."
-echo "$ROSA"
+printf '%b\n' "$VERDE"
+printf 'Please write the language you want for your firefox:\n\n'
+printf 'Some options are:\n\n'
+printf '%b Spanish -->%b es-ES\n' "$AMARILLO" "$VERDE"
+printf '%b English -->%b en-US\n' "$AMARILLO" "$VERDE"
+printf '%b Rumania -->%b ro\n' "$AMARILLO" "$VERDE"
+printf '%b Italian -->%b it\n' "$AMARILLO" "$VERDE"
+printf '%b French  -->%b fr\n' "$AMARILLO" "$VERDE"
+printf '%b Deutsch -->%b de\n' "$AMARILLO" "$VERDE"
+printf '%b\n' "$CYAN"
+printf 'If you dont know what letters write to your lang\n'
+printf 'Visit firefox homepage to see.\n'
+printf '%b\n' "$AMARILLO"
+printf 'Now write letters for your lang (default: en-US) and press ENTER to continue ...\n'
+printf '%b' "$ROSA"
 read -r LANGUAGE
 LANGUAGE=$(printf '%s' "$LANGUAGE" | tr -d ' ')
 [ -z "$LANGUAGE" ] && LANGUAGE="en-US"
-echo "$BLANCO"
+printf '%b\n' "$BLANCO"
 
 PRGNAM=firefox_multi
 SRCNAM=firefox
@@ -51,7 +49,7 @@ DOWNLOAD=https://ftp.mozilla.org/pub/firefox/releases/$VERSION/linux-x86_64/$LAN
 
 # Descomprimimos el fichero descargado y compilamos
 F_compilar(){
-mkdir -p "$PKG/usr/lib${LIBDIRSUFFIX}" "$PKG/usr/bin" "$PKG/usr/share/pixmaps" "$PKG/usr/share/applications" "$PKG/usr/lib/mozilla"
+mkdir -p "$PKG/usr/lib${LIBDIRSUFFIX}/mozilla/plugins" "$PKG/usr/bin" "$PKG/usr/share/pixmaps" "$PKG/usr/share/applications" "$PKG/usr/lib/mozilla"
 cp -a "$TMP/$SRCNAM" "$PKG/usr/lib${LIBDIRSUFFIX}/" || exit 1
 ln -s "/usr/lib${LIBDIRSUFFIX}/firefox/firefox" "$PKG/usr/bin/firefox" || exit 1
 install -Dm 644 "$TMP/firefox/browser/chrome/icons/default/default128.png" "$PKG/usr/share/pixmaps/firefox.png" || exit 1
@@ -72,7 +70,9 @@ cat << 'EOF' > "$PKG/usr/lib${LIBDIRSUFFIX}/firefox/distribution/policies.json"
 EOF
 
 # Linkeamos plugins en /usr/lib
+if [ "$LIBDIRSUFFIX" = "64" ]; then
 ln -s "/usr/lib${LIBDIRSUFFIX}/mozilla/plugins" "$PKG/usr/lib/mozilla/plugins"
+fi
 
 cat << 'EOF' > "$PKG/usr/share/applications/mozilla-firefox.desktop"
 [Desktop Entry]
@@ -92,30 +92,27 @@ EOF
 ###################################
 ## BLOQUE PRINCIPAL DE EJECUCION ##
 ###################################
-# Si se cierra el script inesperadamente, ejecutar la funcion de limpieza
-trap f_exitmode SIGHUP SIGINT SIGTERM
-
-#Inicializamos las variables globales
+# 1. Inicializamos variables globales, trap y autodetección de PRGNAM
 f_variables
-#Asignamos o detectamos arquitectura
+# 2. Detectamos arquitectura del sistema
 f_arquitectura
-#Comprobamos conexion a Internet
+# 3. Comprobamos conexión a Internet
 f_comprobarConexion
-#Inicializamos las variables del script
-F_variables
-#Creamos directorio de trabajo
-f_directorioTemporal
-#Mostramos el mensaje de presentacion
+# 4. Mostramos el mensaje de presentación
 f_presentacion
-#Comprobamos updates del script
-f_comprobarUpdates
-#Comprobamos version instalada del script
+# 5. Comprobamos updates del propio script
+f_comprobarUpdates "$@"
+# 6. Inicializamos las variables propias del paquete (consulta WEB/VERSION/DOWNLOAD)
+F_variables
+# 7. Comprobamos versión instalada en el sistema y pedimos confirmación
 f_versionInstalada
-#Si no existe el fichero se descargara
+# 8. Creamos directorio temporal de trabajo
+f_directorioTemporal
+# 9. Descargamos sources
 f_download
-#Descomprimir sources
+# 10. Descomprimimos sources
 f_descomprimir
-#Descomprimir fichero descargado y compilamos
+# 11. Configuramos y compilamos
 F_compilar
-#Creamos xzm , instalamos y salimos
+# 12. Creamos paquete (xzm/txz), instalamos, limpiamos y salimos
 f_tareasFinales
