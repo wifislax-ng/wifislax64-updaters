@@ -15,7 +15,7 @@ SCRIPT_PATH=$(readlink -f "$0" 2>/dev/null || printf '%s' "$0")
 # Eliminamos posibles ficheros viejos de modificaciones de scripts y compilaciones huérfanas anteriores
 rm -rf /opt/wifislax-updaters/*/*~ /usr/src/building-* >/dev/null 2>&1
 
-readonly SCRIPT_VERSION=20261127
+readonly SCRIPT_VERSION=20261128
 
 # Configuración de colores (segura para cualquier terminal)
 if [ -t 1 ] && command -v tput >/dev/null 2>&1 && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
@@ -36,7 +36,7 @@ else
     readonly BLANCO=""
 fi
 
-# Verificar herramientas esenciales (incluyendo python3 para parseo seguro de JSON)
+# Verificar herramientas esenciales (ccache es opcional y se detecta más adelante)
 DEPENDENCIAS="curl wget tar make gcc bc bison flex perl openssl zstd xz sha256sum strip dir2xzm xzm2dir python3"
 for cmd in $DEPENDENCIAS; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
@@ -146,10 +146,11 @@ RAMA_SISTEMA="${KERNEL_SISTEMA%.*}"
 
 export MAKEFLAGS="-j$(nproc)"
 
-# Usar ccache automáticamente si está disponible en el sistema (solo si no estamos en modo Live sin persistencia)
+# Usar ccache automáticamente si está disponible en el sistema (solo si no estamos en modo Live)
 if command -v ccache >/dev/null 2>&1 && [ ! -d /mnt/live ]; then
     export CCACHE_DIR="${CCACHE_DIR:-/var/cache/ccache}"
     export CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-15G}"
+    export CCACHE_COMPILERCHECK="content"
     export CCACHE_SLOPPINESS="time_macros,include_file_mtime"
     export KBUILD_BUILD_TIMESTAMP="Wifislax-Kernel"
     USE_CCACHE="TRUE"
@@ -199,13 +200,20 @@ if ! verificar_internet; then
     exit 1
 fi
 
-# Comprobar actualizaciones del propio script (búsqueda compatible con POSIX)
+# Comprobar actualizaciones del propio script usando SCRIPT_PATH o búsqueda en /opt
 SERVIDOR_WEB="https://raw.githubusercontent.com/wifislax-ng/wifislax64-updaters/master/$WIFISLAX"
-RUTA_ENCONTRADA=$(find /opt/wifislax-updaters -type f -name "$SCRIPTNAME" 2>/dev/null | head -n 1)
-if [ -n "$RUTA_ENCONTRADA" ]; then
-    DIRECTORIO=$(dirname "$RUTA_ENCONTRADA")
+if [ -n "$SCRIPT_PATH" ] && [ -f "$SCRIPT_PATH" ]; then
+    DIRECTORIO=$(dirname "$SCRIPT_PATH")
+    NOMBRE_SCRIPT_ACTUAL=$(basename "$SCRIPT_PATH")
 else
-    DIRECTORIO=""
+    RUTA_ENCONTRADA=$(find /opt/wifislax-updaters -type f -name "$SCRIPTNAME" 2>/dev/null | head -n 1)
+    if [ -n "$RUTA_ENCONTRADA" ]; then
+        DIRECTORIO=$(dirname "$RUTA_ENCONTRADA")
+        NOMBRE_SCRIPT_ACTUAL="$SCRIPTNAME"
+    else
+        DIRECTORIO=""
+        NOMBRE_SCRIPT_ACTUAL=""
+    fi
 fi
 
 SV_DIA=$(printf '%s' "$SCRIPT_VERSION" | cut -c 7-8)
@@ -213,7 +221,7 @@ SV_MES=$(printf '%s' "$SCRIPT_VERSION" | cut -c 5-6)
 SV_ANO=$(printf '%s' "$SCRIPT_VERSION" | cut -c 1-4)
 printf "\n%bVersión Script%b: %b%s%b/%b%s%b/%b%s%b\n\n" "$CYAN" "$RESET" "$ROJO" "$SV_DIA" "$BLANCO" "$AMARILLO" "$SV_MES" "$BLANCO" "$ROJO" "$SV_ANO" "$RESET"
 
-if [ -n "$DIRECTORIO" ] && [ -w "$DIRECTORIO/$SCRIPTNAME" ]; then
+if [ -n "$DIRECTORIO" ] && [ -w "$DIRECTORIO/$NOMBRE_SCRIPT_ACTUAL" ]; then
     SERVIDOR_VERSION=$(curl -fsSL --max-time 4 "$SERVIDOR_WEB/${DIRECTORIO##*/}/$SCRIPTNAME" 2>/dev/null | awk -F'=' '/^readonly SCRIPT_VERSION=|^SCRIPT_VERSION=/{print $2; exit}')
     case "$SERVIDOR_VERSION" in
         [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9])
@@ -223,15 +231,15 @@ if [ -n "$DIRECTORIO" ] && [ -w "$DIRECTORIO/$SCRIPTNAME" ]; then
                 SRV_ANO=$(printf '%s' "$SERVIDOR_VERSION" | cut -c 1-4)
                 printf "%bComprobando actualizaciones para el script... %b¡NUEVA VERSIÓN DISPONIBLE!%b\n" "$ROSA" "$ROJO" "$RESET"
                 printf "%bVersión Server%b: %b%s%b/%b%s%b/%b%s%b\n\n" "$ROSA" "$RESET" "$ROJO" "$SRV_DIA" "$BLANCO" "$AMARILLO" "$SRV_MES" "$BLANCO" "$ROJO" "$SRV_ANO" "$RESET"
-                printf "%bActualizando %s...%b\n" "$CYAN" "$SCRIPTNAME" "$RESET"
-                if curl -fsSL --max-time 10 "$SERVIDOR_WEB/${DIRECTORIO##*/}/$SCRIPTNAME" -o "$DIRECTORIO/$SCRIPTNAME.tmp"; then
-                    chmod +x "$DIRECTORIO/$SCRIPTNAME.tmp"
-                    mv -f "$DIRECTORIO/$SCRIPTNAME.tmp" "$DIRECTORIO/$SCRIPTNAME"
+                printf "%bActualizando %s...%b\n" "$CYAN" "$NOMBRE_SCRIPT_ACTUAL" "$RESET"
+                if curl -fsSL --max-time 10 "$SERVIDOR_WEB/${DIRECTORIO##*/}/$SCRIPTNAME" -o "$DIRECTORIO/$NOMBRE_SCRIPT_ACTUAL.tmp"; then
+                    chmod +x "$DIRECTORIO/$NOMBRE_SCRIPT_ACTUAL.tmp"
+                    mv -f "$DIRECTORIO/$NOMBRE_SCRIPT_ACTUAL.tmp" "$DIRECTORIO/$NOMBRE_SCRIPT_ACTUAL"
                     printf "%bLISTO. Reiniciando script...%b\n\n" "$VERDE" "$RESET"
                     PROCESO_COMPLETADO="TRUE"
-                    exec sh "$DIRECTORIO/$SCRIPTNAME" "$@"
+                    exec sh "$DIRECTORIO/$NOMBRE_SCRIPT_ACTUAL" "$@"
                 else
-                    rm -f "$DIRECTORIO/$SCRIPTNAME.tmp"
+                    rm -f "$DIRECTORIO/$NOMBRE_SCRIPT_ACTUAL.tmp"
                     printf "%bNo se pudo descargar la actualización. Continuando con la versión local...%b\n\n" "$AMARILLO" "$RESET"
                 fi
             fi
@@ -475,42 +483,46 @@ if command -v cpupower >/dev/null 2>&1; then
     cpupower frequency-set -g performance >/dev/null 2>&1
 fi
 
-# Helper compatible POSIX para invocar make con o sin ccache
+# Helper compatible POSIX para invocar make respetando CONFIG_LOCALVERSION del .config
 ejecutar_make() {
     if [ -n "$USE_CCACHE" ]; then
-        make LOCALVERSION="" CC="ccache gcc" HOSTCC="ccache gcc" "$@"
+        make CC="ccache gcc" HOSTCC="ccache gcc" "$@"
     else
-        make LOCALVERSION="" "$@"
+        make "$@"
     fi
 }
 
 # Inicio del cronómetro de compilación
 COMIENZO=$(date +%s)
 
-# Compilación del kernel y módulos (LOCALVERSION="" evita el sufijo '+' por cambios locales)
+# Compilación del kernel y módulos
 printf "\n%bCompilando kernel y módulos (%s)...%b\n\n" "$CYAN" "$MAKEFLAGS" "$RESET"
 ejecutar_make all || exit 1
 
 # Obtener versión exacta compilada desde el propio árbol de compilación
-KERNEL_VERSION=$(make -s LOCALVERSION="" kernelrelease)
+KERNEL_VERSION=$(make -s kernelrelease)
 CONTAINER="$HOME/$ESCRITORIO/$MODNAM-$KERNEL_VERSION-$ARCH-$BUILD$TAG"
 rm -rf "$CONTAINER"
 mkdir -p "$CONTAINER"
 
 # Instalación de módulos y cabeceras en el contenedor
-ZSTD_CLEVEL=9 make LOCALVERSION="" modules_install INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH="$CONTAINER" || exit 1
-make LOCALVERSION="" INSTALL_HDR_PATH="$CONTAINER/usr" headers_install || exit 1
+ZSTD_CLEVEL=9 make modules_install INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH="$CONTAINER" || exit 1
+make INSTALL_HDR_PATH="$CONTAINER/usr" headers_install || exit 1
 
 # Copiar imagen bzImage al escritorio
 cp -f "$FUENTES/arch/$KARCH/boot/bzImage" "$HOME/$ESCRITORIO/$VMLINUZ" || exit 1
 
-# Preparar kernel sources ligeros para compilar drivers externos (preservando System.map, Module.symvers y scripts/module.lds)
+# Preparar kernel sources ligeros para compilar drivers externos
 mv -f System.map ../.System.map.bak 2>/dev/null
 mv -f Module.symvers ../.Module.symvers.bak 2>/dev/null
+mv -f vmlinux.symvers ../.vmlinux.symvers.bak 2>/dev/null
 mv -f scripts/module.lds ../.module.lds.bak 2>/dev/null
+
 make clean
+
 mv -f ../.System.map.bak System.map 2>/dev/null
 mv -f ../.Module.symvers.bak Module.symvers 2>/dev/null
+mv -f ../.vmlinux.symvers.bak vmlinux.symvers 2>/dev/null
 if [ -f ../.module.lds.bak ]; then
     mkdir -p scripts
     mv -f ../.module.lds.bak scripts/module.lds
@@ -522,7 +534,7 @@ ejecutar_make modules_prepare || exit 1
 
 # Limpieza segura y compatible POSIX de archivos innecesarios en sources
 rm -rf Documentation arch/x86/boot/bzImage arch/x86/boot/compressed/vmlinux \
-       drivers firmware fs net sound .tmp_versions tools/testing/ vmlinux vmlinux.o vmlinux.symvers
+       drivers firmware fs net sound .tmp_versions tools/testing/ vmlinux vmlinux.o
 
 find arch/ -mindepth 1 -maxdepth 1 ! -name "$KARCH" -exec rm -rf {} +
 
@@ -540,8 +552,8 @@ done
 find . \( -type f \( -name ".*" ! -name ".config" -o -name "COPYING" -o -name "CREDITS" \
     -o -name "LICENSE*" -o -name "MAINTAINERS*" -o -name "README*" \) \) -exec rm -f {} +
 
-# Hacer strip únicamente sobre binarios ejecutables en scripts/ y tools/
-find scripts tools -type f -perm -u+x -exec strip --strip-unneeded \
+# Hacer strip únicamente sobre binarios ejecutables en scripts/ y tools/ excluyendo *.so (GCC plugins)
+find scripts tools -type f -perm -u+x ! -name "*.so" -exec strip --strip-unneeded \
     -R .comment -R .eh_frame -R .eh_frame_hdr -R .eh_frame_ptr \
     -R .jcr -R .note -R .note.ABI-tag -R .note.gnu.build-id \
     -R .note.gnu.gold-version -R .note.GNU-stack {} + >/dev/null 2>&1
@@ -596,7 +608,7 @@ if [ ! -f /etc/wifislax-version ] || [ -d /mnt/live ]; then
     exit 0
 fi
 
-# Instalación opcional en Wifislax instalado en disco duro
+# Instalación opcional en Wifislax instalado en disco duro (sin initrd)
 printf "%bPulsa ENTER para instalar el kernel %s en el sistema o Ctrl+C para salir...%b\n" "$AMARILLO" "$KERNEL_VERSION" "$RESET"
 read -r
 
@@ -615,20 +627,9 @@ if [ -f "$MODULO_FINAL" ] && [ -f "$HOME/$ESCRITORIO/$VMLINUZ" ]; then
     xzm2dir "$MODULO_FINAL" /
     cp -f "$HOME/$ESCRITORIO/$VMLINUZ" "/boot/vmlinuz-${KERNEL_VERSION}"
 
-    # Comprobar si el sistema utiliza initrd y generarlo de forma segura
-    if ls /boot/initrd* >/dev/null 2>&1; then
-        if command -v mkinitrd >/dev/null 2>&1; then
-            printf "%b[INFO] Se detectó initrd en /boot. Generando initrd-%s.gz...%b\n" "$CYAN" "$KERNEL_VERSION" "$RESET"
-            if [ -r /etc/mkinitrd.conf ]; then
-                mkinitrd -F -k "$KERNEL_VERSION" -o "/boot/initrd-${KERNEL_VERSION}.gz" || \
-                    printf "%b[AVISO] Fallo al generar initrd con /etc/mkinitrd.conf. Revisa /boot/initrd antes de reiniciar.%b\n" "$AMARILLO" "$RESET"
-            else
-                mkinitrd -c -k "$KERNEL_VERSION" -o "/boot/initrd-${KERNEL_VERSION}.gz" || \
-                    printf "%b[AVISO] Fallo al generar initrd automáticamente. Revisa /boot/initrd antes de reiniciar.%b\n" "$AMARILLO" "$RESET"
-            fi
-        else
-            printf "%b[AVISO] Existen imágenes initrd en /boot pero no se encontró 'mkinitrd'. Verifica si tu configuración requiere initrd.%b\n" "$AMARILLO" "$RESET"
-        fi
+    # Respaldar configuración actual de GRUB antes de regenerar
+    if [ -f /boot/grub/grub.cfg ]; then
+        cp -f /boot/grub/grub.cfg /boot/grub/grub.cfg.bak
     fi
 
     if command -v update-grub >/dev/null 2>&1; then
